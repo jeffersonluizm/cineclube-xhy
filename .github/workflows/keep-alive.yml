@@ -1,0 +1,30 @@
+# Mantém a API acordada em hospedagens gratuitas que hibernam após alguns minutos
+# sem tráfego (Render, Koyeb...). Sem isso o primeiro visitante espera de 30 a 60 s.
+#
+# Configuração: no GitHub → Settings → Secrets and variables → Actions → Variables,
+# crie a variável API_HEALTH_URL com o valor https://api.seudominio.com.br/api/health
+#
+# Observação: o agendamento do GitHub Actions pode atrasar alguns minutos em horários de pico.
+# Se preferir precisão, use também https://cron-job.org (gratuito) apontando para a mesma URL.
+name: keep-alive
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping /api/health
+        env:
+          URL: ${{ vars.API_HEALTH_URL }}
+        run: |
+          if [ -z "$URL" ]; then
+            echo "Variável API_HEALTH_URL não definida; nada a fazer."
+            exit 0
+          fi
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 90 "$URL" || echo "000")
+          echo "HTTP $code — $URL"

@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: Se este software for útil ao seu trabalho, cite-o usando estes metadados.
+title: Site do Cineclube XHY
+abstract: >-
+  Publicação digital do Cineclube XHY reunindo revista, catálogos de mostras e
+  programação de ciclos e exibições, com painel de editor para publicação autônoma.
+  Frontend em Next.js e Tailwind CSS; API em Express e MongoDB.
+type: software
+authors:
+  - family-names: Mendonça da Silva
+    given-names: Jefferson Luiz
+    alias: jeffersonluizm
+keywords:
+  - cineclube
+  - revista de cinema
+  - publicação digital
+  - Next.js
+  - Express
+  - MongoDB
+license-url: https://github.com/jeffersonluizm/projeto-site-de-cinema
+repository-code: https://github.com/jeffersonluizm/projeto-site-de-cinema
+version: 1.2.0
+date-released: 2026-09-15

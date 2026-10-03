@@ -1,0 +1,271 @@
+'use client';
+
+import { useCallback, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { imageUrl } from '@/lib/media';
+import type { Article, Catalog, Magazine } from '@/lib/types';
+
+export interface ShowcaseSlide {
+  key: string;
+  type: 'revista' | 'catalogo';
+  href: string;
+  coverImage?: string;
+  magazine?: Magazine;
+  catalog?: Catalog;
+  articles: Article[];
+}
+
+interface HomeShowcaseProps {
+  slides: ShowcaseSlide[];
+}
+
+const TRANSITION_MS = 750;
+
+export default function HomeShowcase({ slides }: HomeShowcaseProps) {
+  const [index, setIndex] = useState(0);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const lockRef = useRef(false);
+  const wheelAccum = useRef(0);
+  const touchStartY = useRef<number | null>(null);
+  const total = slides.length;
+
+  const go = useCallback(
+    (dir: 1 | -1) => {
+      if (lockRef.current) return;
+      setIndex((i) => {
+        const next = Math.min(Math.max(i + dir, 0), total - 1);
+        if (next !== i) {
+          lockRef.current = true;
+          setTimeout(() => {
+            lockRef.current = false;
+          }, TRANSITION_MS + 100);
+        }
+        return next;
+      });
+    },
+    [total]
+  );
+
+  // Roda do mouse: a página fica parada, o gesto troca a edição
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      if (lockRef.current) return;
+      wheelAccum.current += e.deltaY;
+      if (wheelAccum.current > 60) {
+        wheelAccum.current = 0;
+        go(1);
+      } else if (wheelAccum.current < -60) {
+        wheelAccum.current = 0;
+        go(-1);
+      }
+    };
+
+    const onTouchStart = (e: TouchEvent) => {
+      touchStartY.current = e.touches[0]?.clientY ?? null;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (touchStartY.current == null) return;
+      const delta = touchStartY.current - (e.touches[0]?.clientY ?? touchStartY.current);
+      if (Math.abs(delta) > 55) {
+        go(delta > 0 ? 1 : -1);
+        touchStartY.current = null;
+      }
+      e.preventDefault();
+    };
+
+    stage.addEventListener('wheel', onWheel, { passive: false });
+    stage.addEventListener('touchstart', onTouchStart, { passive: true });
+    stage.addEventListener('touchmove', onTouchMove, { passive: false });
+    return () => {
+      stage.removeEventListener('wheel', onWheel);
+      stage.removeEventListener('touchstart', onTouchStart);
+      stage.removeEventListener('touchmove', onTouchMove);
+    };
+  }, [go]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowDown' || e.key === 'PageDown') go(1);
+      if (e.key === 'ArrowUp' || e.key === 'PageUp') go(-1);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [go]);
+
+  if (total === 0) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <p className="font-serif italic text-text-dark text-sm">Em breve...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      ref={stageRef}
+      className="flex-1 relative overflow-hidden select-none"
+      style={{ touchAction: 'none' }}
+      role="region"
+      aria-roledescription="carrossel"
+      aria-label="edições"
+    >
+      {slides.map((slide, j) => {
+        const pos = j - index;
+        // pos < 0: já foi "retirada da prateleira"; pos === 0: em exibição; pos > 0: aguardando atrás
+        const style: React.CSSProperties = {
+          transition: `transform ${TRANSITION_MS}ms cubic-bezier(.22,.9,.28,1), opacity ${TRANSITION_MS}ms ease`,
+          zIndex: pos < 0 ? 40 : pos === 0 ? 30 : 20 - pos,
+          transform:
+            pos < 0
+              ? 'translateY(-115%) rotate(-7deg) scale(1.04)'
+              : pos === 0
+                ? 'none'
+                : `translateY(${2.2 * pos}%) scale(${1 - 0.05 * pos})`,
+          opacity: pos < 0 ? 0 : pos === 0 ? 1 : pos === 1 ? 0.16 : 0,
+          pointerEvents: pos === 0 ? 'auto' : 'none',
+        };
+
+        return (
+          <div
+            key={slide.key}
+            className="absolute inset-0 flex items-center justify-center px-5 sm:px-8 pt-8 pb-10 sm:py-0"
+            style={style}
+            aria-hidden={pos !== 0}
+          >
+            {/* A edição que espera atrás mostra só a capa, como uma silhueta na prateleira */}
+            <SlideContent slide={slide} hideInfo={pos !== 0} eager={j === 0} />
+          </div>
+        );
+      })}
+
+      <p className="absolute top-3 sm:top-6 left-5 sm:left-8 text-pink font-serif italic text-xs sm:text-sm z-40">
+        {index === 0 ? 'últimas atualizações' : 'edições anteriores'}
+      </p>
+
+      {/* Navegação lateral */}
+      {total > 1 && (
+        <div className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-3 z-40">
+          <button
+            type="button"
+            onClick={() => go(-1)}
+            disabled={index === 0}
+            aria-label="edição mais recente"
+            className="font-display text-text-dark/50 hover:text-olive disabled:opacity-20 text-lg p-1"
+          >
+            ▲
+          </button>
+          {slides.map((slide, j) => (
+            <button
+              key={slide.key}
+              type="button"
+              onClick={() => {
+                if (!lockRef.current) setIndex(j);
+              }}
+              aria-label={slide.type === 'revista' ? `edição n°${slide.magazine?.number}` : slide.catalog?.title}
+              aria-current={j === index ? 'true' : undefined}
+              className={`w-2.5 h-2.5 rounded-full transition-colors ${
+                j === index ? 'bg-pink' : 'bg-text-dark/20 hover:bg-olive'
+              }`}
+            />
+          ))}
+          <button
+            type="button"
+            onClick={() => go(1)}
+            disabled={index === total - 1}
+            aria-label="edição anterior"
+            className="font-display text-text-dark/50 hover:text-olive disabled:opacity-20 text-lg p-1"
+          >
+            ▼
+          </button>
+        </div>
+      )}
+
+      {total > 1 && index < total - 1 && (
+        <p className="absolute bottom-3 sm:bottom-5 inset-x-0 text-center font-serif italic text-text-dark/40 text-xs sm:text-sm z-40">
+          <span className="sm:hidden">deslize para ver a próxima edição</span>
+          <span className="hidden sm:inline">role para ver a próxima edição</span>
+        </p>
+      )}
+    </div>
+  );
+}
+
+function SlideContent({ slide, hideInfo, eager }: { slide: ShowcaseSlide; hideInfo?: boolean; eager?: boolean }) {
+  const mag = slide.magazine;
+  const cat = slide.catalog;
+
+  return (
+    <div className="flex flex-col sm:flex-row gap-5 sm:gap-12 items-center justify-center max-w-5xl w-full">
+      <Link href={slide.href} className="w-[min(440px,42vw)] sm:w-[min(440px,40vw)] shrink-0 block group">
+        {slide.coverImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={imageUrl(slide.coverImage)}
+            alt={mag ? `Revista XHY n°${mag.number}` : cat?.title ?? ''}
+            loading={eager ? 'eager' : 'lazy'}
+            decoding="async"
+            className="w-full aspect-[3/4] object-cover shadow-[0_18px_40px_rgba(38,24,64,0.35)] group-hover:opacity-95 transition-opacity"
+          />
+        ) : (
+          <div className="w-full aspect-[3/4] bg-dark-purple shadow-[0_18px_40px_rgba(38,24,64,0.35)]" />
+        )}
+      </Link>
+
+      <div
+        className="max-w-sm text-center sm:text-left transition-opacity duration-500"
+        style={{ opacity: hideInfo ? 0 : 1 }}
+      >
+        {mag && (
+          <>
+            <Link
+              href={slide.href}
+              className="font-display font-black text-text-dark hover:text-olive transition-colors block mb-2 sm:mb-4"
+              style={{ fontSize: 'clamp(3rem, 12vw, 5.5rem)', lineHeight: 1 }}
+            >
+              n<sup className="font-black align-super" style={{ fontSize: '0.55em' }}>o</sup>
+              {mag.number}
+            </Link>
+
+            {slide.articles.length > 0 && (
+              <div className="mb-4 hidden sm:block">
+                <p className="font-display font-bold text-text-dark text-base">{slide.articles[0]?.column}</p>
+                {slide.articles.map((a) => (
+                  <div key={a._id} className="mb-1">
+                    <Link
+                      href={`/revista/${mag.number}/artigo/${a.slug}`}
+                      className="font-serif italic text-text-dark text-sm hover:text-olive hover:underline block"
+                    >
+                      {a.title}
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <p className="font-serif text-text-dark text-sm sm:mt-6">
+              Revista XHY, v. {mag.volume}, n. {mag.number},<br />
+              {mag.month}, {mag.year}.
+            </p>
+          </>
+        )}
+
+        {cat && (
+          <>
+            <Link
+              href={slide.href}
+              className="font-display font-black text-text-dark hover:text-olive transition-colors block mb-2 sm:mb-4"
+              style={{ fontSize: 'clamp(2rem, 8vw, 4rem)', lineHeight: 1.1 }}
+            >
+              {cat.title}
+            </Link>
+            <p className="font-serif text-text-dark text-sm sm:mt-6">{cat.year}</p>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

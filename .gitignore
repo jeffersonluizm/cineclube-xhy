@@ -1,0 +1,21 @@
+# Dependências
+node_modules/
+
+# Variáveis de ambiente (contêm senhas — nunca commitar)
+.env
+.env.local
+
+# Builds
+codigo-fonte/frontend/.next/
+codigo-fonte/backend/dist/
+*.tsbuildinfo
+
+# Imagens enviadas pelo editor
+codigo-fonte/backend/uploads/
+
+# Banco de dados local de desenvolvimento
+codigo-fonte/backend/data/
+
+# Sistema
+Thumbs.db
+.DS_Store
