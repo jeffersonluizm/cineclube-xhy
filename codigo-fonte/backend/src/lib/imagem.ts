@@ -12,7 +12,7 @@ const EXTENSOES: Record<string, string> = {
 };
 
 export function extensaoDaImagem(mimetype: string): string | undefined {
-  return EXTENSOES[mimetype];
+  return Object.prototype.hasOwnProperty.call(EXTENSOES, mimetype) ? EXTENSOES[mimetype] : undefined;
 }
 
 export function safeBaseName(originalname: string) {
@@ -25,7 +25,7 @@ export function safeBaseName(originalname: string) {
     .replace(/^-+|-+$/g, '')
     .toLowerCase()
     .slice(0, 60);
-  return { base: base || 'imagem', ext: originalExt.toLowerCase() };
+  return { base: base || 'imagem' };
 }
 
 /**
