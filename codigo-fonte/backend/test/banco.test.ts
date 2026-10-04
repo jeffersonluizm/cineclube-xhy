@@ -141,3 +141,28 @@ test('URI configurada com usuário e senha: descrição e log não expõem as cr
     await mongod.stop();
   }
 });
+
+test('porta do embutido ocupada por algo que não é MongoDB: erro diz isso claramente', async () => {
+  const conexoes = new Set<net.Socket>();
+  const intruso = net.createServer((socket) => {
+    conexoes.add(socket);
+    socket.on('error', () => {}); // o cliente pode derrubar a conexão
+    socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
+  });
+  await new Promise<void>((r) => intruso.listen(0, '127.0.0.1', () => r()));
+  const porta = (intruso.address() as net.AddressInfo).port;
+  const dbPath = path.join(os.tmpdir(), `cineclube-nao-criar-${process.pid}`);
+  try {
+    await assert.rejects(
+      conectarBanco({ uri: URI_FORA_DO_AR, producao: false, timeoutMs: 500, portaEmbutida: porta, dbPath, log: silencioso }),
+      (err: Error) => {
+        assert.match(err.message, new RegExp(`porta ${porta} está ocupada por um programa que não é o MongoDB`));
+        return true;
+      }
+    );
+    assert.equal(fs.existsSync(dbPath), false);
+  } finally {
+    for (const socket of conexoes) socket.destroy();
+    await new Promise((r) => intruso.close(r));
+  }
+});

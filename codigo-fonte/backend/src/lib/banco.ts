@@ -53,7 +53,7 @@ function portaOcupada(porta: number): Promise<boolean> {
       socket.destroy();
       resolve(true);
     });
-    socket.once('error', () => resolve(false));
+    socket.on('error', () => resolve(false));
   });
 }
 
@@ -80,7 +80,15 @@ export async function conectarBanco(opcoes: OpcoesConexao = {}): Promise<Conexao
 
   if (await portaOcupada(porta)) {
     const uriEmbutido = `mongodb://127.0.0.1:${porta}/${NOME_BANCO}`;
-    await mongoose.connect(uriEmbutido, { serverSelectionTimeoutMS: timeoutMs });
+    try {
+      await mongoose.connect(uriEmbutido, { serverSelectionTimeoutMS: timeoutMs });
+    } catch (err) {
+      await mongoose.disconnect(); // para o driver de ficar tentando a porta
+      throw new Error(
+        `A porta ${porta} está ocupada por um programa que não é o MongoDB (ou que não respondeu como um). ` +
+          `Feche esse programa ou defina MONGODB_URI. Detalhe: ${(err as Error).message}`
+      );
+    }
     const descricao = descreverBanco(uriEmbutido, NOME_BANCO, 'embutido');
     log(`Conectado ao MongoDB ${descricao}, que já estava rodando (API?)`);
     return { origem: 'embutido-existente', descricao, desconectar: soDesconectar };
