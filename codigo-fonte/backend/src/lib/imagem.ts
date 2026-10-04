@@ -1,6 +1,7 @@
 import path from 'path';
 
-// Tipos de imagem aceitos no upload e a extensão gravada para cada um
+// Tipos de imagem aceitos no upload e a extensão gravada para cada um.
+// SVG fica de fora de propósito: é XML e pode carregar <script> quando servido do próprio domínio.
 const EXTENSOES: Record<string, string> = {
   'image/jpeg': '.jpg',
   'image/jpg': '.jpg',
@@ -8,7 +9,6 @@ const EXTENSOES: Record<string, string> = {
   'image/webp': '.webp',
   'image/gif': '.gif',
   'image/avif': '.avif',
-  'image/svg+xml': '.svg',
 };
 
 export function extensaoDaImagem(mimetype: string): string | undefined {
