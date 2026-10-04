@@ -1,6 +1,7 @@
-# Blueprint do Render (https://render.com) para a API do Cineclube XHY.
-# No painel do Render: New → Blueprint → selecione este repositório.
-# Depois preencha os valores marcados com "sync: false" em Environment.
+# Blueprint do Render (https://render.com) para a API da DEMONSTRAÇÃO do Cineclube XHY.
+# Passo a passo completo em docs/deploy.md.
+# No painel do Render: New → Blueprint → selecione este repositório e preencha os valores
+# marcados com "sync: false" em Environment.
 services:
   - type: web
     name: cineclube-xhy-api
@@ -17,14 +18,22 @@ services:
       - key: NODE_ENV
         value: production
       - key: MONGODB_URI
-        sync: false           # string de conexão do MongoDB Atlas
+        sync: false           # Atlas: banco SÓ de demonstração (o reset periódico apaga tudo)
       - key: ADMIN_PASSWORD
-        sync: false           # senha do painel /admin
+        sync: false           # 12+ caracteres; a API recusa subir com menos
       - key: JWT_SECRET
         generateValue: true   # o Render gera um valor aleatório seguro
+      - key: SERVIDOR_SEGREDO
+        sync: false           # 32+ caracteres; o MESMO valor vai na Vercel (variável só de servidor)
       - key: FRONTEND_URL
-        sync: false           # https://seudominio.com.br,https://www.seudominio.com.br
+        sync: false           # https://seu-site.vercel.app (e o domínio próprio, separados por vírgula)
+      - key: DEMO_ENABLED
+        value: "true"         # demonstração: "Entrar como editor" com um clique e reset periódico
+      - key: DEMO_RESET_MINUTOS
+        value: "360"
+      - key: MONGODB_TIMEOUT_MS
+        value: "30000"        # Atlas gratuito pode demorar a responder na primeira conexão
       - key: CLOUDINARY_URL
-        sync: false           # cloudinary://API_KEY:API_SECRET@CLOUD_NAME
+        sync: false           # opcional: sem ele, imagens enviadas somem a cada deploy (disco efêmero)
       - key: CLOUDINARY_FOLDER
-        value: cineclube-xhy
+        value: cineclube-xhy-demo
