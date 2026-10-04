@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Cormorant_Garamond, Inter, Nunito } from 'next/font/google';
+import { cores } from '@/lib/tokens';
 import './globals.css';
 
 // Fontes self-hosted pelo Next: sem requisição externa ao Google e sem "piscar" de fonte
@@ -38,6 +39,7 @@ export const metadata: Metadata = {
   },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
+  alternates: { types: { 'application/rss+xml': [{ url: '/feed.xml', title: 'Textos do Cineclube XHY' }] } },
   openGraph: {
     type: 'website',
     locale: 'pt_BR',
@@ -55,7 +57,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#F2EDD6',
+  themeColor: cores.cream,
   width: 'device-width',
   initialScale: 1,
 };
@@ -66,7 +68,15 @@ export const maxDuration = 60;
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={`${cormorant.variable} ${nunito.variable} ${inter.variable}`}>
-      <body>{children}</body>
+      <body>
+        <a
+          href="#conteudo"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:bg-text-dark focus:text-cream focus:px-4 focus:py-2 font-display font-bold"
+        >
+          pular para o conteúdo
+        </a>
+        {children}
+      </body>
     </html>
   );
 }

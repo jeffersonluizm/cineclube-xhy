@@ -19,7 +19,7 @@ export default function BackToTop() {
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       aria-label="Voltar ao topo"
       tabIndex={visible ? 0 : -1}
-      className={`fixed bottom-5 right-5 md:bottom-6 md:right-6 w-11 h-11 md:w-12 md:h-12 bg-text-dark text-cream flex items-center justify-center hover:bg-dark-purple transition-all z-50 ${
+      className={`fixed bottom-5 right-5 md:bottom-6 md:right-6 w-11 h-11 md:w-12 md:h-12 bg-text-dark text-cream flex items-center justify-center hover:bg-dark-purple border border-cream/30 transition-all z-50 ${
         visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3 pointer-events-none'
       }`}
     >

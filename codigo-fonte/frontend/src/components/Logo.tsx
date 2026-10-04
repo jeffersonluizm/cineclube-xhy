@@ -1,31 +1,24 @@
 import Link from 'next/link';
-import Image from 'next/image';
 
 interface LogoProps {
   /** Largura fixa em px (ignorada quando className define a largura) */
   size?: number;
   /** Classes para largura responsiva, ex.: "w-12 md:w-[90px]" */
   className?: string;
+  /** Destino do clique (no painel, o início do painel) */
+  href?: string;
+  rotulo?: string;
 }
 
-const RATIO = 1827 / 1963;
+// Proporção do desenho original (1961,97 × 1825,94)
+const RATIO = 1825.94 / 1961.97;
 
-export default function Logo({ size = 90, className }: LogoProps) {
+/** Logo vetorial do cineclube (3,5 kB, nítido em qualquer tela) */
+export default function Logo({ size = 90, className, href = '/', rotulo = 'Cineclube XHY: página inicial' }: LogoProps) {
   return (
-    <Link
-      href="/"
-      aria-label="Cineclube XHY: página inicial"
-      className={`block shrink-0 ${className ?? ''}`}
-      style={className ? undefined : { width: size }}
-    >
-      <Image
-        src="/logo/logo-xhy.png"
-        alt="Cineclube XHY"
-        width={size}
-        height={Math.round(size * RATIO)}
-        className="w-full h-auto"
-        priority
-      />
+    <Link href={href} aria-label={rotulo} className={`block shrink-0 ${className ?? ''}`} style={className ? undefined : { width: size }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/logo/logo-xhy.svg" alt="" width={size} height={Math.round(size * RATIO)} className="w-full h-auto" />
     </Link>
   );
 }
