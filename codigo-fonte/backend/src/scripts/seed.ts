@@ -234,11 +234,21 @@ export async function executarSeed({ banco, force, confirmar, log = console.log 
   return 'aplicado';
 }
 
+export const MENSAGEM_SEM_TERMINAL =
+  'Sem terminal interativo para confirmar, então nada foi apagado. ' +
+  'No Git Bash (mintty) o Node não enxerga o terminal: rode no cmd ou no PowerShell, ' +
+  'use "winpty npm run seed" ou, se tiver certeza, "npm run seed -- --force".';
+
+/** Desistir na pergunta é escolha do usuário (0); sem terminal para perguntar é falha (1). */
+export function codigoDeSaida(resultado: 'aplicado' | 'cancelado', temTerminal: boolean): number {
+  return resultado === 'cancelado' && !temTerminal ? 1 : 0;
+}
+
 function perguntarNoTerminal(pergunta: string): Promise<boolean> {
-  // Sem terminal interativo (CI, pipe) não há como confirmar: recusa
+  // Sem terminal interativo (CI, pipe, Git Bash) não há como confirmar: recusa
   if (!process.stdin.isTTY) {
     console.log(`${pergunta}
-Sem terminal interativo para confirmar.`);
+${MENSAGEM_SEM_TERMINAL}`);
     return Promise.resolve(false);
   }
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
@@ -259,7 +269,7 @@ async function main() {
       force: pedeForce(process.argv),
       confirmar: perguntarNoTerminal,
     });
-    if (resultado === 'cancelado') process.exitCode = 1;
+    process.exitCode = codigoDeSaida(resultado, Boolean(process.stdin.isTTY));
   } finally {
     await conexao.desconectar();
   }

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import Magazine from '../src/models/Magazine';
 import Article from '../src/models/Article';
 import About from '../src/models/About';
-import { executarSeed, pedeForce, respostaConfirma } from '../src/scripts/seed';
+import { executarSeed, pedeForce, respostaConfirma, codigoDeSaida, MENSAGEM_SEM_TERMINAL } from '../src/scripts/seed';
 import { abrirBancoEmMemoria } from './helpers/bancoEmMemoria';
 
 let banco: Awaited<ReturnType<typeof abrirBancoEmMemoria>>;
@@ -123,4 +123,19 @@ test('a pergunta de confirmação diz em qual banco os dados serão apagados', a
 
   assert.equal(perguntas.length, 1);
   assert.match(perguntas[0], /^O banco cluster0\.abc12\.mongodb\.net\/cineclube_xhy \(configurado\) já tem 1 documento\(s\)/);
+});
+
+test('cancelar por escolha sai com 0; recusar por falta de terminal sai com 1', () => {
+  assert.equal(codigoDeSaida('aplicado', true), 0);
+  assert.equal(codigoDeSaida('aplicado', false), 0);
+  assert.equal(codigoDeSaida('cancelado', true), 0);
+  assert.equal(codigoDeSaida('cancelado', false), 1);
+});
+
+test('sem terminal interativo, a mensagem orienta como confirmar (Git Bash, winpty, --force)', () => {
+  assert.match(MENSAGEM_SEM_TERMINAL, /Git Bash/);
+  assert.match(MENSAGEM_SEM_TERMINAL, /cmd/);
+  assert.match(MENSAGEM_SEM_TERMINAL, /PowerShell/);
+  assert.match(MENSAGEM_SEM_TERMINAL, /winpty npm run seed/);
+  assert.match(MENSAGEM_SEM_TERMINAL, /npm run seed -- --force/);
 });
