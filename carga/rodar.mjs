@@ -227,9 +227,10 @@ async function principal() {
   const cwdApi = fs.mkdtempSync(path.join(os.tmpdir(), 'cineclube-carga-'));
   if (cwdApi.startsWith(RAIZ) || fs.existsSync(path.join(cwdApi, '.env'))) throw new Error('cwd da API inválido para a carga');
   const senha = crypto.randomBytes(12).toString('hex');
+const segredoServidor = crypto.randomBytes(32).toString('hex');
   const envBase = { ...process.env };
   for (const k of Object.keys(envBase)) {
-    if (/^(MONGODB_URI|CLOUDINARY_|ADMIN_PASSWORD|JWT_SECRET|FRONTEND_URL|NEXT_PUBLIC_|RATE_LIMIT_)/.test(k)) delete envBase[k];
+    if (/^(MONGODB_URI|CLOUDINARY_|ADMIN_PASSWORD|JWT_SECRET|FRONTEND_URL|NEXT_PUBLIC_|RATE_LIMIT_|SERVIDOR_SEGREDO|DEMO_|LIMITE_SITE)/.test(k)) delete envBase[k];
   }
   const envApi = {
     ...envBase,
@@ -242,6 +243,7 @@ async function principal() {
     CINECLUBE_PROIBIR_BANCO_DEV: '1',
     // limitador geral desligado para medir vazão (o H6 mede os limitadores separadamente)
     RATE_LIMIT_GERAL: '0',
+    SERVIDOR_SEGREDO: segredoServidor,
     // máquina compartilhada: prazo folgado para achar o banco (ignorado pelo código antigo)
     MONGODB_TIMEOUT_MS: '60000',
   };
@@ -253,7 +255,8 @@ async function principal() {
   log('API pronta e conferida no banco da carga');
 
   // 3. Site com build apontando para a API de teste
-  const envSite = { ...envBase, NEXT_PUBLIC_API_URL: API, NEXT_PUBLIC_SITE_URL: SITE, NEXT_TELEMETRY_DISABLED: '1' };
+  // LIMITE_SITE=0: a contenção por IP do site é medida à parte (k6 sai de um IP só)
+const envSite = { ...envBase, NEXT_PUBLIC_API_URL: API, NEXT_PUBLIC_SITE_URL: SITE, NEXT_TELEMETRY_DISABLED: '1', SERVIDOR_SEGREDO: segredoServidor, LIMITE_SITE: '0' };
   if (!SEM_BUILD) {
     log('next build apontando para a API de teste...');
     await rodarAteFim(process.execPath, [path.join(FRONTEND, 'node_modules/next/dist/bin/next'), 'build'], { cwd: FRONTEND, env: envSite });

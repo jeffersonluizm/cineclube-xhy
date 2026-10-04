@@ -20,6 +20,8 @@ export function middleware(req: NextRequest) {
   const caminho = req.nextUrl.pathname;
   // Otimizador de imagens fechado (images.unoptimized): nenhum pedido chega a ele
   if (caminho.startsWith('/_next/image')) return new NextResponse(null, { status: 404 });
+  // LIMITE_SITE=0 desliga a contenção por IP (só o teste de carga usa, para medir vazão)
+  if (process.env.LIMITE_SITE === '0') return NextResponse.next();
   const ip = ipDoVisitante(req);
   const permitido = caminho.startsWith('/api/revalidar') ? revalidar(ip) : caminho.startsWith('/busca') ? busca(ip) : paginas(ip);
   if (permitido) return NextResponse.next();
