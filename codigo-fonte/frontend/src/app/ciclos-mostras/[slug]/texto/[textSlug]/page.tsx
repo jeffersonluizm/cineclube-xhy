@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const { article, cycle } = await api.ciclos.text(params.slug, params.textSlug);
     return pageMetadata({
-      title: `${article.title} — ${cycle.title}`,
+      title: `${article.title} · ${cycle.title}`,
       description: article.epigraph || article.content,
       path: `/ciclos-mostras/${cycle.slug}/texto/${article.slug}`,
       image: article.coverImage || cycle.coverImage,

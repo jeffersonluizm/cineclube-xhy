@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const { article, catalog } = await api.catalogos.text(params.slug, params.textSlug);
     return pageMetadata({
-      title: `${article.title} — ${catalog.title}`,
+      title: `${article.title} · ${catalog.title}`,
       description: article.epigraph || article.content,
       path: `/catalogos/${catalog.slug}/${article.slug}`,
       image: article.coverImage || catalog.coverImage,

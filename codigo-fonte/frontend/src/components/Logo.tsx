@@ -14,7 +14,7 @@ export default function Logo({ size = 90, className }: LogoProps) {
   return (
     <Link
       href="/"
-      aria-label="Cineclube XHY — página inicial"
+      aria-label="Cineclube XHY: página inicial"
       className={`block shrink-0 ${className ?? ''}`}
       style={className ? undefined : { width: size }}
     >

@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { cycle } = await api.ciclos.get(params.slug);
     return pageMetadata({
       title: cycle.subtitle ? `${cycle.title}: ${cycle.subtitle}` : cycle.title,
-      description: cycle.description || `${cycle.title} (${cycle.year}) — exibição do Cineclube XHY.`,
+      description: cycle.description || `${cycle.title} (${cycle.year}), exibição do Cineclube XHY.`,
       path: `/ciclos-mostras/${cycle.slug}`,
       image: cycle.coverImage,
     });
