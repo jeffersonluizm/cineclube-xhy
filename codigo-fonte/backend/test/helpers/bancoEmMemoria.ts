@@ -5,10 +5,14 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 export async function abrirBancoEmMemoria() {
   const mongod = await MongoMemoryServer.create();
   await mongoose.connect(mongod.getUri(), { dbName: 'teste' });
+  // Índices (únicos, de texto) prontos antes do primeiro teste, como em produção
+  await Promise.all(Object.values(mongoose.models).map((m) => m.init()));
   return {
     uri: mongod.getUri(),
+    /** Esvazia as coleções mantendo os índices (dropDatabase apagaria os únicos) */
     async limpar() {
-      await mongoose.connection.db!.dropDatabase();
+      const colecoes = await mongoose.connection.db!.collections();
+      await Promise.all(colecoes.map((c) => c.deleteMany({})));
     },
     async fechar() {
       await mongoose.disconnect();
