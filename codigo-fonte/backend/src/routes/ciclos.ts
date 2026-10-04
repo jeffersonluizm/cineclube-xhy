@@ -1,8 +1,12 @@
 import { Router, Request, Response } from 'express';
 import Cycle from '../models/Cycle';
 import Film from '../models/Film';
+import Article from '../models/Article';
 
 const router = Router();
+
+// Só textos publicados que pertencem a este ciclo (rascunhos ficam no painel)
+const textosPublicados = (cycleId: unknown) => ({ parentId: cycleId, parentType: 'ciclo', published: { $ne: false } });
 
 router.get('/', async (_req: Request, res: Response) => {
   try {
@@ -19,7 +23,16 @@ router.get('/:slug', async (req: Request, res: Response) => {
     if (!cycle) return res.status(404).json({ error: 'Ciclo não encontrado' });
 
     const films = await Film.find({ cycleId: cycle._id }).sort({ order: 1 });
-    res.json({ cycle, films });
+    const articles = await Article.find(textosPublicados(cycle._id)).sort({ order: 1 });
+
+    // Textos do ciclo agrupados por coluna, no mesmo formato da página de catálogo
+    const sections: Record<string, typeof articles> = {};
+    for (const article of articles) {
+      if (!sections[article.column]) sections[article.column] = [];
+      sections[article.column].push(article);
+    }
+
+    res.json({ cycle, films, sections });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar ciclo' });
   }
@@ -42,6 +55,26 @@ router.get('/:slug/filme/:filmSlug', async (req: Request, res: Response) => {
     res.json({ film, cycle, prev, next });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar filme' });
+  }
+});
+
+router.get('/:slug/texto/:textSlug', async (req: Request, res: Response) => {
+  try {
+    const cycle = await Cycle.findOne({ slug: req.params.slug });
+    if (!cycle) return res.status(404).json({ error: 'Ciclo não encontrado' });
+
+    const article = await Article.findOne({ ...textosPublicados(cycle._id), slug: req.params.textSlug });
+    if (!article) return res.status(404).json({ error: 'Texto não encontrado' });
+
+    const allArticles = await Article.find(textosPublicados(cycle._id)).sort({ order: 1 });
+    const idx = allArticles.findIndex((a) => a.slug === req.params.textSlug);
+
+    const prev = idx > 0 ? { title: allArticles[idx - 1].title, slug: allArticles[idx - 1].slug, author: allArticles[idx - 1].author } : null;
+    const next = idx < allArticles.length - 1 ? { title: allArticles[idx + 1].title, slug: allArticles[idx + 1].slug, author: allArticles[idx + 1].author } : null;
+
+    res.json({ article, cycle, prev, next });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar texto' });
   }
 });
 
