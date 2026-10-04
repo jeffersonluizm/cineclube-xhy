@@ -15,7 +15,7 @@ codigo-fonte/
   com padrão glob nos arquivos, recurso do runner do Node que só existe a partir do 21.
   O `tsx` faz a transpilação do TypeScript, então os testes não dependem do type
   stripping nativo do Node.
-- MongoDB (opcional em desenvolvimento — sem um MongoDB acessível, o backend
+- MongoDB (opcional em desenvolvimento: sem um MongoDB acessível, o backend
   sobe automaticamente um MongoDB embutido com dados salvos em `backend/data/`)
 
 ---
@@ -52,7 +52,10 @@ a API antes de fechar a janela do seed. O caminho mais simples é subir a API pr
 e rodar o seed depois: ele usa o banco que a API já abriu.
 
 Os testes rodam com `tsx` e sobem um MongoDB só em memória: não tocam em
-`backend/data/` nem no banco configurado no `.env`.
+`backend/data/` nem no banco configurado no `.env`. O `npm test` carrega
+`test/preparar.ts`, que liga `CINECLUBE_PROIBIR_BANCO_DEV=1`: com ela, qualquer
+tentativa de usar a porta 27018 ou `backend/data/db` falha em vez de gravar no banco
+de desenvolvimento.
 
 **Variáveis de ambiente** (`backend/.env` — copie de `.env.example`):
 ```
