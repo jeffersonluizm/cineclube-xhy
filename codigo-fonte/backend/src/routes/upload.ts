@@ -4,7 +4,9 @@ import path from 'path';
 import fs from 'fs';
 import { v2 as cloudinary } from 'cloudinary';
 import { requireAuth, AuthRequest } from '../middleware/auth';
-import { extensaoDaImagem, safeBaseName, uploadFileName } from '../lib/imagem';
+import { limitadorUpload } from '../middleware/limitadores';
+import { pastaUploads } from '../lib/uploads';
+import { extensaoDaImagem, safeBaseName, tipoPelosBytes, uploadFileName } from '../lib/imagem';
 
 const router = Router();
 
@@ -13,30 +15,27 @@ const router = Router();
  *  - Com CLOUDINARY_URL definida → envia para o Cloudinary (persistente, com CDN).
  *    Obrigatório em hospedagens com disco efêmero (Render, Vercel, Koyeb...).
  *  - Sem CLOUDINARY_URL → salva em backend/uploads/ (apenas desenvolvimento local
- *    ou servidores com disco persistente).
+ *    ou servidores com disco persistente). UPLOADS_DIR troca a pasta (usado nos testes).
+ * O arquivo fica em memória até o tipo ser confirmado pelos bytes: nada inválido toca o disco.
  */
 const USE_CLOUDINARY = Boolean(process.env.CLOUDINARY_URL);
 const CLOUDINARY_FOLDER = process.env.CLOUDINARY_FOLDER || 'cineclube-xhy';
+const FORMATOS = 'jpg, png, webp, gif, avif';
 
 if (USE_CLOUDINARY) {
   // O SDK lê CLOUDINARY_URL automaticamente; aqui só forçamos URLs https
   cloudinary.config({ secure: true });
 }
 
-const UPLOADS_DIR = path.resolve(__dirname, '../../uploads');
+const UPLOADS_DIR = pastaUploads();
 if (!USE_CLOUDINARY && !fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
-const diskStorage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
-  filename: (_req, file, cb) => cb(null, uploadFileName(file.originalname, file.mimetype, Date.now())),
-});
-
 const upload = multer({
-  storage: USE_CLOUDINARY ? multer.memoryStorage() : diskStorage,
-  limits: { fileSize: 10 * 1024 * 1024 },
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 5 },
   fileFilter: (_req, file, cb) => {
     if (extensaoDaImagem(file.mimetype)) cb(null, true);
-    else cb(new Error('Apenas imagens são permitidas (jpg, png, webp, gif, avif)'));
+    else cb(new Error(`Apenas imagens são permitidas (${FORMATOS})`));
   },
 });
 
@@ -59,13 +58,19 @@ function uploadToCloudinary(file: Express.Multer.File): Promise<string> {
   });
 }
 
-router.post('/', requireAuth, (req: AuthRequest, res: Response) => {
+router.post('/', limitadorUpload, requireAuth, (req: AuthRequest, res: Response) => {
   upload.single('image')(req, res, async (err) => {
     if (err) return res.status(400).json({ error: err.message });
     if (!req.file) return res.status(400).json({ error: 'Nenhuma imagem enviada' });
 
+    // O tipo declarado pelo navegador só passou no filtro; quem decide é a assinatura do arquivo
+    const tipoReal = tipoPelosBytes(req.file.buffer);
+    if (!tipoReal) return res.status(400).json({ error: `O arquivo não é uma imagem válida (${FORMATOS})` });
+
     if (!USE_CLOUDINARY) {
-      return res.json({ url: `/uploads/${req.file.filename}` });
+      const nome = uploadFileName(req.file.originalname, tipoReal, Date.now());
+      await fs.promises.writeFile(path.join(UPLOADS_DIR, nome), req.file.buffer);
+      return res.json({ url: `/uploads/${nome}` });
     }
 
     try {

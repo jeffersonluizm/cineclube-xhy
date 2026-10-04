@@ -1,15 +1,28 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-const getSecret = () => {
-  const secret = process.env.JWT_SECRET;
-  if (secret) return secret;
-  if (process.env.NODE_ENV === 'production') {
-    // index.ts já aborta a inicialização sem JWT_SECRET; esta é a segunda barreira
-    throw new Error('JWT_SECRET não definido em produção');
+const SEGREDO_DEV = 'segredo-apenas-para-desenvolvimento';
+
+/** Validade do token do editor: um turno de trabalho. O painel avisa antes de expirar. */
+export const VALIDADE_TOKEN_S = 8 * 60 * 60;
+
+function bancoLocal(uri?: string): boolean {
+  if (!uri) return true; // sem URI a API usa o MongoDB local ou o embutido
+  const hosts = uri.replace(/^mongodb(\+srv)?:\/\//, '').split('/')[0].split('@').pop() ?? '';
+  return hosts.split(',').every((h) => /^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(h));
+}
+
+/**
+ * Segredo que assina os tokens. O de desenvolvimento só vale fora de produção E com banco
+ * local: uma API ligada a um banco remoto sem JWT_SECRET aceitaria tokens forjados.
+ */
+export function segredoJwt(env: NodeJS.ProcessEnv = process.env): string {
+  if (env.JWT_SECRET) return env.JWT_SECRET;
+  if (env.NODE_ENV === 'production' || !bancoLocal(env.MONGODB_URI)) {
+    throw new Error('JWT_SECRET não definido: obrigatório em produção e com banco remoto');
   }
-  return 'segredo-apenas-para-desenvolvimento';
-};
+  return SEGREDO_DEV;
+}
 
 export interface AuthRequest extends Request {
   editor?: { role: string };
@@ -22,7 +35,8 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
   }
 
   try {
-    const payload = jwt.verify(header.slice(7), getSecret()) as { role: string };
+    const payload = jwt.verify(header.slice(7), segredoJwt(), { algorithms: ['HS256'] }) as { role: string };
+    if (payload.role !== 'editor') throw new Error('papel inválido');
     req.editor = payload;
     next();
   } catch {
@@ -31,5 +45,5 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
 }
 
 export function signToken() {
-  return jwt.sign({ role: 'editor' }, getSecret(), { expiresIn: '7d' });
+  return jwt.sign({ role: 'editor' }, segredoJwt(), { expiresIn: VALIDADE_TOKEN_S, algorithm: 'HS256' });
 }
