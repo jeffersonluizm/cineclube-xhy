@@ -115,7 +115,18 @@ linhas.push('### H11: site com a API fora do ar');
 linhas.push('');
 linhas.push('| Página | status antes | mostra antes | status depois | mostra depois |');
 linhas.push('|---|---:|---|---:|---|');
-const mostra = (p) => (!p ? 'n/d' : p.mostraIndisponivel ? '"serviço indisponível"' : p.mostra404 ? '404 "fim da sessão"' : p.mostraVazio ? 'lista vazia / "em breve"' : 'conteúdo');
+// O status decide o 404; o texto "não encontrad" aparece no payload de toda página do Next
+// (o componente de 404 vai junto), então não serve para identificar a página exibida
+const mostra = (p) =>
+  !p
+    ? 'n/d'
+    : p.status === 404
+      ? 'página 404 ("fim da sessão")'
+      : p.mostraIndisponivel
+        ? '"serviço indisponível"'
+        : p.mostraVazio
+          ? 'lista vazia ("Nenhuma… disponível" / "Em breve")'
+          : 'conteúdo (do cache)';
 for (const p of antes.cenarios.H11 ?? []) {
   const d = (depois.cenarios.H11 ?? []).find((x) => x.pagina === p.pagina);
   linhas.push(`| \`${p.pagina}\` | ${p.status} | ${mostra(p)} | ${d?.status ?? 'n/d'} | ${mostra(d)} |`);
