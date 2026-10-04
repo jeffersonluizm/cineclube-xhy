@@ -1,110 +1,150 @@
 <p align="center">
-  <img src="codigo-fonte/frontend/public/logo/logo-xhy.png" alt="Cineclube XHY" width="160">
+  <img src="codigo-fonte/frontend/public/logo/logo-xhy.svg" alt="Cineclube XHY" width="140">
 </p>
 
-<h1 align="center">Cineclube XHY — Site</h1>
+<h1 align="center">Cineclube XHY: site e painel de publicação</h1>
 
 <p align="center">
-  Revista, catálogos e exibições do Cineclube XHY em um site editorial com painel de publicação próprio.
+  Revista, catálogos e exibições de um cineclube, num site editorial com a identidade do
+  material impresso e um painel para a equipe publicar sozinha.
+</p>
+
+<p align="center">
+  Next.js 14 · Express · MongoDB · TypeScript nos dois lados · testes automatizados · teste de carga antes/depois
 </p>
 
 ---
 
-## Sobre o projeto
+![Página inicial: a prateleira de edições](docs/img/01-home.jpg)
 
-O Cineclube XHY reúne pessoas para pensar cinema coletivamente, fora dos circuitos comerciais.
-Este projeto leva para a web o material que o cineclube já produz: a **Revista XHY**, os
-**catálogos** das mostras e a programação de **ciclos e exibições**, além de uma página sobre
-a equipe.
+## Em 30 segundos
 
-O site foi desenhado como uma publicação impressa: fundo creme para a navegação, fundo roxo
-escuro para a leitura dos textos, tipografia serifada e uma página inicial que funciona como
-uma "prateleira" de edições. Um painel de editor, protegido por senha, permite que a equipe do
-cineclube publique revistas, textos, catálogos, ciclos e filmes sem mexer em código, com
-editor de blocos e upload de imagens.
+- **O problema:** o cineclube produzia revista, catálogos e programação, mas tudo ficava
+  em PDF e imagens de rede social: sem link para citar, sem busca, ilegível no celular.
+- **A solução:** um site que reproduz a diagramação do impresso (creme para navegar, roxo
+  para ler, serifa nos textos) e um painel em que a equipe publica textos em blocos, com
+  imagens, rascunhos e programação, sem tocar em código.
+- **O que mostra de engenharia:** API organizada por recurso com validação na entrada,
+  erros centralizados e segurança revisada; front com cache e revalidação sob demanda,
+  estados de erro honestos e acessibilidade com contraste AA testado; testes de rota com
+  banco em memória e um teste de carga com hipóteses escritas antes de medir.
 
-### Funcionalidades
+| Leitura (desktop) | Leitura (celular) | Exibição com programação |
+|---|---|---|
+| ![Texto da revista](docs/img/03-leitura.jpg) | ![Texto no celular](docs/img/12-celular-leitura.jpg) | ![Exibição](docs/img/04-exibicao.jpg) |
 
-- **Página inicial** com a última publicação em destaque e navegação entre edições
-- **Revista** — listagem por ano, sumário de cada edição e leitura dos textos com epígrafe,
-  imagens no corpo e notas laterais
-- **Catálogos** — capa, apresentação e textos de cada catálogo
-- **Exibições** — ciclos e mostras com programação de sessões, página de cada filme e textos do ciclo
-- **Sobre** — apresentação do cineclube e equipe com contatos
-- **Painel do editor** (`/admin`) — criação e edição de todo o conteúdo, editor de texto em
-  blocos (parágrafo, subtítulo, citação, imagem) com arrastar e soltar, rascunhos e reordenação
-- **Responsivo** — navegação lateral no desktop, barra compacta no celular
-- **Compartilhável** — metatags Open Graph por página, favicon, `robots.txt` e `sitemap.xml`
+| Painel: início | Painel: exclusão em cascata | Sessão expirada |
+|---|---|---|
+| ![Início do painel](docs/img/08-painel-inicio.jpg) | ![Diálogo de exclusão](docs/img/11-exclusao-em-cascata.jpg) | ![Sessão expirada](docs/img/07-sessao-expirada.jpg) |
 
-### Tecnologias
+Mais telas em [`docs/img/`](docs/img/): sumário da revista, busca, 404, editor de textos,
+painel da revista, home no celular e a página [como foi feito](docs/img/14-como-foi-feito.jpg).
 
-| Camada | Stack |
-|--------|-------|
-| Frontend | Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS |
-| Backend | Node.js, Express, TypeScript, Mongoose |
-| Banco de dados | MongoDB (Atlas em produção, embutido em desenvolvimento) |
-| Imagens | Cloudinary (produção) ou disco local (desenvolvimento) |
-| Autenticação | Senha única do editor com token JWT |
+## Arquitetura
 
-## Estrutura do repositório
-
-```
-├── codigo-fonte/          Código da aplicação
-│   ├── backend/           API REST (Express + MongoDB)
-│   ├── frontend/          Site (Next.js + Tailwind)
-│   └── README.md          Como rodar, variáveis de ambiente, API e guia de hospedagem
-├── documentos/            Documentação do projeto
-├── apresentacao/          Identidade visual (logo) e materiais de apresentação
-├── render.yaml            Blueprint de deploy da API no Render
-└── .github/workflows/     Automação (keep-alive da API)
+```mermaid
+flowchart LR
+  V[Navegador<br/>site e painel] --> N[Next.js 14 na Vercel<br/>páginas em cache 60 s<br/>/api/revalidar · RSS · sitemap]
+  N --> A[API Express no Render<br/>helmet · CORS · limites · zod · JWT]
+  V -. painel com token .-> A
+  A --> M[(MongoDB Atlas<br/>índices e busca de texto)]
+  A --> C[Cloudinary<br/>imagens]
 ```
 
-## Como rodar
+- **Backend** (`codigo-fonte/backend`): Express + Mongoose. Rotas públicas de leitura,
+  rotas do painel uma por recurso (`routes/admin/`), validação com zod
+  (`validacao/esquemas.ts`), tratador central de erros (400/404/409/413/503, nunca stack),
+  limitadores, upload conferido pelos bytes. Em desenvolvimento, sem MongoDB, sobe um
+  banco embutido; os testes usam um banco só em memória e são impedidos de tocar no de
+  desenvolvimento.
+- **Frontend** (`codigo-fonte/frontend`): Next.js App Router. Páginas de servidor com
+  cache de 60 s etiquetado e revalidação sob demanda quando o editor salva; painel em
+  componentes de cliente com sessão, toasts, diálogos e rascunho local. Identidade em
+  tokens (`src/lib/tokens.ts`).
+
+## Papéis
+
+| Quem | O que faz |
+|---|---|
+| Leitor | Navega pela revista, catálogos e exibições, busca textos e autores, assina o RSS. Sem conta, por desenho. |
+| Editor (equipe do cineclube) | Entra no `/admin` com a senha da equipe, publica e organiza o conteúdo, guarda rascunhos. |
+
+## Rodar em poucos minutos
 
 Pré-requisito: Node.js 22 ou superior.
 
-No Windows, dê dois cliques em **`iniciar.bat`** (na raiz do repositório): ele instala as
-dependências na primeira vez e abre uma janela para a API e outra para o site. Para
-parar, feche as duas janelas.
+No Windows, dê dois cliques em **`iniciar.bat`**: ele instala as dependências na primeira
+vez e abre uma janela para a API (http://localhost:3001) e outra para o site
+(http://localhost:3000, painel em `/admin`).
 
 Ou, manualmente:
 
 ```bash
-# API
-cd codigo-fonte/backend
-npm install
-npm run dev          # http://localhost:3001
-
-# Site (em outro terminal)
-cd codigo-fonte/frontend
-npm install
-npm run dev          # http://localhost:3000
+cd codigo-fonte/backend && npm install && npm run dev      # API, com banco embutido se não houver MongoDB
+cd codigo-fonte/backend && npm run seed                    # dados de exemplo (pede confirmação)
+cd codigo-fonte/frontend && npm install && npm run dev     # site
 ```
 
-Sem um MongoDB configurado, a API sobe automaticamente um banco embutido para
-desenvolvimento. Para preencher com dados de exemplo, rode `npm run seed` em
-`codigo-fonte/backend` (ele pede confirmação antes de apagar dados existentes).
-Os testes da API rodam com `npm test` na mesma pasta. Detalhes de configuração, variáveis de ambiente e rotas da API estão em
+A senha do painel é a `ADMIN_PASSWORD` do `backend/.env` (copie de `.env.example`).
+Configuração completa, variáveis, tabela da API e guia de hospedagem gratuita em
 [`codigo-fonte/README.md`](codigo-fonte/README.md).
 
-## Hospedagem
+## Testes
 
-Arquitetura gratuita com domínio próprio, descrita passo a passo no
-[guia de hospedagem](codigo-fonte/README.md#hospedagem-gratuita-com-dom%C3%ADnio-pr%C3%B3prio):
+```bash
+cd codigo-fonte/backend && npm test     # node:test + supertest + MongoDB em memória
+cd codigo-fonte/frontend && npm test    # regras do front: contraste AA dos tokens, sessão, login, RSS
+cd codigo-fonte/frontend && npm run build
+```
 
-| Peça | Serviço |
-|------|---------|
-| Site | Vercel |
-| API | Render (Blueprint em [`render.yaml`](render.yaml)) |
-| Banco | MongoDB Atlas |
-| Imagens | Cloudinary |
+O backend cobre rotas públicas, CRUD do painel, validação (ids, operadores do MongoDB nos
+filtros, links, imagens), segurança (CORS 403, cabeçalhos, limitadores, hash da senha,
+token de 8 h, upload pelos bytes, 503 com banco fora), busca/autores/RSS/sitemap,
+criação concorrente com o mesmo título e a proteção do banco de desenvolvimento.
 
-- **Endereço público:** _em breve_
+## Teste de carga
+
+Harness em [`carga/`](carga/) (k6 + MongoDB em memória na porta 27200, API compilada com o
+diretório de trabalho fora do repositório para não ler `.env` real, site com `next build`
+apontando para a API de teste). Hipóteses registradas antes de medir em
+[`docs/carga/2026-10-04-hipoteses.md`](docs/carga/2026-10-04-hipoteses.md); resultados,
+gráficos e conclusões em [`docs/carga/2026-10-04-resultados.md`](docs/carga/2026-10-04-resultados.md).
+
+## Decisões
+
+- **Cache com revalidação sob demanda** em vez de `no-store`: o visitante não espera a API
+  (que dorme no plano gratuito) e o editor vê a mudança na hora.
+- **Erro honesto:** API fora do ar mostra "serviço indisponível" com status 500; 404 é 404.
+  Por isso as páginas de conteúdo não usam `loading.tsx` (com streaming o Next mandaria 200).
+- **Senha de equipe, mas com cuidado:** comparação por hash em tempo constante, limite de
+  tentativas, token curto, re-login sem perder trabalho. Contas individuais ficaram de fora
+  por escolha do cineclube.
+- **Token no `localStorage` + CSP** em vez de cookie: a API e o site ficam em domínios
+  diferentes no plano gratuito; a CSP restringe de onde vem script. Está nas limitações.
+- **Sem newsletter nem formulário de contato:** evitam guardar dados pessoais; o RSS cumpre
+  o papel de acompanhar as publicações e o rodapé leva aos canais do cineclube.
+- **Contraste testado:** cores de marca ficam para fundos e títulos grandes; texto pequeno
+  usa variantes mais escuras/claras, conferidas por teste automatizado.
+
+## Limitações
+
+- Uma senha compartilhada: o painel não sabe quem alterou o quê.
+- Token no navegador: um XSS bem-sucedido o levaria (a CSP reduz, não elimina).
+- Datas da programação em texto livre: ainda não há "próximas sessões".
+- Plano gratuito: a API dorme; o cache esconde isso do leitor, não do editor.
+- O teste de carga roda gerador e servidores na mesma máquina: vale para comparar versões.
+
+## Próximos passos
+
+- Contas individuais com papéis (editor, revisor) e histórico de alterações.
+- Datas estruturadas nas sessões e agenda "próximas sessões" com calendário (.ics).
+- Prévia de rascunho no próprio site (`draftMode`) e imagem de compartilhamento gerada (`next/og`).
+- Cookie `httpOnly` com proxy no mesmo domínio para o token do painel.
 
 ## Documentação
 
 1. [Documentação de Contexto](documentos/01-Documenta%C3%A7%C3%A3o%20de%20Contexto.md)
-2. [Especificação do Projeto](documentos/02-Especifica%C3%A7%C3%A3o%20do%20Projeto.md)
+2. [Especificação do Projeto](documentos/02-Especifica%C3%A7%C3%A3o%20do%20Projeto.md) (requisitos com status)
 3. [Metodologia](documentos/03-Metodologia.md)
 4. [Projeto de Interface](documentos/04-Projeto%20de%20Interface.md)
 5. [Template padrão da Aplicação](documentos/05-Template%20padr%C3%A3o%20da%20Aplica%C3%A7%C3%A3o.md)
@@ -113,15 +153,14 @@ Arquitetura gratuita com domínio próprio, descrita passo a passo no
 8. [Registro de Testes de Software](documentos/08-Registro%20de%20Testes%20de%20Software.md)
 9. [Referências Bibliográficas](documentos/09-Refer%C3%AAncias%20Bibliogr%C3%A1ficas.md)
 
-## Apresentação
+Os documentos 01, 04, 05 e 09 são o registro acadêmico do projeto, mantido como histórico.
 
-- [Materiais de apresentação](apresentacao/README.md)
-- [Identidade visual (logo e ícones)](codigo-fonte/frontend/public/)
+## Autoria
 
-## Desenvolvedor
-
-**Jefferson Luiz Mendonça da Silva**
+**Jefferson Luiz Mendonça da Silva**: projeto, design de interface, desenvolvimento,
+testes e documentação.
 [LinkedIn](https://www.linkedin.com/in/j-luiz/) · [GitHub](https://github.com/jeffersonluizm) · [Letterboxd](https://letterboxd.com/Weinsmann/)
 
-Projeto desenvolvido para o Cineclube XHY —
-[Instagram](https://www.instagram.com/cinexhy247/) · [YouTube](https://www.youtube.com/@XHY-247) · [Letterboxd](https://boxd.it/b9dkB)
+Feito para o Cineclube XHY:
+[Instagram](https://www.instagram.com/cinexhy247/) · [YouTube](https://www.youtube.com/@XHY-247) · [Letterboxd](https://boxd.it/b9dkB).
+A identidade visual (logo, cores, tipografia) é do próprio cineclube.
