@@ -1,4 +1,5 @@
-import mongoose from 'mongoose';
+import readline from 'readline';
+import type { Model } from 'mongoose';
 import dotenv from 'dotenv';
 import Magazine from '../models/Magazine';
 import Article from '../models/Article';
@@ -6,10 +7,20 @@ import Catalog from '../models/Catalog';
 import Cycle from '../models/Cycle';
 import Film from '../models/Film';
 import About from '../models/About';
+import { conectarBanco } from '../lib/banco';
 
-dotenv.config();
+/**
+ * Popula o banco com dados de exemplo. Usa a mesma conexão da API (lib/banco), então
+ * em desenvolvimento grava no banco embutido de backend/data/db.
+ *
+ * ATENÇÃO: apaga revistas, textos, catálogos, ciclos, filmes e o Sobre antes de inserir.
+ * Com dados no banco, só segue com confirmação (s/N) ou com --force.
+ *   npm run seed
+ *   npm run seed -- --force
+ */
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/cineclube_xhy';
+// Model<any>: só usamos countDocuments/deleteMany, iguais em todos os modelos
+const COLECOES: Model<any>[] = [Magazine, Article, Catalog, Cycle, Film, About];
 
 const LOREM_SHORT = 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.';
 
@@ -18,16 +29,43 @@ ${LOREM_SHORT}
 ${LOREM_SHORT} Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi.
 ${LOREM_SHORT}`;
 
-async function seed() {
-  await mongoose.connect(MONGODB_URI);
-  console.log('Conectado ao MongoDB');
+export interface OpcoesSeed {
+  /** Descrição do banco conectado (ConexaoBanco.descricao), mostrada na pergunta */
+  banco: string;
+  /** --force: substitui sem perguntar */
+  force: boolean;
+  /** Pergunta ao usuário; só é chamada se houver dados e não houver --force */
+  confirmar: (pergunta: string) => Promise<boolean>;
+  log?: (mensagem: string) => void;
+}
 
-  await Magazine.deleteMany({});
-  await Article.deleteMany({});
-  await Catalog.deleteMany({});
-  await Cycle.deleteMany({});
-  await Film.deleteMany({});
-  await About.deleteMany({});
+export function pedeForce(argv: string[]): boolean {
+  return argv.includes('--force') || argv.includes('-f');
+}
+
+export function respostaConfirma(resposta: string): boolean {
+  return ['s', 'sim'].includes(resposta.trim().toLowerCase());
+}
+
+/** Pressupõe o mongoose já conectado. Nunca apaga dados sem --force ou confirmação. */
+export async function executarSeed({ banco, force, confirmar, log = console.log }: OpcoesSeed): Promise<'aplicado' | 'cancelado'> {
+  const contagens = await Promise.all(COLECOES.map((modelo) => modelo.countDocuments()));
+  const existentes = contagens.reduce((total, n) => total + n, 0);
+
+  if (existentes > 0 && !force) {
+    const ok = await confirmar(
+      `O banco ${banco} já tem ${existentes} documento(s) (revistas, textos, catálogos, ciclos, filmes, sobre). ` +
+        'Apagar tudo e inserir os dados de exemplo?'
+    );
+    if (!ok) {
+      log('Seed cancelado: nenhum dado foi apagado. Para substituir sem perguntar, use: npm run seed -- --force');
+      return 'cancelado';
+    }
+  }
+
+  for (const modelo of COLECOES) {
+    await modelo.deleteMany({});
+  }
 
   // Revista n°1
   const magazine = await Magazine.create({
@@ -165,26 +203,81 @@ async function seed() {
     order: 2,
   });
 
+  await Article.create({
+    title: 'Depois do fim: notas sobre a mostra',
+    slug: 'ciclo-depois-do-fim-notas-sobre-a-mostra',
+    author: 'Davi B.',
+    column: 'textos',
+    epigraph: `'${LOREM_SHORT}'`,
+    content: LOREM_LONG,
+    order: 1,
+    parentType: 'ciclo',
+    parentId: cycle2026._id,
+  });
+
   await Cycle.create({ title: 'Realizadoras', slug: 'realizadoras', year: 2026 });
   await Cycle.create({ title: 'Cinema Marginal', slug: 'cinema-marginal', year: 2026 });
   await Cycle.create({ title: 'Comédia Moderna', slug: 'comedia-moderna', year: 2025 });
   await Cycle.create({ title: 'A rotina tem seu charme', slug: 'a-rotina-tem-seu-charme', year: 2025 });
 
-  // Sobre
+  // Sobre (equipe fictícia: o conteúdo real é cadastrado pelo painel)
   await About.create({
     content: `O Cineclube.... ${LOREM_LONG}`,
     team: [
-      { name: 'angela prysthon', role: 'coordenação', email: 'angela.prysthon@ufpe.br' },
-      { name: 'davi b.', role: 'editorial', email: 'davi.barros@ufpe.br' },
-      { name: 'lucca nicoleli', role: 'editorial', email: 'lucca.nicoleli@ufpe.br' },
+      { name: 'ana exemplo', role: 'coordenação', email: 'ana@exemplo.com' },
+      { name: 'bruno modelo', role: 'editorial', email: 'bruno@exemplo.com' },
+      { name: 'carla teste', role: 'editorial', email: 'carla@exemplo.com' },
     ],
   });
 
-  console.log('Seed concluído com sucesso!');
-  await mongoose.disconnect();
+  log('Seed concluído com sucesso!');
+  return 'aplicado';
 }
 
-seed().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+export const MENSAGEM_SEM_TERMINAL =
+  'Sem terminal interativo para confirmar, então nada foi apagado. ' +
+  'No Git Bash (mintty) o Node não enxerga o terminal: rode no cmd ou no PowerShell, ' +
+  'use "winpty npm run seed" ou, se tiver certeza, "npm run seed -- --force".';
+
+/** Desistir na pergunta é escolha do usuário (0); sem terminal para perguntar é falha (1). */
+export function codigoDeSaida(resultado: 'aplicado' | 'cancelado', temTerminal: boolean): number {
+  return resultado === 'cancelado' && !temTerminal ? 1 : 0;
+}
+
+function perguntarNoTerminal(pergunta: string): Promise<boolean> {
+  // Sem terminal interativo (CI, pipe, Git Bash) não há como confirmar: recusa
+  if (!process.stdin.isTTY) {
+    console.log(`${pergunta}
+${MENSAGEM_SEM_TERMINAL}`);
+    return Promise.resolve(false);
+  }
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  return new Promise((resolve) => {
+    rl.question(`${pergunta} [s/N] `, (resposta) => {
+      rl.close();
+      resolve(respostaConfirma(resposta));
+    });
+  });
+}
+
+async function main() {
+  dotenv.config();
+  const conexao = await conectarBanco();
+  try {
+    const resultado = await executarSeed({
+      banco: conexao.descricao,
+      force: pedeForce(process.argv),
+      confirmar: perguntarNoTerminal,
+    });
+    process.exitCode = codigoDeSaida(resultado, Boolean(process.stdin.isTTY));
+  } finally {
+    await conexao.desconectar();
+  }
+}
+
+if (require.main === module) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

@@ -84,7 +84,7 @@ export default function FilmForm({ cycleId, initial, onSave }: FilmFormProps) {
       </label>
 
       <label>
-        <span className="font-display text-sm text-text-dark">texto sobre o filme (opcional — um parágrafo por linha)</span>
+        <span className="font-display text-sm text-text-dark">texto sobre o filme (opcional, um parágrafo por linha)</span>
         <textarea value={content} onChange={(e) => setContent(e.target.value)} rows={8} className={inputClass} />
       </label>
 

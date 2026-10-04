@@ -10,8 +10,12 @@ codigo-fonte/
 
 ## Requisitos
 
-- Node.js 18+
-- MongoDB (opcional em desenvolvimento — sem um MongoDB acessível, o backend
+- Node.js 22+ (é o `engines` do backend). O banco embutido de desenvolvimento
+  (`mongodb-memory-server`) exige 20.19 ou superior, e o `npm test` roda `tsx --test`
+  com padrão glob nos arquivos, recurso do runner do Node que só existe a partir do 21.
+  O `tsx` faz a transpilação do TypeScript, então os testes não dependem do type
+  stripping nativo do Node.
+- MongoDB (opcional em desenvolvimento: sem um MongoDB acessível, o backend
   sobe automaticamente um MongoDB embutido com dados salvos em `backend/data/`)
 
 ---
@@ -23,7 +27,35 @@ cd backend
 npm install
 npm run seed   # popula o banco com dados de exemplo
 npm run dev    # inicia em http://localhost:3001
+npm test       # testes automatizados (node:test + supertest, banco em memória)
 ```
+
+O seed usa a mesma conexão da API: `MONGODB_URI` (ou o MongoDB local padrão) e, em
+desenvolvimento, o banco embutido de `backend/data/db`, inclusive quando a API já está
+rodando com ele. O log e a pergunta mostram em qual banco ele está, no formato
+`host:porta/banco (configurado|embutido)`, sem usuário nem senha.
+
+**O seed apaga revistas, textos, catálogos, ciclos, filmes e o Sobre** antes de inserir
+os exemplos. Se o banco já tiver dados:
+
+- com terminal interativo, ele pergunta (`s/N`); responder "não" cancela sem apagar
+  nada e sai com código 0;
+- sem terminal interativo, não apaga nada e sai com código 1. No **Git Bash** (mintty)
+  o Node não enxerga o terminal: rode no cmd ou no PowerShell, ou use
+  `winpty npm run seed`;
+- para substituir sem perguntar: `npm run seed -- --force`.
+
+Se o próprio seed precisou subir o banco embutido (API parada) e a API conectar nele
+enquanto o seed roda, o seed não derruba o banco ao terminar: avisa no log e espera a
+API desconectar. O banco embutido morre junto com o processo que o iniciou, então pare
+a API antes de fechar a janela do seed. O caminho mais simples é subir a API primeiro
+e rodar o seed depois: ele usa o banco que a API já abriu.
+
+Os testes rodam com `tsx` e sobem um MongoDB só em memória: não tocam em
+`backend/data/` nem no banco configurado no `.env`. O `npm test` carrega
+`test/preparar.ts`, que liga `CINECLUBE_PROIBIR_BANCO_DEV=1`: com ela, qualquer
+tentativa de usar a porta 27018 ou `backend/data/db` falha em vez de gravar no banco
+de desenvolvimento.
 
 **Variáveis de ambiente** (`backend/.env` — copie de `.env.example`):
 ```
@@ -61,7 +93,7 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000   # endereço público do site (metat
 - **`/admin/login`** — entrada do editor
 - **`/admin`** — edições da revista (`/admin/revistas/nova`, `/admin/revistas/[id]`)
 - **`/admin/catalogos`** — catálogos: capa, descrição e textos de cada catálogo
-- **`/admin/ciclos`** — ciclos & mostras: dados, programação (sessões) e páginas de filmes
+- **`/admin/ciclos`** — ciclos & mostras: dados, programação (sessões), páginas de filmes e textos do ciclo
 - **Editor de artigos/textos** — o texto é montado em blocos (parágrafo, subtítulo,
   citação e imagem). Imagens podem ser inseridas em qualquer ponto do texto,
   com legenda, tamanho e posição (largura total, centralizada ou flutuando à
@@ -109,6 +141,7 @@ Todas as rotas `/api/admin/*` e `/api/upload` exigem `Authorization: Bearer <tok
 | `/ciclos-mostras` | Lista de ciclos e mostras por ano |
 | `/ciclos-mostras/[slug]` | Ciclo/mostra com programação |
 | `/ciclos-mostras/[slug]/[filmSlug]` | Página do filme |
+| `/ciclos-mostras/[slug]/texto/[textSlug]` | Texto do ciclo (os textos publicados aparecem na página do ciclo) |
 | `/sobre` | Sobre o cineclube e equipe |
 | `/robots.txt`, `/sitemap.xml` | Gerados automaticamente (o painel `/admin` fica fora dos buscadores) |
 
@@ -200,6 +233,19 @@ visual do cineclube em vez de uma página em branco.
 ---
 
 ## Histórico de versões
+
+### [Não lançado]
+#### Adicionado
+- Textos de ciclo no painel (`/admin/ciclos/[id]`: listar, criar, editar, rascunho, excluir)
+- Textos de ciclo no site público: listados na página do ciclo e abertos em
+  `/ciclos-mostras/[slug]/texto/[textSlug]` (API: `GET /api/ciclos/:slug/texto/:textSlug`)
+- `iniciar.bat` na raiz para subir API e site no Windows
+- Testes automatizados de rotas (`npm test` no backend)
+#### Alterado
+- O seed usa o mesmo banco da API e pede confirmação (ou `--force`) antes de apagar dados
+- Dados de exemplo da equipe com nomes e e-mails fictícios
+#### Segurança
+- Upload deixa de aceitar SVG (só jpg, png, webp, gif e avif)
 
 ### [1.2.0] - 15/09/2026
 #### Adicionado

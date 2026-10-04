@@ -18,5 +18,21 @@ test('só os tipos da tabela são aceitos, não chaves herdadas de Object.protot
   for (const tipo of ['constructor', '__proto__', 'toString', 'text/html', 'image/heic']) {
     assert.equal(extensaoDaImagem(tipo), undefined, tipo);
   }
-  assert.equal(extensaoDaImagem('image/svg+xml'), '.svg');
+});
+
+test('SVG não é aceito (pode carregar script quando servido do próprio domínio)', () => {
+  assert.equal(extensaoDaImagem('image/svg+xml'), undefined);
+});
+
+test('os formatos raster continuam aceitos', () => {
+  for (const [tipo, ext] of [
+    ['image/jpeg', '.jpg'],
+    ['image/jpg', '.jpg'],
+    ['image/png', '.png'],
+    ['image/webp', '.webp'],
+    ['image/gif', '.gif'],
+    ['image/avif', '.avif'],
+  ]) {
+    assert.equal(extensaoDaImagem(tipo), ext, tipo);
+  }
 });

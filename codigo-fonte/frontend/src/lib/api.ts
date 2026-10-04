@@ -27,9 +27,12 @@ export const api = {
   },
   ciclos: {
     list: () => fetcher<import('./types').Cycle[]>('/api/ciclos'),
-    get: (slug: string) => fetcher<{ cycle: import('./types').Cycle; films: import('./types').Film[] }>(`/api/ciclos/${slug}`),
+    get: (slug: string) =>
+      fetcher<{ cycle: import('./types').Cycle; films: import('./types').Film[]; sections: Record<string, import('./types').Article[]> }>(`/api/ciclos/${slug}`),
     film: (slug: string, filmSlug: string) =>
       fetcher<{ film: import('./types').Film; cycle: import('./types').Cycle; prev: { title: string; slug: string; director: string } | null; next: { title: string; slug: string; director: string } | null }>(`/api/ciclos/${slug}/filme/${filmSlug}`),
+    text: (slug: string, textSlug: string) =>
+      fetcher<{ article: import('./types').Article; cycle: import('./types').Cycle; prev: { title: string; slug: string; author: string } | null; next: { title: string; slug: string; author: string } | null }>(`/api/ciclos/${slug}/texto/${textSlug}`),
   },
   sobre: () => fetcher<import('./types').About>('/api/sobre'),
 };

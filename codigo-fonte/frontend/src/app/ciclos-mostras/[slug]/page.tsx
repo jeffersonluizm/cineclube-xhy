@@ -5,6 +5,7 @@ import PageShell from '@/components/PageShell';
 import Breadcrumb from '@/components/Breadcrumb';
 import { api } from '@/lib/api';
 import { imageUrl } from '@/lib/media';
+import { excerpt } from '@/lib/text';
 import { pageMetadata } from '@/lib/seo';
 
 interface Props {
@@ -16,7 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { cycle } = await api.ciclos.get(params.slug);
     return pageMetadata({
       title: cycle.subtitle ? `${cycle.title}: ${cycle.subtitle}` : cycle.title,
-      description: cycle.description || `${cycle.title} (${cycle.year}) — exibição do Cineclube XHY.`,
+      description: cycle.description || `${cycle.title} (${cycle.year}), exibição do Cineclube XHY.`,
       path: `/ciclos-mostras/${cycle.slug}`,
       image: cycle.coverImage,
     });
@@ -34,6 +35,7 @@ export default async function CicloDetailPage({ params }: Props) {
   }
 
   const { cycle, films } = data;
+  const textSections = Object.entries(data.sections ?? {});
 
   const filmsBySlug = Object.fromEntries(films.map((f) => [f.slug, f]));
 
@@ -114,6 +116,36 @@ export default async function CicloDetailPage({ params }: Props) {
                   </div>
                 );
               })}
+            </section>
+          )}
+
+          {textSections.length > 0 && (
+            <section aria-labelledby="textos" className="mt-10">
+              <p id="textos" className="font-display font-black text-pink text-sm tracking-widest mb-6">
+                TEXTOS
+              </p>
+
+              {textSections.map(([section, arts]) => (
+                <div key={section} className="mb-8">
+                  <p className="font-display font-bold text-text-dark text-sm mb-3">{section}</p>
+                  {arts.map((art) => (
+                    <div key={art._id} className="mb-4">
+                      <Link
+                        href={`/ciclos-mostras/${cycle.slug}/texto/${art.slug}`}
+                        className="font-serif italic text-text-dark text-base sm:text-sm block hover:text-olive hover:underline leading-snug"
+                      >
+                        {art.title}
+                      </Link>
+                      <p className="font-display font-bold text-text-dark text-xs">{art.author}</p>
+                      {art.content && (
+                        <p className="font-serif italic text-text-dark text-xs opacity-70 leading-snug">
+                          {excerpt(art.content)}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ))}
             </section>
           )}
         </div>

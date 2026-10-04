@@ -36,7 +36,7 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (extensaoDaImagem(file.mimetype)) cb(null, true);
-    else cb(new Error('Apenas imagens são permitidas (jpg, png, webp, gif, avif, svg)'));
+    else cb(new Error('Apenas imagens são permitidas (jpg, png, webp, gif, avif)'));
   },
 });
 

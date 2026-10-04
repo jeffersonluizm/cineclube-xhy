@@ -4,24 +4,31 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import CycleForm from '@/components/admin/CycleForm';
+import ArticleList from '@/components/admin/ArticleList';
 import { adminApi, CycleInput } from '@/lib/adminApi';
-import type { Cycle, Film } from '@/lib/types';
+import type { Article, Cycle, Film } from '@/lib/types';
 
 export default function CicloAdminPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [cycle, setCycle] = useState<Cycle | null>(null);
   const [films, setFilms] = useState<Film[]>([]);
+  const [articles, setArticles] = useState<Article[]>([]);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const [cycles, cycleFilms] = await Promise.all([adminApi.ciclos.list(), adminApi.filmes.list(id)]);
+      const [cycles, cycleFilms, cycleArticles] = await Promise.all([
+        adminApi.ciclos.list(),
+        adminApi.filmes.list(id),
+        adminApi.artigos.list(id),
+      ]);
       const found = cycles.find((c) => c._id === id);
       if (!found) throw new Error('Ciclo não encontrado');
       setCycle(found);
       setFilms(cycleFilms);
+      setArticles(cycleArticles);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar');
     }
@@ -54,7 +61,7 @@ export default function CicloAdminPage() {
 
   async function removeCycle() {
     if (!cycle) return;
-    if (!window.confirm(`Excluir o ciclo "${cycle.title}" e TODOS os seus filmes?`)) return;
+    if (!window.confirm(`Excluir o ciclo "${cycle.title}" e TODOS os seus filmes e textos?`)) return;
     await adminApi.ciclos.remove(id);
     router.replace('/admin/ciclos');
   }
@@ -140,6 +147,14 @@ export default function CicloAdminPage() {
           programação deve ser o mesmo usado aqui.
         </p>
       </div>
+
+      <ArticleList
+        articles={articles}
+        onChange={setArticles}
+        newHref={`/admin/ciclos/${id}/textos/novo`}
+        emptyText="Nenhum texto nesta exibição ainda."
+        description="Textos publicados aparecem na página da exibição, abaixo da programação."
+      />
 
       <div>
         <h2 className="font-display font-bold text-text-dark text-xl mb-4">dados da exibição e programação</h2>
