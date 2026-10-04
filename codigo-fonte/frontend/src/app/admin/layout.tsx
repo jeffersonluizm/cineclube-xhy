@@ -3,7 +3,7 @@ import PainelShell from '@/components/admin/PainelShell';
 
 // O painel nunca entra em buscadores (além do Disallow do robots.txt)
 export const metadata: Metadata = {
-  title: { default: 'Painel do editor', template: '%s | Painel do editor' },
+  title: { default: 'Painel do editor', template: '%s | Painel do editor | Cineclube XHY' },
   robots: { index: false, follow: false, nocache: true },
 };
 

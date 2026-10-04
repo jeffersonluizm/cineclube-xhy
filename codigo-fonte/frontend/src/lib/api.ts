@@ -46,7 +46,10 @@ async function buscar<T>(path: string): Promise<T> {
     throw new ErroApi(`API indisponível em ${path}: ${(err as Error).message}`);
   }
   if (res.status === 404) throw new ErroNaoEncontrado(path);
-  if (!res.ok) throw new ErroApi(`API respondeu ${res.status} em ${path}`);
+  if (!res.ok) {
+    if (NA_COMPILACAO) noStore();
+    throw new ErroApi(`API respondeu ${res.status} em ${path}`);
+  }
   return res.json() as Promise<T>;
 }
 

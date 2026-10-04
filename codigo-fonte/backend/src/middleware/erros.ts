@@ -53,6 +53,11 @@ export function tratadorDeErros(err: unknown, _req: Request, res: Response, _nex
     return res.status(400).json({ error: primeiro?.message ?? 'Dados inválidos' });
   }
   if ((err as { code?: number }).code === 11000) return res.status(409).json({ error: 'Já existe um registro com esse valor' });
+  // Banco fora do ar ou lento demais: é indisponibilidade (503), não erro do código (500)
+  if (err instanceof mongoose.mongo.MongoNetworkError || err instanceof mongoose.mongo.MongoServerSelectionError) {
+    res.setHeader('Retry-After', '10');
+    return res.status(503).json({ error: 'Banco de dados indisponível no momento. Tente de novo em instantes.' });
+  }
   const tipo = (err as { type?: string }).type;
   if (tipo === 'entity.parse.failed') return res.status(400).json({ error: 'JSON inválido no corpo da requisição' });
   if (tipo === 'entity.too.large') return res.status(413).json({ error: 'Corpo da requisição grande demais' });

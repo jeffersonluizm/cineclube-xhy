@@ -110,3 +110,14 @@ test('o navegador do painel consegue ler os cabeçalhos do limite de login', asy
   assert.match(String(comum.headers['access-control-expose-headers']), /RateLimit/);
   assert.match(String(comum.headers['access-control-expose-headers']), /Retry-After/);
 });
+
+test('banco fora do ar responde 503 (indisponível), não 500', async () => {
+  const mongoose = (await import('mongoose')).default;
+  const { tratadorDeErros } = await import('../src/middleware/erros');
+  const mini = express();
+  mini.get('/', (_req, _res, next) => next(new mongoose.mongo.MongoNetworkTimeoutError('connection timed out')));
+  mini.use(tratadorDeErros);
+  const res = await request(mini).get('/');
+  assert.equal(res.status, 503);
+  assert.match(res.body.error, /indisponível/);
+});

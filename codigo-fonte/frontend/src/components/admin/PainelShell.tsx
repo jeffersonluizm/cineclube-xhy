@@ -33,7 +33,7 @@ export default function PainelShell({ children }: { children: React.ReactNode })
       <Sessao>
         <div className="min-h-screen bg-cream flex flex-col">
           <header className="bg-dark-purple px-4 sm:px-8 py-4 flex flex-wrap items-center gap-x-8 gap-y-3">
-            <Logo size={48} href="/admin" rotulo="Painel do editor: início" />
+            <Logo size={44} href="/admin" rotulo="Painel do editor: início" placa />
             <p className="font-display font-bold text-cream text-lg">painel do editor</p>
             <nav aria-label="painel" className="flex flex-wrap gap-x-6 gap-y-2 sm:ml-4">
               {LINKS.map((l) => {
