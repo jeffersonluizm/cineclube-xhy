@@ -16,7 +16,7 @@ export const NOME_BANCO = 'cineclube_xhy';
 export const PORTA_EMBUTIDA = 27018;
 const URI_PADRAO = `mongodb://localhost:27017/${NOME_BANCO}`;
 // src/lib e dist/lib ficam no mesmo nível: os dois apontam para backend/data/db
-const DB_PATH_PADRAO = path.resolve(__dirname, '../../data/db');
+export const DB_PATH_PADRAO = path.resolve(__dirname, '../../data/db');
 
 export interface OpcoesConexao {
   uri?: string;
@@ -24,6 +24,11 @@ export interface OpcoesConexao {
   portaEmbutida?: number;
   dbPath?: string;
   timeoutMs?: number;
+  /**
+   * Proíbe cair no banco embutido de desenvolvimento (porta 27018 ou backend/data/db).
+   * Padrão: ligado quando CINECLUBE_PROIBIR_BANCO_DEV=1 (o npm test liga, ver test/preparar.ts).
+   */
+  proibirBancoDev?: boolean;
   /** De quanto em quanto tempo checar se outros clientes saíram antes de parar o embutido */
   intervaloEsperaMs?: number;
   log?: (mensagem: string) => void;
@@ -52,6 +57,17 @@ export function descreverBanco(uri: string, nomeBanco: string, tipo: 'configurad
   return `${hosts}/${nomeBanco} (${tipo})`;
 }
 
+/** Lança erro se a proteção estiver ligada e a conexão fosse usar o banco de desenvolvimento. */
+export function checarBancoDev(porta: number, dbPath: string, proibido: boolean): void {
+  if (!proibido) return;
+  if (porta === PORTA_EMBUTIDA || path.resolve(dbPath) === DB_PATH_PADRAO) {
+    throw new Error(
+      `Uso do banco de desenvolvimento (porta ${PORTA_EMBUTIDA} ou ${DB_PATH_PADRAO}) proibido neste processo. ` +
+        'Nos testes, passe portaEmbutida e dbPath próprios ou use producao: true.'
+    );
+  }
+}
+
 function portaOcupada(porta: number): Promise<boolean> {
   return new Promise((resolve) => {
     const socket = net.createConnection({ host: '127.0.0.1', port: porta });
@@ -70,6 +86,7 @@ export async function conectarBanco(opcoes: OpcoesConexao = {}): Promise<Conexao
   const dbPath = opcoes.dbPath ?? DB_PATH_PADRAO;
   const timeoutMs = opcoes.timeoutMs ?? 8000;
   const intervaloEsperaMs = opcoes.intervaloEsperaMs ?? 2000;
+  const proibirBancoDev = opcoes.proibirBancoDev ?? process.env.CINECLUBE_PROIBIR_BANCO_DEV === '1';
   const log = opcoes.log ?? console.log;
   const soDesconectar = async () => {
     await mongoose.disconnect();
@@ -84,6 +101,8 @@ export async function conectarBanco(opcoes: OpcoesConexao = {}): Promise<Conexao
     log(`Não foi possível conectar ao MongoDB configurado: ${(err as Error).message}`);
     if (producao) throw err;
   }
+
+  checarBancoDev(porta, dbPath, proibirBancoDev);
 
   if (await portaOcupada(porta)) {
     const uriEmbutido = `mongodb://127.0.0.1:${porta}/${NOME_BANCO}`;
