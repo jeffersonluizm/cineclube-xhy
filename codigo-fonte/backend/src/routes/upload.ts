@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { v2 as cloudinary } from 'cloudinary';
 import { requireAuth, AuthRequest } from '../middleware/auth';
+import { extensaoDaImagem, safeBaseName, uploadFileName } from '../lib/imagem';
 
 const router = Router();
 
@@ -25,32 +26,16 @@ if (USE_CLOUDINARY) {
 const UPLOADS_DIR = path.resolve(__dirname, '../../uploads');
 if (!USE_CLOUDINARY && !fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
-function safeBaseName(originalname: string) {
-  const ext = path.extname(originalname).toLowerCase();
-  const base = path
-    .basename(originalname, ext)
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-zA-Z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .toLowerCase()
-    .slice(0, 60);
-  return { base: base || 'imagem', ext };
-}
-
 const diskStorage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
-  filename: (_req, file, cb) => {
-    const { base, ext } = safeBaseName(file.originalname);
-    cb(null, `${Date.now()}-${base}${ext}`);
-  },
+  filename: (_req, file, cb) => cb(null, uploadFileName(file.originalname, file.mimetype, Date.now())),
 });
 
 const upload = multer({
   storage: USE_CLOUDINARY ? multer.memoryStorage() : diskStorage,
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
-    if (/^image\/(jpe?g|png|webp|gif|avif|svg\+xml)$/.test(file.mimetype)) cb(null, true);
+    if (extensaoDaImagem(file.mimetype)) cb(null, true);
     else cb(new Error('Apenas imagens são permitidas (jpg, png, webp, gif, avif, svg)'));
   },
 });
