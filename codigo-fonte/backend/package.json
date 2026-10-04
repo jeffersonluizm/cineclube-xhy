@@ -11,7 +11,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "seed": "ts-node src/scripts/seed.ts",
-    "test": "tsx --import ./test/preparar.ts --test --test-timeout=60000 \"test/**/*.test.ts\""
+    "test": "tsx --import ./test/preparar.ts --test --test-concurrency=3 --test-timeout=60000 \"test/**/*.test.ts\""
   },
   "dependencies": {
     "cloudinary": "^2.11.0",

@@ -7,6 +7,7 @@ import { executarSeed } from '../src/scripts/seed';
 
 test('pergunta do seed, num banco com usuário e senha, mostra o banco sem as credenciais', async () => {
   const mongod = await MongoMemoryServer.create({
+    instance: { launchTimeout: 60_000 },
     auth: { enable: true, customRootName: 'editorsecreto', customRootPwd: 'SenhaMuitoSecreta123' },
   });
   try {

@@ -42,7 +42,7 @@ async function removerComPaciencia(dir: string) {
 }
 
 test('conecta na URI configurada quando ela responde', async () => {
-  const mongod = await MongoMemoryServer.create();
+  const mongod = await MongoMemoryServer.create({ instance: { launchTimeout: 60_000 } });
   try {
     const conexao = await conectarSoNaUri(`${mongod.getUri()}configurado`);
 
@@ -65,7 +65,7 @@ test('em produção, URI fora do ar é erro e não sobe banco embutido', async (
 });
 
 test('fora de produção, se o banco embutido já está na porta (API rodando), conecta nele', async () => {
-  const daApi = await MongoMemoryServer.create();
+  const daApi = await MongoMemoryServer.create({ instance: { launchTimeout: 60_000 } });
   const porta = daApi.instanceInfo!.port;
   const dbPath = path.join(os.tmpdir(), `cineclube-nao-criar-${process.pid}`);
   try {
@@ -126,6 +126,7 @@ test('descrição do banco mostra hosts e nome, sem usuário e senha', () => {
 
 test('URI configurada com usuário e senha: descrição e log não expõem as credenciais', async () => {
   const mongod = await MongoMemoryServer.create({
+    instance: { launchTimeout: 60_000 },
     auth: { enable: true, customRootName: 'editorsecreto', customRootPwd: 'SenhaMuitoSecreta123' },
   });
   const linhas: string[] = [];
