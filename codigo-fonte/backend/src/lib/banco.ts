@@ -24,6 +24,8 @@ export interface OpcoesConexao {
   portaEmbutida?: number;
   dbPath?: string;
   timeoutMs?: number;
+  /** De quanto em quanto tempo checar se outros clientes saíram antes de parar o embutido */
+  intervaloEsperaMs?: number;
   log?: (mensagem: string) => void;
 }
 
@@ -31,7 +33,11 @@ export interface ConexaoBanco {
   origem: 'configurado' | 'embutido-existente' | 'embutido-novo';
   /** host:porta/banco (configurado|embutido), sem usuário nem senha: para logs e perguntas */
   descricao: string;
-  /** Fecha a conexão e, se este processo subiu o banco embutido, para o banco (sem apagar os dados). */
+  /**
+   * Fecha a conexão e, se este processo subiu o banco embutido, para o banco (sem apagar os dados).
+   * Se outros clientes (a API) estiverem conectados a esse embutido, espera eles saírem antes de parar:
+   * o mongod morre junto com o processo que o iniciou, então não dá para deixá-lo rodando sozinho.
+   */
   desconectar(): Promise<void>;
 }
 
@@ -63,6 +69,7 @@ export async function conectarBanco(opcoes: OpcoesConexao = {}): Promise<Conexao
   const porta = opcoes.portaEmbutida ?? PORTA_EMBUTIDA;
   const dbPath = opcoes.dbPath ?? DB_PATH_PADRAO;
   const timeoutMs = opcoes.timeoutMs ?? 8000;
+  const intervaloEsperaMs = opcoes.intervaloEsperaMs ?? 2000;
   const log = opcoes.log ?? console.log;
   const soDesconectar = async () => {
     await mongoose.disconnect();
@@ -102,13 +109,34 @@ export async function conectarBanco(opcoes: OpcoesConexao = {}): Promise<Conexao
     // portGeneration: false mantém a porta fixa, para o seed e a API se encontrarem
     instance: { dbName: NOME_BANCO, dbPath, storageEngine: 'wiredTiger', port: porta, portGeneration: false },
   });
-  await mongoose.connect(`${mongod.getUri()}${NOME_BANCO}`);
+  // appName único identifica as conexões deste processo entre os clientes do mongod
+  const appName = `cineclube-xhy-${process.pid}-${Math.random().toString(36).slice(2, 8)}`;
+  await mongoose.connect(`${mongod.getUri()}${NOME_BANCO}`, { appName });
+  const outrosClientes = async () => {
+    const ops = await mongoose.connection
+      .getClient()
+      .db('admin')
+      .aggregate([{ $currentOp: { allUsers: true, idleConnections: true } }])
+      .toArray();
+    return ops.filter((op) => op.client && op.appName !== appName).length;
+  };
   const descricao = descreverBanco(mongod.getUri(), NOME_BANCO, 'embutido');
   log(`Conectado ao MongoDB ${descricao}, iniciado por este processo`);
   return {
     origem: 'embutido-novo',
     descricao,
     async desconectar() {
+      if ((await outrosClientes()) > 0) {
+        log(
+          `Há outros clientes conectados ao MongoDB ${descricao} (provavelmente a API). ` +
+            'Este processo iniciou o banco, então ele continua no ar até eles desconectarem. ' +
+            'Pare a API antes de fechar esta janela, ou ela fica sem banco.'
+        );
+        while ((await outrosClientes()) > 0) {
+          await new Promise((r) => setTimeout(r, intervaloEsperaMs));
+        }
+        log('Os outros clientes desconectaram; encerrando o banco embutido.');
+      }
       // O stop encerra o mongod à força (no Windows não há desligamento limpo): sem o fsync,
       // as últimas gravações (como as do seed) podem se perder
       await mongoose.connection.db?.admin().command({ fsync: 1 });

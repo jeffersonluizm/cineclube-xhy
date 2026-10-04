@@ -166,3 +166,41 @@ test('porta do embutido ocupada por algo que não é MongoDB: erro diz isso clar
     await new Promise((r) => intruso.close(r));
   }
 });
+
+test('embutido iniciado por este processo continua no ar enquanto outro cliente (a API) estiver conectado', async () => {
+  const porta = await portaLivre();
+  const dbPath = fs.mkdtempSync(path.join(os.tmpdir(), 'cineclube-embutido-'));
+  const linhas: string[] = [];
+  const conexao = await conectarBanco({
+    uri: URI_FORA_DO_AR,
+    producao: false,
+    timeoutMs: 300,
+    portaEmbutida: porta,
+    dbPath,
+    intervaloEsperaMs: 100,
+    log: (l) => linhas.push(l),
+  });
+  // A "API": outro cliente, com sua própria instância do mongoose
+  const api = new mongoose.Mongoose();
+  try {
+    assert.equal(conexao.origem, 'embutido-novo');
+    await api.connect(`mongodb://127.0.0.1:${porta}/cineclube_xhy`);
+
+    let terminou = false;
+    const desligando = conexao.desconectar().then(() => {
+      terminou = true;
+    });
+    await new Promise((r) => setTimeout(r, 1000));
+
+    assert.equal(terminou, false, 'não pode derrubar o banco com a API conectada');
+    await api.connection.db!.collection('marcas').insertOne({ depois: true });
+    assert.ok(linhas.some((l) => /outros clientes/i.test(l)), 'avisa no log');
+
+    await api.disconnect();
+    await desligando;
+    assert.equal(terminou, true);
+  } finally {
+    await api.disconnect();
+    await removerComPaciencia(dbPath);
+  }
+});
