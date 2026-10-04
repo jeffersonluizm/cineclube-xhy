@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { adminApi } from '@/lib/adminApi';
 import type { Article } from '@/lib/types';
@@ -15,19 +16,34 @@ interface ArticleListProps {
 
 /** Lista de textos de um catálogo ou ciclo no painel: reordenar, editar, excluir e criar. */
 export default function ArticleList({ articles, onChange, newHref, emptyText, description }: ArticleListProps) {
+  const [error, setError] = useState('');
+
   async function move(index: number, dir: -1 | 1) {
+    const before = articles;
     const next = [...articles];
     const target = index + dir;
     if (target < 0 || target >= next.length) return;
     [next[index], next[target]] = [next[target], next[index]];
+    setError('');
     onChange(next);
-    await adminApi.artigos.reorder(next.map((a) => a._id));
+    try {
+      await adminApi.artigos.reorder(next.map((a) => a._id));
+    } catch (err) {
+      // A ordem mostrada volta a ser a que está salva
+      onChange(before);
+      setError(`Não foi possível reordenar: ${err instanceof Error ? err.message : 'erro desconhecido'}`);
+    }
   }
 
   async function removeArticle(article: Article) {
     if (!window.confirm(`Excluir o texto "${article.title}"? Essa ação não pode ser desfeita.`)) return;
-    await adminApi.artigos.remove(article._id);
-    onChange(articles.filter((a) => a._id !== article._id));
+    setError('');
+    try {
+      await adminApi.artigos.remove(article._id);
+      onChange(articles.filter((a) => a._id !== article._id));
+    } catch (err) {
+      setError(`Não foi possível excluir: ${err instanceof Error ? err.message : 'erro desconhecido'}`);
+    }
   }
 
   return (
@@ -44,6 +60,12 @@ export default function ArticleList({ articles, onChange, newHref, emptyText, de
           + novo texto
         </Link>
       </div>
+
+      {error && (
+        <p role="alert" className="font-sans text-sm text-pink mb-2">
+          {error}
+        </p>
+      )}
 
       {articles.length === 0 && <p className="font-serif text-text-dark/70">{emptyText}</p>}
 
