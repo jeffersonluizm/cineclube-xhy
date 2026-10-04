@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import Magazine from '../src/models/Magazine';
-import { conectarBanco } from '../src/lib/banco';
+import { conectarSoNaUri } from './helpers/conexaoSegura';
 import { executarSeed } from '../src/scripts/seed';
 
 test('pergunta do seed, num banco com usuário e senha, mostra o banco sem as credenciais', async () => {
@@ -12,7 +12,7 @@ test('pergunta do seed, num banco com usuário e senha, mostra o banco sem as cr
   try {
     const porta = mongod.instanceInfo!.port;
     const uri = `mongodb://editorsecreto:SenhaMuitoSecreta123@127.0.0.1:${porta}/cineclube_xhy?authSource=admin`;
-    const conexao = await conectarBanco({ uri, producao: false, log: () => {} });
+    const conexao = await conectarSoNaUri(uri);
     await Magazine.create({ number: 99, volume: 3, month: 'maio', year: 2027, slug: 'n99' });
     const perguntas: string[] = [];
 

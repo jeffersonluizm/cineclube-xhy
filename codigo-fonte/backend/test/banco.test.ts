@@ -7,6 +7,7 @@ import path from 'path';
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { conectarBanco, descreverBanco } from '../src/lib/banco';
+import { conectarSoNaUri } from './helpers/conexaoSegura';
 
 // Porta onde nada escuta: a "URI configurada" que não responde
 const URI_FORA_DO_AR = 'mongodb://127.0.0.1:1/cineclube_xhy';
@@ -43,7 +44,7 @@ async function removerComPaciencia(dir: string) {
 test('conecta na URI configurada quando ela responde', async () => {
   const mongod = await MongoMemoryServer.create();
   try {
-    const conexao = await conectarBanco({ uri: `${mongod.getUri()}configurado`, producao: false, log: silencioso });
+    const conexao = await conectarSoNaUri(`${mongod.getUri()}configurado`);
 
     assert.equal(conexao.origem, 'configurado');
     assert.equal(mongoose.connection.readyState, 1);
@@ -131,7 +132,7 @@ test('URI configurada com usuário e senha: descrição e log não expõem as cr
   try {
     const porta = mongod.instanceInfo!.port;
     const uri = `mongodb://editorsecreto:SenhaMuitoSecreta123@127.0.0.1:${porta}/cineclube_xhy?authSource=admin`;
-    const conexao = await conectarBanco({ uri, producao: false, log: (l) => linhas.push(l) });
+    const conexao = await conectarSoNaUri(uri, { log: (l) => linhas.push(l) });
 
     assert.equal(conexao.descricao, `127.0.0.1:${porta}/cineclube_xhy (configurado)`);
     assert.ok(linhas.some((l) => l.includes(conexao.descricao)), 'o log de conexão mostra o banco');
