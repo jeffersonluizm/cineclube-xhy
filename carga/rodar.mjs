@@ -23,7 +23,8 @@ import { popular } from './popular.mjs';
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BACKEND = path.join(RAIZ, 'codigo-fonte/backend');
 const FRONTEND = path.join(RAIZ, 'codigo-fonte/frontend');
-const TRAVA = path.resolve(RAIZ, '../../.carga-lock');
+// Trava compartilhada da oficina (caminho absoluto: vale também quando a carga roda de um worktree)
+const TRAVA = process.env.CARGA_TRAVA || 'E:\Faculdade\Projeto - Faculdade\Projetos do portfólio\martorelli-oficina\.carga-lock';
 const K6 = process.env.K6_BIN || 'C:\\Program Files\\k6\\k6.exe';
 const PORTA_MONGO = 27200;
 const PORTA_API = 3201;
