@@ -145,23 +145,34 @@ export async function conectarBanco(opcoes: OpcoesConexao = {}): Promise<Conexao
     origem: 'embutido-novo',
     descricao,
     async desconectar() {
-      if ((await outrosClientes()) > 0) {
-        log(
-          `Há outros clientes conectados ao MongoDB ${descricao} (provavelmente a API). ` +
-            'Este processo iniciou o banco, então ele continua no ar até eles desconectarem. ' +
-            'Pare a API antes de fechar esta janela, ou ela fica sem banco.'
-        );
-        while ((await outrosClientes()) > 0) {
-          await new Promise((r) => setTimeout(r, intervaloEsperaMs));
-        }
-        log('Os outros clientes desconectaram; encerrando o banco embutido.');
-      }
       // O stop encerra o mongod à força (no Windows não há desligamento limpo): sem o fsync,
       // as últimas gravações (como as do seed) podem se perder
-      await mongoose.connection.db?.admin().command({ fsync: 1 });
-      await mongoose.disconnect();
-      // doCleanup apaga só diretório temporário; com dbPath próprio os dados ficam (force: false)
-      await mongod.stop({ doCleanup: true, force: false });
+      const fsync = async () => {
+        await mongoose.connection.db?.admin().command({ fsync: 1 });
+      };
+      try {
+        // Primeiro garante no disco o que este processo gravou, antes de qualquer espera
+        await fsync();
+        if ((await outrosClientes()) > 0) {
+          log(
+            `Há outros clientes conectados ao MongoDB ${descricao} (provavelmente a API). ` +
+              'Este processo iniciou o banco, então ele continua no ar até eles desconectarem. ' +
+              'Pare a API antes de fechar esta janela; Ctrl+C aqui encerra o banco e a API fica sem ele.'
+          );
+          while ((await outrosClientes()) > 0) {
+            await new Promise((r) => setTimeout(r, intervaloEsperaMs));
+          }
+          log('Os outros clientes desconectaram; encerrando o banco embutido.');
+        }
+      } finally {
+        // Janela de corrida: um cliente que conectar entre a última checagem e o stop perde o
+        // banco sem aviso. Fechar essa janela exigiria um mongod independente deste processo.
+        // Mesmo se a checagem falhar, o banco é gravado (se der) e parado: nunca fica órfão.
+        await fsync().catch((err) => log(`fsync antes de parar o banco falhou: ${(err as Error).message}`));
+        await mongoose.disconnect().catch(() => {});
+        // doCleanup apaga só diretório temporário; com dbPath próprio os dados ficam (force: false)
+        await mongod.stop({ doCleanup: true, force: false });
+      }
     },
   };
 }

@@ -205,3 +205,66 @@ test('embutido iniciado por este processo continua no ar enquanto outro cliente 
     await removerComPaciencia(dbPath);
   }
 });
+
+function portaRespondendo(porta: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const socket = net.createConnection({ host: '127.0.0.1', port: porta });
+    socket.once('connect', () => {
+      socket.destroy();
+      resolve(true);
+    });
+    socket.on('error', () => resolve(false));
+  });
+}
+
+test('se a checagem antes de parar falhar, o embutido iniciado aqui é parado mesmo assim', async () => {
+  const porta = await portaLivre();
+  const dbPath = fs.mkdtempSync(path.join(os.tmpdir(), 'cineclube-embutido-'));
+  try {
+    const conexao = await conectarBanco({
+      uri: URI_FORA_DO_AR,
+      producao: false,
+      timeoutMs: 300,
+      portaEmbutida: porta,
+      dbPath,
+      log: silencioso,
+    });
+    assert.equal(conexao.origem, 'embutido-novo');
+    // Conexão fechada por fora: fsync e a contagem de clientes passam a lançar
+    await mongoose.connection.close();
+
+    await assert.rejects(conexao.desconectar());
+
+    assert.equal(await portaRespondendo(porta), false, 'o mongod precisa ter sido parado');
+  } finally {
+    await removerComPaciencia(dbPath);
+  }
+});
+
+test('aviso de espera pela API diz que Ctrl+C encerra o banco', async () => {
+  const porta = await portaLivre();
+  const dbPath = fs.mkdtempSync(path.join(os.tmpdir(), 'cineclube-embutido-'));
+  const linhas: string[] = [];
+  const api = new mongoose.Mongoose();
+  try {
+    const conexao = await conectarBanco({
+      uri: URI_FORA_DO_AR,
+      producao: false,
+      timeoutMs: 300,
+      portaEmbutida: porta,
+      dbPath,
+      intervaloEsperaMs: 100,
+      log: (l) => linhas.push(l),
+    });
+    await api.connect(`mongodb://127.0.0.1:${porta}/cineclube_xhy`);
+    const desligando = conexao.desconectar();
+    await new Promise((r) => setTimeout(r, 500));
+    await api.disconnect();
+    await desligando;
+
+    assert.ok(linhas.some((l) => /outros clientes/i.test(l) && /Ctrl\+C/.test(l)), linhas.join('\n'));
+  } finally {
+    await api.disconnect();
+    await removerComPaciencia(dbPath);
+  }
+});
