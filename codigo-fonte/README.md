@@ -1,4 +1,4 @@
-# Cineclube XHY — Código Fonte
+# Cineclube XHY: código-fonte
 
 ## Estrutura
 
@@ -30,6 +30,20 @@ npm run dev    # inicia em http://localhost:3001
 npm test       # testes automatizados (node:test + supertest, banco em memória)
 ```
 
+Organização do backend:
+
+```
+src/
+  app.ts               monta o Express: helmet, CORS, limites, rotas e tratador de erros
+  index.ts             carrega o .env, conecta no banco e sobe a porta
+  lib/                 banco, slug, slug único, conteúdo (agrupar, vizinhos, trecho), endereços, links, senha, imagem
+  middleware/          auth (JWT), erros (ErroHttp + tratador central), limitadores
+  validacao/esquemas.ts  zod de todas as entradas do painel
+  models/              Magazine, Article, Catalog, Cycle, Film, About (com índices)
+  routes/              públicas (home, revista, catalogos, ciclos, sobre, descoberta), auth, upload
+  routes/admin/        uma rota por recurso + resumo
+```
+
 O seed usa a mesma conexão da API: `MONGODB_URI` (ou o MongoDB local padrão) e, em
 desenvolvimento, o banco embutido de `backend/data/db`, inclusive quando a API já está
 rodando com ele. O log e a pergunta mostram em qual banco ele está, no formato
@@ -57,15 +71,17 @@ Os testes rodam com `tsx` e sobem um MongoDB só em memória: não tocam em
 tentativa de usar a porta 27018 ou `backend/data/db` falha em vez de gravar no banco
 de desenvolvimento.
 
-**Variáveis de ambiente** (`backend/.env` — copie de `.env.example`):
+**Variáveis de ambiente** (`backend/.env` · copie de `.env.example`):
 ```
 MONGODB_URI=mongodb://localhost:27017/cineclube_xhy
 PORT=3001
 NODE_ENV=development                # "production" na hospedagem
 ADMIN_PASSWORD=senha-do-editor      # senha de acesso ao painel /admin
-JWT_SECRET=um-segredo-aleatorio     # assina os tokens de sessão do editor
+JWT_SECRET=um-segredo-aleatorio     # assina os tokens de sessão do editor (obrigatório com banco remoto)
 FRONTEND_URL=http://localhost:3000  # origens permitidas (CORS), separadas por vírgula
 # CLOUDINARY_URL=cloudinary://...   # opcional local; obrigatório na hospedagem (ver abaixo)
+# RATE_LIMIT_GERAL=300              # requisições por minuto por IP (0 desliga; a carga desliga)
+# UPLOADS_DIR=...                   # pasta das imagens sem Cloudinary (padrão backend/uploads)
 ```
 
 ---
@@ -76,9 +92,10 @@ FRONTEND_URL=http://localhost:3000  # origens permitidas (CORS), separadas por v
 cd frontend
 npm install
 npm run dev    # inicia em http://localhost:3000
+npm test       # testes das regras do front (tokens/contraste, sessão, login, RSS)
 ```
 
-**Variáveis de ambiente** (`frontend/.env.local` — copie de `.env.local.example`):
+**Variáveis de ambiente** (`frontend/.env.local` · copie de `.env.local.example`):
 ```
 NEXT_PUBLIC_API_URL=http://localhost:3001    # endereço da API
 NEXT_PUBLIC_SITE_URL=http://localhost:3000   # endereço público do site (metatags de compartilhamento)
@@ -88,42 +105,89 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000   # endereço público do site (metat
 
 ## Painel do editor (`/admin`)
 
-Área de publicação da revista, protegida por senha (a `ADMIN_PASSWORD` do backend).
+Área de publicação, protegida por uma senha única da equipe (a `ADMIN_PASSWORD` da API).
+A sessão dura 8 horas; o painel avisa 10 minutos antes e, se a sessão expirar no meio de
+uma edição, pede a senha numa janela por cima da página, sem perder o que foi digitado.
 
-- **`/admin/login`** — entrada do editor
-- **`/admin`** — edições da revista (`/admin/revistas/nova`, `/admin/revistas/[id]`)
-- **`/admin/catalogos`** — catálogos: capa, descrição e textos de cada catálogo
-- **`/admin/ciclos`** — ciclos & mostras: dados, programação (sessões), páginas de filmes e textos do ciclo
-- **Editor de artigos/textos** — o texto é montado em blocos (parágrafo, subtítulo,
-  citação e imagem). Imagens podem ser inseridas em qualquer ponto do texto,
-  com legenda, tamanho e posição (largura total, centralizada ou flutuando à
-  esquerda/direita). Blocos podem ser reordenados arrastando com o mouse (⠿)
-  ou pelas setas.
+| Página | O que faz |
+|---|---|
+| `/admin/login` | Entrar (mostrar senha, autocomplete, aviso de Caps Lock, contagem quando o limite de tentativas é atingido, `?motivo=` e `?next=`) |
+| `/admin/recuperar-senha` | Explica, sem prometer o que não existe, como receber ou trocar a senha |
+| `/admin/sessao-expirada` | Sessão vencida ao abrir o painel: entra de novo e volta para a página de origem |
+| `/admin/sair` | Encerra a sessão neste navegador |
+| `/admin` | Início: contagens, rascunhos pendentes e textos editados por último |
+| `/admin/revistas`, `/admin/revistas/nova`, `/admin/revistas/[id]` | Edições da revista e seus textos |
+| `/admin/catalogos`, `/admin/catalogos/[id]` | Catálogos: capa, apresentação e textos |
+| `/admin/ciclos`, `/admin/ciclos/[id]` | Exibições: dados, notas, páginas de filme, textos e programação (cada sessão escolhe a página do filme) |
+| `/admin/artigos/[id]`, `/admin/filmes/[id]` | Editor de texto em blocos e ficha do filme |
+| `/admin/sobre` | Apresentação do cineclube e equipe (links só `https://` ou `mailto:`) |
+
+- **Editor de textos**: blocos (parágrafo, subtítulo, citação, imagem) reordenáveis por
+  arrastar ou pelas setas (teclado), imagem de compartilhamento, notas de rodapé,
+  rascunho/publicado. Guarda um rascunho local no navegador e oferece restaurar.
+- **Feedback**: avisos (toasts) de sucesso e erro; ações de reordenar voltam atrás se a
+  API falhar; sair com alterações não salvas pede confirmação.
+- **Exclusão em cascata** (revista, catálogo, exibição): o diálogo mostra quantos textos
+  e filmes vão junto e pede para digitar o nome.
+- **Fora dos buscadores**: `noindex` em todas as páginas e `Disallow` no `robots.txt`.
 
 **Imagens enviadas:** com `CLOUDINARY_URL` definida, vão para o Cloudinary (CDN,
 persistente). Sem ela, ficam em `backend/uploads/` e são servidas em
-`http://localhost:3001/uploads/…` — adequado só para desenvolvimento local.
+`http://localhost:3001/uploads/…`, adequado só para desenvolvimento local. O tipo da
+imagem é conferido pelos primeiros bytes do arquivo, não pelo que o navegador declara.
 
-**Proteções:** o login aceita no máximo 10 tentativas por IP a cada 15 minutos.
-Em produção o servidor se recusa a subir sem `MONGODB_URI`, `ADMIN_PASSWORD`,
-`JWT_SECRET` e `FRONTEND_URL`.
+### Segurança da API
 
-### API de publicação
+- `helmet` (CSP `default-src 'none'`, `nosniff`, `X-Frame-Options`), sem `X-Powered-By`.
+- CORS só para as origens de `FRONTEND_URL`; origem desconhecida recebe **403**.
+- Limite geral de 300 requisições por minuto por IP (`RATE_LIMIT_GERAL`, `0` desliga),
+  login com no máximo 10 tentativas erradas a cada 15 minutos e upload com 60 envios a
+  cada 15 minutos. O painel lê os cabeçalhos `RateLimit` para mostrar quanto falta.
+- Senha comparada por hash SHA-256 em tempo constante (nem o tamanho vaza).
+- Token JWT HS256 de 8 horas. O segredo de desenvolvimento só é aceito fora de produção
+  **e** com banco local; com banco remoto sem `JWT_SECRET`, a API não emite tokens.
+- Toda entrada do painel passa por esquemas `zod` (tipos, tamanhos, enums, ids, URLs) e
+  as atualizações rodam os validadores do Mongoose; filtros de consulta não aceitam
+  operadores (`?parentId[$ne]=` é recusado com 400).
+- Erros centralizados (`middleware/erros.ts`): 400 validação, 404, 409 duplicado,
+  413 corpo grande, 503 banco indisponível; nunca devolve stack.
+
+### API
+
+Públicas (sem autenticação):
 
 | Rota | Descrição |
 |------|-----------|
-| `POST /api/auth/login` | Login do editor (`{ password }` → `{ token }`) |
-| `POST /api/upload` | Upload de imagem (`multipart/form-data`, campo `image`) |
-| `GET/POST /api/admin/revistas` | Listar / criar revistas |
-| `PUT/DELETE /api/admin/revistas/:id` | Atualizar / excluir revista |
-| `GET/POST /api/admin/artigos` | Listar / criar artigos (revista, catálogo ou ciclo via `parentType`) |
-| `GET/PUT/DELETE /api/admin/artigos/:id` | Buscar / atualizar / excluir artigo |
-| `PUT /api/admin/artigos/reorder` | Reordenar artigos (`{ ids: [...] }`) |
-| `GET/POST /api/admin/catalogos` + `PUT/DELETE /:id` | CRUD de catálogos |
-| `GET/POST /api/admin/ciclos` + `PUT/DELETE /:id` | CRUD de ciclos & mostras (com programação) |
-| `GET/POST /api/admin/filmes` + `GET/PUT/DELETE /:id` + `PUT /reorder` | CRUD de páginas de filmes |
+| `GET /api/health` | Situação da API e do banco |
+| `GET /api/home` | Publicação mais recente e todas as edições com os primeiros textos |
+| `GET /api/revista` | Edições da revista |
+| `GET /api/revista/:numero` | Edição com o sumário agrupado por coluna (trechos, sem o corpo) |
+| `GET /api/revista/:numero/artigo/:slug` | Texto completo, edição, anterior e próximo |
+| `GET /api/catalogos`, `GET /api/catalogos/:slug` | Catálogos e um catálogo com as seções |
+| `GET /api/catalogos/:slug/texto/:textSlug` | Texto do catálogo com anterior e próximo |
+| `GET /api/ciclos`, `GET /api/ciclos/:slug` | Exibições e uma exibição com filmes e textos |
+| `GET /api/ciclos/:slug/filme/:filmSlug` | Página do filme com anterior e próximo |
+| `GET /api/ciclos/:slug/texto/:textSlug` | Texto do ciclo com anterior e próximo |
+| `GET /api/sobre` | Apresentação e equipe |
+| `GET /api/busca?q=` | Busca (índice de texto, sem acentos) em textos publicados e filmes |
+| `GET /api/autores`, `GET /api/autores/:slug` | Autores com contagem e textos de um autor |
+| `GET /api/recentes` | 30 textos mais recentes com endereço (alimenta o RSS) |
+| `GET /api/mapa` | Todas as páginas públicas com data de atualização (alimenta o sitemap) |
 
-Todas as rotas `/api/admin/*` e `/api/upload` exigem `Authorization: Bearer <token>`.
+Autenticação e painel (todas as rotas `/api/admin/*` e `/api/upload` exigem `Authorization: Bearer <token>`):
+
+| Rota | Descrição |
+|------|-----------|
+| `POST /api/auth/login` | Login do editor (`{ password }` → `{ token, expiraEm }`) |
+| `GET /api/auth/sessao` | Confere o token e devolve quando ele expira |
+| `POST /api/upload` | Upload de imagem (`multipart/form-data`, campo `image`, até 10 MB) |
+| `GET /api/admin/resumo` | Contagens, rascunhos e últimos editados |
+| `GET/POST /api/admin/revistas` + `GET/PUT/DELETE /:id` + `GET /:id/impacto` | Revistas (impacto = textos que a exclusão leva junto) |
+| `GET/POST /api/admin/artigos` (`?parentId=&parentType=`) + `GET/PUT/DELETE /:id` + `PUT /reorder` | Textos de revista, catálogo e ciclo |
+| `GET/POST /api/admin/catalogos` + `GET/PUT/DELETE /:id` + `GET /:id/impacto` | Catálogos |
+| `GET/POST /api/admin/ciclos` + `GET/PUT/DELETE /:id` + `GET /:id/impacto` | Exibições com programação (sessões com `filmId`) |
+| `GET/POST /api/admin/filmes` (`?cycleId=`) + `GET/PUT/DELETE /:id` + `PUT /reorder` | Páginas de filme |
+| `GET/PUT /api/admin/sobre` | Apresentação e equipe |
 
 ---
 
@@ -131,22 +195,33 @@ Todas as rotas `/api/admin/*` e `/api/upload` exigem `Authorization: Bearer <tok
 
 | URL | Descrição |
 |-----|-----------|
-| `/` | Página inicial com última atualização |
-| `/revista` | Lista de edições por ano |
-| `/revista/[number]` | Sumário da revista |
-| `/revista/[number]/artigo/[slug]` | Texto da revista |
-| `/catalogos` | Lista de catálogos por ano |
-| `/catalogos/[slug]` | Catálogo individual |
-| `/catalogos/[slug]/[textSlug]` | Texto do catálogo |
-| `/ciclos-mostras` | Lista de ciclos e mostras por ano |
-| `/ciclos-mostras/[slug]` | Ciclo/mostra com programação |
-| `/ciclos-mostras/[slug]/[filmSlug]` | Página do filme |
-| `/ciclos-mostras/[slug]/texto/[textSlug]` | Texto do ciclo (os textos publicados aparecem na página do ciclo) |
-| `/sobre` | Sobre o cineclube e equipe |
-| `/robots.txt`, `/sitemap.xml` | Gerados automaticamente (o painel `/admin` fica fora dos buscadores) |
+| `/` | Página inicial: prateleira de edições (rolar, deslizar ou setas) |
+| `/revista`, `/revista/[number]`, `/revista/[number]/artigo/[slug]` | Edições, sumário e leitura |
+| `/catalogos`, `/catalogos/[slug]`, `/catalogos/[slug]/[textSlug]` | Catálogos e textos |
+| `/ciclos-mostras`, `/ciclos-mostras/[slug]` | Exibições com programação, textos e notas |
+| `/ciclos-mostras/[slug]/[filmSlug]`, `/ciclos-mostras/[slug]/texto/[textSlug]` | Filme e texto do ciclo |
+| `/busca` | Busca em textos, filmes e autores |
+| `/autores`, `/autores/[slug]` | Autores e textos de cada um |
+| `/sobre` | Apresentação, equipe e contatos |
+| `/como-foi-feito` | Arquitetura, decisões, testes e resultados de carga deste site |
+| `/feed.xml` | RSS dos textos mais recentes |
+| `/robots.txt`, `/sitemap.xml` | Gerados automaticamente (sitemap com textos, filmes e autores) |
 
-Todas as páginas públicas são responsivas: no desktop a navegação é a coluna
-lateral; no celular vira uma barra superior compacta.
+Estados de sistema: 404 com busca ("fim da sessão", status 404 de verdade); "serviço
+indisponível" quando a API falha (status 500, não vira lista vazia nem 404 falso);
+carregando só na busca e na lista de autores. As páginas de conteúdo não têm `loading.tsx`
+de propósito: com streaming o Next já envia status 200 antes de saber se a página existe,
+e o 404/500 deixaria de ser real (o cache de 60 s torna a espera rara);
+`global-error` para falha do layout. Rodapé em todas as páginas com como participar,
+contato e o link para o RSS.
+
+**Cache:** as páginas guardam as respostas da API por até 60 s (etiqueta `conteudo`) e o
+painel chama `/api/revalidar` depois de cada alteração, então o editor vê a mudança na
+hora e o visitante não espera a API a cada página. Se a API não estiver no ar durante o
+`next build`, as páginas passam a ser renderizadas por pedido em vez de quebrar o build.
+
+**Identidade:** cores e escala de títulos em `frontend/src/lib/tokens.ts`. O teste
+`tokens.test.ts` confere o contraste WCAG AA de todo par texto/fundo usado.
 
 ---
 
@@ -156,10 +231,10 @@ Arquitetura recomendada (custo zero além do domínio):
 
 | Peça | Serviço | Endereço |
 |------|---------|----------|
-| Site (Next.js) | [Vercel](https://vercel.com) — plano Hobby | `seudominio.com.br` e `www.` |
-| API (Express) | [Render](https://render.com) — plano Free | `api.seudominio.com.br` |
-| Banco | [MongoDB Atlas](https://cloud.mongodb.com) — cluster M0 | — |
-| Imagens | [Cloudinary](https://cloudinary.com) — plano Free | `res.cloudinary.com/...` |
+| Site (Next.js) | [Vercel](https://vercel.com) · plano Hobby | `seudominio.com.br` e `www.` |
+| API (Express) | [Render](https://render.com) · plano Free | `api.seudominio.com.br` |
+| Banco | [MongoDB Atlas](https://cloud.mongodb.com) · cluster M0 | · |
+| Imagens | [Cloudinary](https://cloudinary.com) · plano Free | `res.cloudinary.com/...` |
 
 ### 1. Preparação
 
@@ -204,7 +279,7 @@ Arquitetura recomendada (custo zero além do domínio):
 ### 4. DNS no registrador do domínio
 
 ```
-@      A      76.76.21.21              (Vercel — confirme o IP mostrado no painel)
+@      A      76.76.21.21              (Vercel · confirme o IP mostrado no painel)
 www    CNAME  cname.vercel-dns.com
 api    CNAME  <nome-do-servico>.onrender.com
 ```
@@ -234,18 +309,36 @@ visual do cineclube em vez de uma página em branco.
 
 ## Histórico de versões
 
-### [Não lançado]
+### [1.3.0] - 04/10/2026
 #### Adicionado
-- Textos de ciclo no painel (`/admin/ciclos/[id]`: listar, criar, editar, rascunho, excluir)
-- Textos de ciclo no site público: listados na página do ciclo e abertos em
-  `/ciclos-mostras/[slug]/texto/[textSlug]` (API: `GET /api/ciclos/:slug/texto/:textSlug`)
+- Busca (`/busca`, índice de texto sem acentos), páginas de autor (`/autores`), RSS (`/feed.xml`) e página "como foi feito"
+- Rodapé em todas as páginas com como participar, contato e RSS
+- Painel: início com contagens, rascunhos e últimos editados; páginas de esqueci a senha, sessão expirada e sair; 404 e erro próprios
+- Sessão de 8 h com aviso antes de expirar e re-login por cima da página, sem perder o formulário
+- Rascunho local no editor de textos, aviso de alterações não salvas, toasts e diálogo de exclusão em cascata com contagem
+- Imagem de compartilhamento no editor de textos; nota do autor e notas do ciclo editáveis e exibidas
+- Programação ligada às páginas de filme pelo id (sessões antigas continuam pelo slug)
+- Textos de ciclo no painel e no site (`/ciclos-mostras/[slug]/texto/[textSlug]`)
 - `iniciar.bat` na raiz para subir API e site no Windows
-- Testes automatizados de rotas (`npm test` no backend)
+- Testes de rotas públicas, do CRUD do painel, de validação, de segurança e de descoberta (API) e das regras do front
+- Harness de carga isolado (`carga/`) e resultados em `docs/carga/`
 #### Alterado
-- O seed usa o mesmo banco da API e pede confirmação (ou `--force`) antes de apagar dados
-- Dados de exemplo da equipe com nomes e e-mails fictícios
+- Identidade em tokens (`src/lib/tokens.ts`) com variantes de cor AA para texto e escala de títulos; logo em SVG
+- Painel na estética do impresso (papel, fios, sem cartões arredondados)
+- `admin.ts` dividido em uma rota por recurso; erros centralizados; validação com zod e `runValidators`
+- Home sem N+1 (consultas fixas), sumários sem o corpo dos textos, `lean`, índices, reordenação em lote
+- Site com cache de 60 s e revalidação sob demanda no lugar de `no-store`
+- Falha da API mostra "serviço indisponível" (antes virava lista vazia ou 404 falso)
+- O seed usa o mesmo banco da API, pede confirmação (ou `--force`) e traz textos de exemplo próprios
 #### Segurança
+- helmet, CORS 403, limitador geral, upload validado pelos bytes, links só `https:`/`mailto:`
+- Senha comparada por hash, token de 8 h, segredo de desenvolvimento só com banco local
+- CSP e cabeçalhos de segurança no site; painel com `noindex`
 - Upload deixa de aceitar SVG (só jpg, png, webp, gif e avif)
+#### Corrigido
+- Criação simultânea de textos com o mesmo título gerava erro 500 (slug duplicado)
+- Remover a capa de uma revista, catálogo ou ciclo não era gravado
+- Erros silenciosos ao reordenar ou excluir no painel
 
 ### [1.2.0] - 15/09/2026
 #### Adicionado

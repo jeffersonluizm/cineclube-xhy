@@ -23,7 +23,8 @@ if (IS_PRODUCTION) {
   }
 }
 
-conectarBanco()
+// MONGODB_TIMEOUT_MS: prazo para achar o banco (padrão 8 s); maior ajuda com Atlas acordando ou máquina ocupada
+conectarBanco({ timeoutMs: Number(process.env.MONGODB_TIMEOUT_MS) || undefined })
   .then(() => {
     app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
   })
