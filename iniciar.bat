@@ -8,7 +8,7 @@ cd /d "%~dp0"
 
 where node >nul 2>nul
 if errorlevel 1 (
-  echo Node.js nao encontrado. Instale o Node.js 22.18 ou superior: https://nodejs.org
+  echo Node.js nao encontrado. Instale o Node.js 22 ou superior: https://nodejs.org
   goto fim
 )
 

@@ -10,8 +10,11 @@ codigo-fonte/
 
 ## Requisitos
 
-- Node.js 22+ (o banco embutido de desenvolvimento, `mongodb-memory-server`, exige
-  20.19 ou superior, e os testes usam `node --test` com glob, que só existe a partir do 21)
+- Node.js 22+ (é o `engines` do backend). O banco embutido de desenvolvimento
+  (`mongodb-memory-server`) exige 20.19 ou superior, e o `npm test` roda `tsx --test`
+  com padrão glob nos arquivos, recurso do runner do Node que só existe a partir do 21.
+  O `tsx` faz a transpilação do TypeScript, então os testes não dependem do type
+  stripping nativo do Node.
 - MongoDB (opcional em desenvolvimento — sem um MongoDB acessível, o backend
   sobe automaticamente um MongoDB embutido com dados salvos em `backend/data/`)
 
@@ -29,10 +32,24 @@ npm test       # testes automatizados (node:test + supertest, banco em memória)
 
 O seed usa a mesma conexão da API: `MONGODB_URI` (ou o MongoDB local padrão) e, em
 desenvolvimento, o banco embutido de `backend/data/db`, inclusive quando a API já está
-rodando com ele. **O seed apaga revistas, textos, catálogos, ciclos, filmes e o Sobre**
-antes de inserir os exemplos: se o banco já tiver dados, ele pergunta antes (`s/N`) e,
-sem terminal interativo, não apaga nada. Para substituir sem perguntar:
-`npm run seed -- --force`.
+rodando com ele. O log e a pergunta mostram em qual banco ele está, no formato
+`host:porta/banco (configurado|embutido)`, sem usuário nem senha.
+
+**O seed apaga revistas, textos, catálogos, ciclos, filmes e o Sobre** antes de inserir
+os exemplos. Se o banco já tiver dados:
+
+- com terminal interativo, ele pergunta (`s/N`); responder "não" cancela sem apagar
+  nada e sai com código 0;
+- sem terminal interativo, não apaga nada e sai com código 1. No **Git Bash** (mintty)
+  o Node não enxerga o terminal: rode no cmd ou no PowerShell, ou use
+  `winpty npm run seed`;
+- para substituir sem perguntar: `npm run seed -- --force`.
+
+Se o próprio seed precisou subir o banco embutido (API parada) e a API conectar nele
+enquanto o seed roda, o seed não derruba o banco ao terminar: avisa no log e espera a
+API desconectar. O banco embutido morre junto com o processo que o iniciou, então pare
+a API antes de fechar a janela do seed. O caminho mais simples é subir a API primeiro
+e rodar o seed depois: ele usa o banco que a API já abriu.
 
 Os testes rodam com `tsx` e sobem um MongoDB só em memória: não tocam em
 `backend/data/` nem no banco configurado no `.env`.
