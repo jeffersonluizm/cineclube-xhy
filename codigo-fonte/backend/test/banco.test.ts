@@ -6,7 +6,7 @@ import os from 'os';
 import path from 'path';
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import { conectarBanco } from '../src/lib/banco';
+import { conectarBanco, descreverBanco } from '../src/lib/banco';
 
 // Porta onde nada escuta: a "URI configurada" que não responde
 const URI_FORA_DO_AR = 'mongodb://127.0.0.1:1/cineclube_xhy';
@@ -78,6 +78,7 @@ test('fora de produção, se o banco embutido já está na porta (API rodando), 
     });
 
     assert.equal(conexao.origem, 'embutido-existente');
+    assert.equal(conexao.descricao, `127.0.0.1:${porta}/cineclube_xhy (embutido)`);
     assert.equal(mongoose.connection.port, porta);
     assert.equal(mongoose.connection.name, 'cineclube_xhy');
     assert.equal(fs.existsSync(dbPath), false, 'não deve subir outro banco');
@@ -96,6 +97,7 @@ test('fora de produção, sem banco na porta, sobe o embutido no dbPath e manté
   try {
     const primeira = await conectarBanco(opcoes);
     assert.equal(primeira.origem, 'embutido-novo');
+    assert.equal(primeira.descricao, `127.0.0.1:${porta}/cineclube_xhy (embutido)`);
     assert.equal(mongoose.connection.port, porta);
     await mongoose.connection.db!.collection('marcas').insertOne({ ok: 1 });
     await primeira.desconectar();
@@ -106,5 +108,36 @@ test('fora de produção, sem banco na porta, sobe o embutido no dbPath e manté
     await segunda.desconectar();
   } finally {
     await removerComPaciencia(dbPath);
+  }
+});
+
+test('descrição do banco mostra hosts e nome, sem usuário e senha', () => {
+  assert.equal(
+    descreverBanco('mongodb+srv://editor:s3nh4@cluster0.abc12.mongodb.net/cineclube_xhy?retryWrites=true', 'cineclube_xhy', 'configurado'),
+    'cluster0.abc12.mongodb.net/cineclube_xhy (configurado)'
+  );
+  assert.equal(
+    descreverBanco('mongodb://u%40x:p%3Aw@h1:27017,h2:27018/?replicaSet=rs0', 'outro', 'configurado'),
+    'h1:27017,h2:27018/outro (configurado)'
+  );
+  assert.equal(descreverBanco('mongodb://localhost:27017/cineclube_xhy', 'cineclube_xhy', 'configurado'), 'localhost:27017/cineclube_xhy (configurado)');
+});
+
+test('URI configurada com usuário e senha: descrição e log não expõem as credenciais', async () => {
+  const mongod = await MongoMemoryServer.create({
+    auth: { enable: true, customRootName: 'editorsecreto', customRootPwd: 'SenhaMuitoSecreta123' },
+  });
+  const linhas: string[] = [];
+  try {
+    const porta = mongod.instanceInfo!.port;
+    const uri = `mongodb://editorsecreto:SenhaMuitoSecreta123@127.0.0.1:${porta}/cineclube_xhy?authSource=admin`;
+    const conexao = await conectarBanco({ uri, producao: false, log: (l) => linhas.push(l) });
+
+    assert.equal(conexao.descricao, `127.0.0.1:${porta}/cineclube_xhy (configurado)`);
+    assert.ok(linhas.some((l) => l.includes(conexao.descricao)), 'o log de conexão mostra o banco');
+    assert.doesNotMatch([conexao.descricao, ...linhas].join(' '), /editorsecreto|SenhaMuitoSecreta123/);
+    await conexao.desconectar();
+  } finally {
+    await mongod.stop();
   }
 });

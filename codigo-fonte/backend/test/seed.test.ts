@@ -8,6 +8,7 @@ import { abrirBancoEmMemoria } from './helpers/bancoEmMemoria';
 
 let banco: Awaited<ReturnType<typeof abrirBancoEmMemoria>>;
 const silencioso = () => {};
+const BANCO = '127.0.0.1:27018/cineclube_xhy (embutido)';
 const naoDeviaPerguntar = async (): Promise<boolean> => {
   throw new Error('não devia pedir confirmação');
 };
@@ -30,7 +31,7 @@ test('com dados existentes, sem --force e sem confirmação, não apaga nada', a
   await criarRevistaDoEditor();
   let perguntas = 0;
 
-  const resultado = await executarSeed({
+  const resultado = await executarSeed({ banco: BANCO,
     force: false,
     confirmar: async () => {
       perguntas++;
@@ -51,7 +52,7 @@ test('com dados existentes, sem --force e sem confirmação, não apaga nada', a
 test('com dados existentes e confirmação, substitui pelos dados de exemplo', async () => {
   await criarRevistaDoEditor();
 
-  const resultado = await executarSeed({ force: false, confirmar: async () => true, log: silencioso });
+  const resultado = await executarSeed({ banco: BANCO, force: false, confirmar: async () => true, log: silencioso });
 
   assert.equal(resultado, 'aplicado');
   const revistas = await Magazine.find();
@@ -64,21 +65,21 @@ test('com dados existentes e confirmação, substitui pelos dados de exemplo', a
 test('com --force, substitui sem perguntar', async () => {
   await criarRevistaDoEditor();
 
-  const resultado = await executarSeed({ force: true, confirmar: naoDeviaPerguntar, log: silencioso });
+  const resultado = await executarSeed({ banco: BANCO, force: true, confirmar: naoDeviaPerguntar, log: silencioso });
 
   assert.equal(resultado, 'aplicado');
   assert.equal(await Magazine.countDocuments({ number: 99 }), 0);
 });
 
 test('banco vazio é populado sem perguntar', async () => {
-  const resultado = await executarSeed({ force: false, confirmar: naoDeviaPerguntar, log: silencioso });
+  const resultado = await executarSeed({ banco: BANCO, force: false, confirmar: naoDeviaPerguntar, log: silencioso });
 
   assert.equal(resultado, 'aplicado');
   assert.equal(await Magazine.countDocuments(), 1);
 });
 
 test('equipe do Sobre usa nomes e contatos fictícios', async () => {
-  await executarSeed({ force: true, confirmar: naoDeviaPerguntar, log: silencioso });
+  await executarSeed({ banco: BANCO, force: true, confirmar: naoDeviaPerguntar, log: silencioso });
 
   const sobre = await About.findOne();
   assert.ok(sobre && sobre.team.length > 0);
@@ -89,7 +90,7 @@ test('equipe do Sobre usa nomes e contatos fictícios', async () => {
 });
 
 test('dados de exemplo trazem um texto publicado de ciclo', async () => {
-  await executarSeed({ force: true, confirmar: naoDeviaPerguntar, log: silencioso });
+  await executarSeed({ banco: BANCO, force: true, confirmar: naoDeviaPerguntar, log: silencioso });
 
   assert.ok((await Article.countDocuments({ parentType: 'ciclo', published: true })) >= 1);
 });
@@ -104,4 +105,22 @@ test('--force e -f liberam a substituição; outros argumentos não', () => {
 test('só "s" ou "sim" confirmam; vazio (padrão N) e qualquer outra resposta recusam', () => {
   for (const sim of ['s', 'S', 'sim', ' Sim ']) assert.equal(respostaConfirma(sim), true, sim);
   for (const nao of ['', 'n', 'N', 'nao', 'y', 'yes', 'ss']) assert.equal(respostaConfirma(nao), false, nao);
+});
+
+test('a pergunta de confirmação diz em qual banco os dados serão apagados', async () => {
+  await criarRevistaDoEditor();
+  const perguntas: string[] = [];
+
+  await executarSeed({
+    banco: 'cluster0.abc12.mongodb.net/cineclube_xhy (configurado)',
+    force: false,
+    confirmar: async (pergunta) => {
+      perguntas.push(pergunta);
+      return false;
+    },
+    log: silencioso,
+  });
+
+  assert.equal(perguntas.length, 1);
+  assert.match(perguntas[0], /^O banco cluster0\.abc12\.mongodb\.net\/cineclube_xhy \(configurado\) já tem 1 documento\(s\)/);
 });

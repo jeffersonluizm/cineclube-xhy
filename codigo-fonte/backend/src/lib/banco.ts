@@ -29,8 +29,21 @@ export interface OpcoesConexao {
 
 export interface ConexaoBanco {
   origem: 'configurado' | 'embutido-existente' | 'embutido-novo';
+  /** host:porta/banco (configurado|embutido), sem usuário nem senha: para logs e perguntas */
+  descricao: string;
   /** Fecha a conexão e, se este processo subiu o banco embutido, para o banco (sem apagar os dados). */
   desconectar(): Promise<void>;
+}
+
+/**
+ * Descreve o banco para o usuário sem expor credenciais: só os hosts da URI
+ * (o que vem depois do último @) e o nome do banco.
+ */
+export function descreverBanco(uri: string, nomeBanco: string, tipo: 'configurado' | 'embutido'): string {
+  const semEsquema = uri.replace(/^[a-z][a-z0-9+.-]*:\/\//i, '');
+  const autoridade = semEsquema.split(/[/?]/)[0];
+  const hosts = autoridade.slice(autoridade.lastIndexOf('@') + 1);
+  return `${hosts}/${nomeBanco} (${tipo})`;
 }
 
 function portaOcupada(porta: number): Promise<boolean> {
@@ -57,17 +70,20 @@ export async function conectarBanco(opcoes: OpcoesConexao = {}): Promise<Conexao
 
   try {
     await mongoose.connect(uri, { serverSelectionTimeoutMS: timeoutMs });
-    log('Conectado ao MongoDB');
-    return { origem: 'configurado', desconectar: soDesconectar };
+    const descricao = descreverBanco(uri, mongoose.connection.name, 'configurado');
+    log(`Conectado ao MongoDB ${descricao}`);
+    return { origem: 'configurado', descricao, desconectar: soDesconectar };
   } catch (err) {
     log(`Não foi possível conectar ao MongoDB configurado: ${(err as Error).message}`);
     if (producao) throw err;
   }
 
   if (await portaOcupada(porta)) {
-    await mongoose.connect(`mongodb://127.0.0.1:${porta}/${NOME_BANCO}`, { serverSelectionTimeoutMS: timeoutMs });
-    log(`Conectado ao MongoDB embutido que já estava rodando na porta ${porta}`);
-    return { origem: 'embutido-existente', desconectar: soDesconectar };
+    const uriEmbutido = `mongodb://127.0.0.1:${porta}/${NOME_BANCO}`;
+    await mongoose.connect(uriEmbutido, { serverSelectionTimeoutMS: timeoutMs });
+    const descricao = descreverBanco(uriEmbutido, NOME_BANCO, 'embutido');
+    log(`Conectado ao MongoDB ${descricao}, que já estava rodando (API?)`);
+    return { origem: 'embutido-existente', descricao, desconectar: soDesconectar };
   }
 
   // Fallback de desenvolvimento: MongoDB embutido com dados persistidos em disco
@@ -79,9 +95,11 @@ export async function conectarBanco(opcoes: OpcoesConexao = {}): Promise<Conexao
     instance: { dbName: NOME_BANCO, dbPath, storageEngine: 'wiredTiger', port: porta, portGeneration: false },
   });
   await mongoose.connect(`${mongod.getUri()}${NOME_BANCO}`);
-  log(`Conectado ao MongoDB embutido em ${mongod.getUri()}`);
+  const descricao = descreverBanco(mongod.getUri(), NOME_BANCO, 'embutido');
+  log(`Conectado ao MongoDB ${descricao}, iniciado por este processo`);
   return {
     origem: 'embutido-novo',
+    descricao,
     async desconectar() {
       // O stop encerra o mongod à força (no Windows não há desligamento limpo): sem o fsync,
       // as últimas gravações (como as do seed) podem se perder

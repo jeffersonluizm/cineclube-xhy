@@ -30,6 +30,8 @@ ${LOREM_SHORT} Duis autem vel eum iriure dolor in hendrerit in vulputate velit e
 ${LOREM_SHORT}`;
 
 export interface OpcoesSeed {
+  /** Descrição do banco conectado (ConexaoBanco.descricao), mostrada na pergunta */
+  banco: string;
   /** --force: substitui sem perguntar */
   force: boolean;
   /** Pergunta ao usuário; só é chamada se houver dados e não houver --force */
@@ -46,13 +48,13 @@ export function respostaConfirma(resposta: string): boolean {
 }
 
 /** Pressupõe o mongoose já conectado. Nunca apaga dados sem --force ou confirmação. */
-export async function executarSeed({ force, confirmar, log = console.log }: OpcoesSeed): Promise<'aplicado' | 'cancelado'> {
+export async function executarSeed({ banco, force, confirmar, log = console.log }: OpcoesSeed): Promise<'aplicado' | 'cancelado'> {
   const contagens = await Promise.all(COLECOES.map((modelo) => modelo.countDocuments()));
   const existentes = contagens.reduce((total, n) => total + n, 0);
 
   if (existentes > 0 && !force) {
     const ok = await confirmar(
-      `O banco já tem ${existentes} documento(s) (revistas, textos, catálogos, ciclos, filmes, sobre). ` +
+      `O banco ${banco} já tem ${existentes} documento(s) (revistas, textos, catálogos, ciclos, filmes, sobre). ` +
         'Apagar tudo e inserir os dados de exemplo?'
     );
     if (!ok) {
@@ -252,7 +254,11 @@ async function main() {
   dotenv.config();
   const conexao = await conectarBanco();
   try {
-    const resultado = await executarSeed({ force: pedeForce(process.argv), confirmar: perguntarNoTerminal });
+    const resultado = await executarSeed({
+      banco: conexao.descricao,
+      force: pedeForce(process.argv),
+      confirmar: perguntarNoTerminal,
+    });
     if (resultado === 'cancelado') process.exitCode = 1;
   } finally {
     await conexao.desconectar();
