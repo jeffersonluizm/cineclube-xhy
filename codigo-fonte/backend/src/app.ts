@@ -10,7 +10,7 @@ import sobreRouter from './routes/sobre';
 import homeRouter from './routes/home';
 import authRouter from './routes/auth';
 import uploadRouter from './routes/upload';
-import adminRouter from './routes/admin';
+import adminRouter from './routes/admin/index';
 import { ErroHttp, rotaInexistente, tratadorDeErros } from './middleware/erros';
 import { criarLimitadorGeral } from './middleware/limitadores';
 import { pastaUploads } from './lib/uploads';

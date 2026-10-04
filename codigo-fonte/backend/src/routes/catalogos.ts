@@ -1,55 +1,43 @@
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
 import Catalog from '../models/Catalog';
 import Article from '../models/Article';
+import { assincrono, naoEncontrado } from '../middleware/erros';
+import { agruparPor, textosPublicados, vizinhos } from '../lib/conteudo';
 
 const router = Router();
 
-router.get('/', async (_req: Request, res: Response) => {
-  try {
-    const catalogs = await Catalog.find().sort({ year: -1 });
-    res.json(catalogs);
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar catálogos' });
-  }
-});
+async function catalogoPeloSlug(slug: string) {
+  const catalog = await Catalog.findOne({ slug });
+  if (!catalog) throw naoEncontrado('Catálogo não encontrado');
+  return catalog;
+}
 
-router.get('/:slug', async (req: Request, res: Response) => {
-  try {
-    const catalog = await Catalog.findOne({ slug: req.params.slug });
-    if (!catalog) return res.status(404).json({ error: 'Catálogo não encontrado' });
+router.get(
+  '/',
+  assincrono(async (_req, res) => {
+    res.json(await Catalog.find().sort({ year: -1 }));
+  })
+);
 
-    const articles = await Article.find({ parentId: catalog._id, parentType: 'catalogo', published: { $ne: false } }).sort({ order: 1 });
+router.get(
+  '/:slug',
+  assincrono(async (req, res) => {
+    const catalog = await catalogoPeloSlug(req.params.slug);
+    const articles = await Article.find(textosPublicados('catalogo', catalog._id)).sort({ order: 1 });
+    res.json({ catalog, sections: agruparPor(articles, 'column') });
+  })
+);
 
-    const sections: Record<string, typeof articles> = {};
-    for (const article of articles) {
-      if (!sections[article.column]) sections[article.column] = [];
-      sections[article.column].push(article);
-    }
-
-    res.json({ catalog, sections });
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar catálogo' });
-  }
-});
-
-router.get('/:slug/texto/:textSlug', async (req: Request, res: Response) => {
-  try {
-    const catalog = await Catalog.findOne({ slug: req.params.slug });
-    if (!catalog) return res.status(404).json({ error: 'Catálogo não encontrado' });
-
+router.get(
+  '/:slug/texto/:textSlug',
+  assincrono(async (req, res) => {
+    const catalog = await catalogoPeloSlug(req.params.slug);
     const article = await Article.findOne({ slug: req.params.textSlug, parentId: catalog._id, published: { $ne: false } });
-    if (!article) return res.status(404).json({ error: 'Texto não encontrado' });
+    if (!article) throw naoEncontrado('Texto não encontrado');
 
-    const allArticles = await Article.find({ parentId: catalog._id, parentType: 'catalogo', published: { $ne: false } }).sort({ order: 1 });
-    const idx = allArticles.findIndex((a) => a.slug === req.params.textSlug);
-
-    const prev = idx > 0 ? { title: allArticles[idx - 1].title, slug: allArticles[idx - 1].slug, author: allArticles[idx - 1].author } : null;
-    const next = idx < allArticles.length - 1 ? { title: allArticles[idx + 1].title, slug: allArticles[idx + 1].slug, author: allArticles[idx + 1].author } : null;
-
-    res.json({ article, catalog, prev, next });
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar texto' });
-  }
-});
+    const todos = await Article.find(textosPublicados('catalogo', catalog._id)).sort({ order: 1 });
+    res.json({ article, catalog, ...vizinhos(todos, req.params.textSlug, ['title', 'slug', 'author']) });
+  })
+);
 
 export default router;
