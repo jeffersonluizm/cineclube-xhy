@@ -2,6 +2,7 @@ import fs from 'fs';
 import net from 'net';
 import path from 'path';
 import mongoose from 'mongoose';
+import ConnectionString from 'mongodb-connection-string-url';
 
 /**
  * Conexão com o MongoDB compartilhada pela API (index.ts) e pelo seed (scripts/seed.ts),
@@ -48,13 +49,10 @@ export interface ConexaoBanco {
 
 /**
  * Descreve o banco para o usuário sem expor credenciais: só os hosts da URI
- * (o que vem depois do último @) e o nome do banco.
+ * (lidos pelo mesmo parser do driver) e o nome do banco.
  */
 export function descreverBanco(uri: string, nomeBanco: string, tipo: 'configurado' | 'embutido'): string {
-  const semEsquema = uri.replace(/^[a-z][a-z0-9+.-]*:\/\//i, '');
-  const autoridade = semEsquema.split(/[/?]/)[0];
-  const hosts = autoridade.slice(autoridade.lastIndexOf('@') + 1);
-  return `${hosts}/${nomeBanco} (${tipo})`;
+  return `${new ConnectionString(uri).hosts.join(',')}/${nomeBanco} (${tipo})`;
 }
 
 /** Lança erro se a proteção estiver ligada e a conexão fosse usar o banco de desenvolvimento. */
