@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { AboutInput } from '@/lib/adminApi';
 import type { About, Block, TeamMember, TeamMemberLink } from '@/lib/types';
+import { comChaves, semChaves } from '@/lib/blocos';
 import BlocksEditor from './BlocksEditor';
 import AvisoSaida from './AvisoSaida';
 import { useSujo } from './hooks';
@@ -16,15 +17,17 @@ interface AboutFormProps {
 const urlValida = (url: string) => /^(https:\/\/|mailto:)\S+$/i.test(url.trim());
 
 export default function AboutForm({ initial, onSave }: AboutFormProps) {
-  const [blocks, setBlocks] = useState<Block[]>(
-    initial?.blocks?.length
-      ? initial.blocks
-      : initial?.content
-        ? initial.content
-            .split('\n')
-            .filter(Boolean)
-            .map((text) => ({ type: 'paragraph' as const, text }))
-        : [{ type: 'paragraph', text: '' }]
+  const [blocks, setBlocks] = useState<Block[]>(() =>
+    comChaves(
+      initial?.blocks?.length
+        ? initial.blocks
+        : initial?.content
+          ? initial.content
+              .split('\n')
+              .filter(Boolean)
+              .map((text) => ({ type: 'paragraph' as const, text }))
+          : [{ type: 'paragraph', text: '' }]
+    )
   );
   const [team, setTeam] = useState<TeamMember[]>(initial?.team ?? []);
   const [erro, setErro] = useState('');
@@ -42,7 +45,7 @@ export default function AboutForm({ initial, onSave }: AboutFormProps) {
     setSalvando(true);
     try {
       await onSave({
-        blocks: blocks.filter((b) => (b.type === 'image' ? Boolean(b.src) : Boolean(b.text?.trim()))),
+        blocks: semChaves(blocks.filter((b) => (b.type === 'image' ? Boolean(b.src) : Boolean(b.text?.trim())))),
         team: team
           .filter((m) => m.name.trim() && m.role.trim())
           .map((m) => ({ ...m, email: m.email?.trim() || '', links: (m.links ?? []).filter((l) => l.label.trim() && l.url.trim()) })),

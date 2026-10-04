@@ -33,7 +33,7 @@ export default async function SobrePage() {
           about.blocks?.length ? (
             <BlockContent blocks={about.blocks} />
           ) : (
-            about.content.split('\n').map((p, i) => (
+            (about.content ?? '').split('\n').map((p, i) => (
               <p key={i} className="font-serif text-text-dark text-base md:text-lg leading-relaxed mb-3">
                 {p}
               </p>

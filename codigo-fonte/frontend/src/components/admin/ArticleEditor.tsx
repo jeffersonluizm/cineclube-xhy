@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { ArticleInput } from '@/lib/adminApi';
 import type { Article, Block } from '@/lib/types';
+import { comChaves, semChaves } from '@/lib/blocos';
 import BlocksEditor from './BlocksEditor';
 import ImageUploadField from './ImageUploadField';
 import CampoNotas from './CampoNotas';
@@ -37,14 +38,16 @@ function estadoInicial(initial?: Article): Estado {
     coverImage: initial?.coverImage ?? '',
     footnotes: initial?.footnotes ?? [],
     published: initial?.published !== false,
-    blocks: initial?.blocks?.length
-      ? initial.blocks
-      : initial?.content
-        ? initial.content
-            .split('\n')
-            .filter(Boolean)
-            .map((text) => ({ type: 'paragraph' as const, text }))
-        : [{ type: 'paragraph', text: '' }],
+    blocks: comChaves(
+      initial?.blocks?.length
+        ? initial.blocks
+        : initial?.content
+          ? initial.content
+              .split('\n')
+              .filter(Boolean)
+              .map((text) => ({ type: 'paragraph' as const, text }))
+          : [{ type: 'paragraph', text: '' }]
+    ),
   };
 }
 
@@ -79,7 +82,7 @@ export default function ArticleEditor({ parentId, parentType = 'revista', initia
         column: v.column.trim().toLowerCase(),
         epigraph: v.epigraph.trim(),
         coverImage: v.coverImage,
-        blocks: v.blocks.filter((b) => (b.type === 'image' ? Boolean(b.src) : Boolean(b.text?.trim()))),
+        blocks: semChaves(v.blocks.filter((b) => (b.type === 'image' ? Boolean(b.src) : Boolean(b.text?.trim())))),
         footnotes: v.footnotes.map((f) => f.trim()).filter(Boolean),
         published: v.published,
         parentType,
@@ -103,6 +106,12 @@ export default function ArticleEditor({ parentId, parentType = 'revista', initia
           <p className="mb-2">
             Há um rascunho deste texto guardado neste navegador em {quando(rascunho.em)}, com alterações que não foram salvas.
           </p>
+          {initial?.updatedAt && rascunho.em < Date.parse(initial.updatedAt) && (
+            <p className="mb-2 font-bold">
+              Atenção: o texto foi salvo depois deste rascunho ({quando(Date.parse(initial.updatedAt))}). Restaurar desfaz essa versão mais
+              nova.
+            </p>
+          )}
           <div className="flex flex-wrap gap-4">
             <Botao
               variante="texto"

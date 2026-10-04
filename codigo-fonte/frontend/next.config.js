@@ -32,7 +32,8 @@ const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${DEV ? " 'unsafe-eval'" : ''}`,
   "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' data: blob: https://res.cloudinary.com ${origemApi}`.trim(),
+  // a API aceita imagens de qualquer endereço https (links.ts): a CSP segue a mesma regra
+  `img-src 'self' data: blob: https: ${origemApi}`.trim(),
   "font-src 'self' data:",
   `connect-src 'self' ${origemApi}${DEV ? ' ws:' : ''}`.trim(),
   "frame-ancestors 'none'",

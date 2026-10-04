@@ -63,6 +63,7 @@ interface DialogoExclusaoProps {
 }
 
 const ROTULO_IMPACTO: Record<string, [string, string]> = {
+  desconhecido: ['conteúdo que não foi possível conferir agora (a API não respondeu)', 'conteúdos que não foi possível conferir'],
   textos: ['texto', 'textos'],
   filmes: ['página de filme', 'páginas de filme'],
 };
@@ -86,7 +87,8 @@ export function DialogoExclusao({ aberto, oQue, confirmacao, carregarImpacto, ao
     if (carregarImpacto) {
       carregarImpacto()
         .then(setImpacto)
-        .catch(() => setImpacto({}));
+        // Sem conseguir conferir o que vai junto, a exclusão continua exigindo a confirmação digitada
+        .catch(() => setImpacto({ desconhecido: 1 }));
     } else {
       setImpacto({});
     }
@@ -120,7 +122,8 @@ export function DialogoExclusao({ aberto, oQue, confirmacao, carregarImpacto, ao
           <ul className="font-sans text-sm list-disc pl-6 mb-4">
             {itens.map(([chave, n]) => (
               <li key={chave}>
-                <strong>{n}</strong> {(ROTULO_IMPACTO[chave] ?? [chave, chave])[n === 1 ? 0 : 1]}
+                {chave !== 'desconhecido' && <strong>{n} </strong>}
+                {(ROTULO_IMPACTO[chave] ?? [chave, chave])[n === 1 ? 0 : 1]}
               </li>
             ))}
           </ul>

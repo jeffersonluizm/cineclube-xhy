@@ -3,6 +3,7 @@
 import { useCallback, useId, useRef, useState } from 'react';
 import { imageUrl } from '@/lib/adminApi';
 import type { Block } from '@/lib/types';
+import { blocoNovo } from '@/lib/blocos';
 import { useUploadImagem } from './hooks';
 import { Botao, MoverItem } from './ui';
 
@@ -35,21 +36,29 @@ export default function BlocksEditor({
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
   const idTitulo = useId();
+  // Sempre a lista mais recente: um upload que termina depois de outras edições não as desfaz
+  const atuais = useRef(blocks);
+  atuais.current = blocks;
 
   function moveBlockTo(from: number, to: number) {
     if (from === to) return;
-    const next = [...blocks];
+    const next = [...atuais.current];
     const [moved] = next.splice(from, 1);
     next.splice(to, 0, moved);
     onChange(next);
   }
 
-  const updateBlock = (index: number, patch: Partial<Block>) => onChange(blocks.map((b, i) => (i === index ? { ...b, ...patch } : b)));
+  /** Atualiza o bloco pela chave estável (o índice pode ter mudado durante um upload) */
+  function updateBlock(chave: string | undefined, indice: number, patch: Partial<Block>) {
+    const lista = atuais.current;
+    const alvo = chave ? lista.findIndex((b) => b._k === chave) : indice;
+    if (alvo < 0) return; // o bloco foi removido enquanto a imagem subia
+    onChange(lista.map((b, i) => (i === alvo ? { ...b, ...patch } : b)));
+  }
 
   function addBlock(index: number, type: Block['type']) {
-    const block: Block = type === 'image' ? { type, src: '', align: 'full', width: 'large' } : { type, text: '' };
-    const next = [...blocks];
-    next.splice(index, 0, block);
+    const next = [...atuais.current];
+    next.splice(index, 0, blocoNovo(type));
     onChange(next);
   }
 
@@ -67,7 +76,7 @@ export default function BlocksEditor({
       <ol>
         {blocks.map((block, i) => (
           <li
-            key={i}
+            key={block._k ?? i}
             onDragOver={(e) => {
               if (dragIndex === null) return;
               e.preventDefault();
@@ -128,12 +137,12 @@ export default function BlocksEditor({
                 </div>
 
                 {block.type === 'image' ? (
-                  <ImageBlockFields block={block} indice={i} onChange={(patch) => updateBlock(i, patch)} />
+                  <ImageBlockFields block={block} indice={i} onChange={(patch) => updateBlock(block._k, i, patch)} />
                 ) : (
                   <textarea
                     aria-label={`texto do bloco ${i + 1} (${blockLabels[block.type]})`}
                     value={block.text ?? ''}
-                    onChange={(e) => updateBlock(i, { text: e.target.value })}
+                    onChange={(e) => updateBlock(block._k, i, { text: e.target.value })}
                     rows={block.type === 'subtitle' ? 1 : 4}
                     placeholder={
                       block.type === 'subtitle'

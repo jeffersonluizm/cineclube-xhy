@@ -5,6 +5,8 @@ interface NotasProps {
   notas: string[];
   tom?: 'cream' | 'dark';
   className?: string;
+  /** números que têm chamada no texto (só esses ganham o link de volta) */
+  chamadas?: number[];
 }
 
 /** Chamada de nota no texto (¹, ²…) que leva até a nota e volta */
@@ -19,7 +21,7 @@ export function ChamadaNota({ n }: { n: number }) {
 }
 
 /** Notas de rodapé com âncoras: cada uma volta para a sua chamada no texto */
-export default function Notas({ notas, tom = 'dark', className = '' }: NotasProps) {
+export default function Notas({ notas, tom = 'dark', className = '', chamadas = [] }: NotasProps) {
   const lista = notas.filter((n) => n.trim());
   if (lista.length === 0) return null;
   const cor = tom === 'dark' ? 'text-light-text' : 'text-light-escuro';
@@ -29,10 +31,15 @@ export default function Notas({ notas, tom = 'dark', className = '' }: NotasProp
         {lista.map((nota, i) => (
           <li key={i} id={idNota(i + 1)} className={`font-serif text-xs leading-relaxed scroll-mt-6 ${cor}`}>
             <span className="font-bold mr-1">{i + 1}.</span>
-            {nota}{' '}
-            <a href={`#${idChamada(i + 1)}`} aria-label={`voltar à chamada da nota ${i + 1}`} className="underline">
-              ↩
-            </a>
+            {nota}
+            {chamadas.includes(i + 1) && (
+              <>
+                {' '}
+                <a href={`#${idChamada(i + 1)}`} aria-label={`voltar à chamada da nota ${i + 1}`} className="underline">
+                  ↩
+                </a>
+              </>
+            )}
           </li>
         ))}
       </ol>

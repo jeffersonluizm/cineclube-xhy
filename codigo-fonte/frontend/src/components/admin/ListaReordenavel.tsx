@@ -41,6 +41,8 @@ export default function ListaReordenavel<T extends ItemLista>({
 }: ListaReordenavelProps<T>) {
   const avisar = useToast();
   const [paraExcluir, setParaExcluir] = useState<T | null>(null);
+  // Uma reordenação por vez: sem pedidos concorrentes, a volta em caso de erro bate com o banco
+  const [gravando, setGravando] = useState(false);
 
   async function mover(indice: number, dir: -1 | 1) {
     const alvo = indice + dir;
@@ -49,11 +51,14 @@ export default function ListaReordenavel<T extends ItemLista>({
     const depois = [...itens];
     [depois[indice], depois[alvo]] = [depois[alvo], depois[indice]];
     aoMudar(depois);
+    setGravando(true);
     try {
       await reordenar(depois.map((i) => i._id));
     } catch (e) {
       aoMudar(antes); // a tela volta para a ordem que está salva
       avisar(`Não foi possível reordenar: ${e instanceof Error ? e.message : 'erro desconhecido'}`, 'erro');
+    } finally {
+      setGravando(false);
     }
   }
 
@@ -64,7 +69,7 @@ export default function ListaReordenavel<T extends ItemLista>({
       <ol className="border-t border-text-dark/20">
         {itens.map((item, i) => (
           <li key={item._id} className="flex items-center gap-4 py-3 border-b border-text-dark/20">
-            <MoverItem indice={i} total={itens.length} rotulo={titulo(item)} aoMover={(dir) => mover(i, dir)} />
+            <MoverItem indice={i} total={itens.length} rotulo={titulo(item)} aoMover={(dir) => mover(i, dir)} desabilitado={gravando} />
             <div className="min-w-0 flex-1">
               <p className="font-display font-bold text-text-dark truncate">{titulo(item)}</p>
               <p className="font-sans text-sm text-text-suave">{detalhe(item)}</p>

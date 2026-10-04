@@ -68,14 +68,14 @@ export default async function CicloDetailPage({ params }: Props) {
             </p>
           )}
 
-          {cycle.screenings.length > 0 && (
+          {(cycle.screenings ?? []).length > 0 && (
             <section aria-labelledby="programacao">
               <h2 id="programacao" className="font-display font-black text-pink-escuro text-sm tracking-widest mb-6">
                 PROGRAMAÇÃO
               </h2>
 
               <ol>
-                {cycle.screenings.map((s, i) => {
+                {(cycle.screenings ?? []).map((s, i) => {
                   const filme = filmeDaSessao(s, films);
                   const ficha = [s.director, s.duration, s.country].filter(Boolean).join(', ');
                   return (
@@ -118,7 +118,7 @@ export default async function CicloDetailPage({ params }: Props) {
                 <p className="font-serif italic text-light-escuro text-sm leading-relaxed">{cycle.epigraph}</p>
               </aside>
             )}
-            <Notas notas={notas} tom="cream" />
+            <Notas notas={notas} tom="cream" chamadas={cycle.author && cycle.authorFootnote ? [1] : []} />
           </div>
         )}
       </div>

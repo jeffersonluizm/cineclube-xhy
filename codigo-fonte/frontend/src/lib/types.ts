@@ -5,6 +5,8 @@ export interface Block {
   caption?: string;
   align?: 'full' | 'left' | 'right' | 'center';
   width?: 'small' | 'medium' | 'large';
+  /** chave do editor (só no navegador; não vai para a API) */
+  _k?: string;
 }
 
 export interface Article {

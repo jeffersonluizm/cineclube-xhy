@@ -241,11 +241,13 @@ export function MoverItem({
   total,
   rotulo,
   aoMover,
+  desabilitado = false,
 }: {
   indice: number;
   total: number;
   rotulo: string;
   aoMover: (dir: -1 | 1) => void;
+  desabilitado?: boolean;
 }) {
   const estilo = 'text-text-dark hover:text-pink-escuro disabled:opacity-30 leading-none p-1';
   return (
@@ -253,7 +255,7 @@ export function MoverItem({
       <button
         type="button"
         onClick={() => aoMover(-1)}
-        disabled={indice === 0}
+        disabled={desabilitado || indice === 0}
         aria-label={`mover "${rotulo}" para cima`}
         className={estilo}
       >
@@ -262,7 +264,7 @@ export function MoverItem({
       <button
         type="button"
         onClick={() => aoMover(1)}
-        disabled={indice === total - 1}
+        disabled={desabilitado || indice === total - 1}
         aria-label={`mover "${rotulo}" para baixo`}
         className={estilo}
       >

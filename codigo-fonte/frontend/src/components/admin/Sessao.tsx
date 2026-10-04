@@ -6,6 +6,7 @@ import { adminApi, ErroSessaoExpirada } from '@/lib/adminApi';
 import { EVENTO_SESSAO_EXPIRADA, EVENTO_SESSAO_RENOVADA, lerToken, segundosRestantes } from '@/lib/sessao';
 import { Dialogo } from './Dialogo';
 import FormularioSenha from './FormularioSenha';
+import CartaoDemo from './CartaoDemo';
 import { Botao } from './ui';
 import { useToast } from './Toasts';
 
@@ -25,6 +26,8 @@ export default function Sessao({ children }: { children: React.ReactNode }) {
   const [pronto, setPronto] = useState(false);
   const [restante, setRestante] = useState<number>(() => segundosRestantes(lerToken()));
   const [relogin, setRelogin] = useState<'expirou' | 'renovar' | null>(null);
+  // "agora não": o aviso não volta sozinho pelo relógio; volta na próxima tentativa de salvar (401)
+  const [dispensado, setDispensado] = useState(false);
 
   // Ao abrir: sem token ou token vencido vai para as páginas de conexão, com volta para cá
   useEffect(() => {
@@ -51,7 +54,10 @@ export default function Sessao({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const t = setInterval(() => setRestante(segundosRestantes(lerToken())), 15_000);
     const renovada = () => setRestante(segundosRestantes(lerToken()));
-    const expirou = () => setRelogin('expirou');
+    const expirou = () => {
+      setDispensado(false);
+      setRelogin('expirou');
+    };
     window.addEventListener(EVENTO_SESSAO_RENOVADA, renovada);
     window.addEventListener(EVENTO_SESSAO_EXPIRADA, expirou);
     return () => {
@@ -62,11 +68,12 @@ export default function Sessao({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (pronto && restante === 0 && !relogin) setRelogin('expirou');
-  }, [pronto, restante, relogin]);
+    if (pronto && restante === 0 && !relogin && !dispensado) setRelogin('expirou');
+  }, [pronto, restante, relogin, dispensado]);
 
   const aoEntrar = useCallback(() => {
     setRelogin(null);
+    setDispensado(false);
     setRestante(segundosRestantes(lerToken()));
     avisar('Sessão renovada. Se estava salvando algo, clique em salvar de novo.');
   }, [avisar]);
@@ -93,16 +100,29 @@ export default function Sessao({ children }: { children: React.ReactNode }) {
       <Dialogo
         aberto={relogin !== null}
         titulo={relogin === 'expirou' ? 'Sua sessão expirou' : 'Renovar a sessão'}
-        aoFechar={() => setRelogin(null)}
+        aoFechar={() => {
+          setRelogin(null);
+          setDispensado(true);
+        }}
       >
         <p className="font-sans text-sm mb-4">
           {relogin === 'expirou'
             ? 'Por segurança, a sessão dura 8 horas. Digite a senha para continuar: nada do que está nesta página foi perdido.'
             : 'Digite a senha para ganhar mais 8 horas de sessão.'}
         </p>
-        <FormularioSenha aoEntrar={aoEntrar} rotuloBotao="continuar" />
+        {/* Quem entrou pela demonstração não tem senha: o mesmo botão de um clique aparece aqui */}
+        <div className="mb-4">
+          <CartaoDemo aoEntrar={aoEntrar} />
+        </div>
+        <FormularioSenha aoEntrar={aoEntrar} rotuloBotao="continuar" autoFocus={false} />
         <div className="mt-4 text-right">
-          <Botao variante="texto" onClick={() => setRelogin(null)}>
+          <Botao
+            variante="texto"
+            onClick={() => {
+              setRelogin(null);
+              setDispensado(true);
+            }}
+          >
             agora não
           </Botao>
         </div>

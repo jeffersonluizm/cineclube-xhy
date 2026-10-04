@@ -67,8 +67,14 @@ export default function HomeShowcase({ slides }: HomeShowcaseProps) {
     if (!stage) return;
 
     const naBorda = (dir: 1 | -1) => (dir === 1 && indexRef.current === total - 1) || (dir === -1 && indexRef.current === 0);
+    // Só troca de edição com a prateleira inteira na tela; meio fora, a rolagem é da página
+    const palcoInteiro = () => {
+      const r = stage.getBoundingClientRect();
+      return r.top >= -2 && r.bottom <= window.innerHeight + 2;
+    };
 
     const onWheel = (e: WheelEvent) => {
+      if (e.deltaY === 0 || total <= 1 || !palcoInteiro()) return; // gesto horizontal ou página fora de posição
       const dir = e.deltaY > 0 ? 1 : -1;
       // Na última edição, rolar para baixo desce a página até o rodapé (e na primeira, para cima)
       if (naBorda(dir)) return;
@@ -90,6 +96,11 @@ export default function HomeShowcase({ slides }: HomeShowcaseProps) {
       if (Math.abs(delta) > 55) {
         const dir = delta > 0 ? 1 : -1;
         touchStartY.current = null;
+        if (total <= 1 || !palcoInteiro()) {
+          // a prateleira bloqueia o arraste nativo (touch-action), então a página rola por aqui
+          window.scrollBy({ top: delta * 2, behavior: 'smooth' });
+          return;
+        }
         if (naBorda(dir)) {
           if (dir === 1) window.scrollBy({ top: window.innerHeight * 0.6, behavior: 'smooth' });
           return;

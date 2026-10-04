@@ -21,3 +21,12 @@ export function criarLimitador({ limite, janelaMs }: { limite: number; janelaMs:
     return atual.usados <= limite;
   };
 }
+
+/** Pré-carregamento de links (prefetch) do Next não é navegação do visitante: não conta no limite */
+export function contaNoLimite(cabecalhos: Headers): boolean {
+  return !(
+    cabecalhos.get('next-router-prefetch') === '1' ||
+    cabecalhos.get('x-middleware-prefetch') === '1' ||
+    cabecalhos.get('purpose') === 'prefetch'
+  );
+}

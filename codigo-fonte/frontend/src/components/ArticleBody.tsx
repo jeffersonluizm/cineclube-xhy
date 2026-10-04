@@ -84,7 +84,7 @@ export default function ArticleBody({ content, blocks, epigraph, footnotes }: Ar
           <div className="clear-both" />
         </div>
 
-        {footnotes && footnotes.length > 0 && <Notas notas={footnotes} />}
+        {footnotes && footnotes.length > 0 && <Notas notas={footnotes} chamadas={[1]} />}
       </div>
     </div>
   );

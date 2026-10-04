@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { criarLimitador } from '@/lib/limite';
+import { contaNoLimite, criarLimitador } from '@/lib/limite';
 
 /**
  * Limite por IP do VISITANTE no site. A API não vê esse IP (quem a chama é o servidor do
@@ -9,7 +9,7 @@ import { criarLimitador } from '@/lib/limite';
  */
 const MINUTO = 60_000;
 const busca = criarLimitador({ limite: 20, janelaMs: MINUTO });
-const revalidar = criarLimitador({ limite: 10, janelaMs: MINUTO });
+const revalidar = criarLimitador({ limite: 30, janelaMs: MINUTO });
 const paginas = criarLimitador({ limite: 300, janelaMs: MINUTO });
 
 function ipDoVisitante(req: NextRequest): string {
@@ -22,6 +22,8 @@ export function middleware(req: NextRequest) {
   if (caminho.startsWith('/_next/image')) return new NextResponse(null, { status: 404 });
   // LIMITE_SITE=0 desliga a contenção por IP (só o teste de carga usa, para medir vazão)
   if (process.env.LIMITE_SITE === '0') return NextResponse.next();
+  // Pré-carregamento de links não é visita: não gasta a cota (a home pré-carrega dezenas de links)
+  if (!contaNoLimite(req.headers)) return NextResponse.next();
   const ip = ipDoVisitante(req);
   const permitido = caminho.startsWith('/api/revalidar') ? revalidar(ip) : caminho.startsWith('/busca') ? busca(ip) : paginas(ip);
   if (permitido) return NextResponse.next();

@@ -97,7 +97,7 @@ export default async function FilmPage({ params }: Props) {
                 </p>
               )}
             </div>
-            <Notas notas={notas} />
+            <Notas notas={notas} chamadas={film.author && film.authorFootnote ? [1] : []} />
           </div>
         )}
       </article>
