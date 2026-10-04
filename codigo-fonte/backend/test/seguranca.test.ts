@@ -104,7 +104,10 @@ test('sessão: token válido responde quando expira; sem token responde 401', as
 });
 
 test('o navegador do painel consegue ler os cabeçalhos do limite de login', async () => {
-  const res = await request(app).options('/api/auth/login').set('Origin', 'http://localhost:3000').set('Access-Control-Request-Method', 'POST');
+  const res = await request(app)
+    .options('/api/auth/login')
+    .set('Origin', 'http://localhost:3000')
+    .set('Access-Control-Request-Method', 'POST');
   const comum = await request(app).post('/api/auth/login').set('Origin', 'http://localhost:3000').send({ password: 'x' });
   void res;
   assert.match(String(comum.headers['access-control-expose-headers']), /RateLimit/);

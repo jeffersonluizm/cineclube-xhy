@@ -20,7 +20,10 @@ export default function AdminCiclosPage() {
         <ul className="border-t border-text-dark/20">
           {ciclos.map((c) => (
             <li key={c._id}>
-              <Link href={`/admin/ciclos/${c._id}`} className="group flex flex-wrap items-baseline gap-x-4 py-4 border-b border-text-dark/20 hover:bg-papel px-2">
+              <Link
+                href={`/admin/ciclos/${c._id}`}
+                className="group flex flex-wrap items-baseline gap-x-4 py-4 border-b border-text-dark/20 hover:bg-papel px-2"
+              >
                 <span className="font-display font-black text-gold-escuro text-lg">{c.year}</span>
                 <span className="font-display font-bold text-text-dark text-xl">{c.title}</span>
                 {c.subtitle && <span className="font-serif italic text-text-suave">{c.subtitle}</span>}

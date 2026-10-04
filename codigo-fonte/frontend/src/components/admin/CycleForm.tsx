@@ -56,9 +56,7 @@ export default function CycleForm({ initial, filmes = [], onSave }: CycleFormPro
     const f = filmes.find((x) => x._id === filmId);
     alterarSessao(
       i,
-      f
-        ? { filmId, filmTitle: `${f.title} (${f.year})`, director: f.director, duration: f.duration, country: f.country }
-        : { filmId: '' }
+      f ? { filmId, filmTitle: `${f.title} (${f.year})`, director: f.director, duration: f.duration, country: f.country } : { filmId: '' }
     );
   }
 
@@ -77,9 +75,7 @@ export default function CycleForm({ initial, filmes = [], onSave }: CycleFormPro
         authorFootnote: v.authorFootnote.trim(),
         epigraph: v.epigraph.trim(),
         footnotes: v.footnotes.map((n) => n.trim()).filter(Boolean),
-        screenings: v.screenings
-          .filter((s) => s.filmTitle.trim())
-          .map(({ filmSlug: _antigo, ...s }) => ({ ...s, filmId: s.filmId || '' })),
+        screenings: v.screenings.filter((s) => s.filmTitle.trim()).map(({ filmSlug: _antigo, ...s }) => ({ ...s, filmId: s.filmId || '' })),
       });
       marcarSalvo();
     } catch (err) {
@@ -97,7 +93,13 @@ export default function CycleForm({ initial, filmes = [], onSave }: CycleFormPro
         <Campo rotulo="ano" type="number" min={1890} max={2100} value={v.year} onChange={alterar('year')} required />
       </div>
       <Campo rotulo="subtítulo" dica="ex.: o cinema de Béla Tarr e Pedro Costa" value={v.subtitle} onChange={alterar('subtitle')} />
-      <AreaTexto rotulo="texto de apresentação" dica="um parágrafo por linha" value={v.description} onChange={alterar('description')} rows={6} />
+      <AreaTexto
+        rotulo="texto de apresentação"
+        dica="um parágrafo por linha"
+        value={v.description}
+        onChange={alterar('description')}
+        rows={6}
+      />
       <ImageUploadField label="foto da exibição" value={v.coverImage} onChange={(url) => setV((x) => ({ ...x, coverImage: url }))} />
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -132,7 +134,12 @@ export default function CycleForm({ initial, filmes = [], onSave }: CycleFormPro
             <li key={i} className="border border-text-dark/30 p-4 grid gap-3 md:grid-cols-[6rem,5rem,1fr]">
               <Campo rotulo="data" placeholder="09.03" value={s.date} onChange={(e) => alterarSessao(i, { date: e.target.value })} />
               <Campo rotulo="hora" placeholder="19h" value={s.time} onChange={(e) => alterarSessao(i, { time: e.target.value })} />
-              <Seletor rotulo="página do filme" value={s.filmId ?? ''} onChange={(e) => escolherFilme(i, e.target.value)} disabled={filmes.length === 0}>
+              <Seletor
+                rotulo="página do filme"
+                value={s.filmId ?? ''}
+                onChange={(e) => escolherFilme(i, e.target.value)}
+                disabled={filmes.length === 0}
+              >
                 <option value="">sem página (só na programação)</option>
                 {filmes.map((f) => (
                   <option key={f._id} value={f._id}>
@@ -148,10 +155,19 @@ export default function CycleForm({ initial, filmes = [], onSave }: CycleFormPro
                 onChange={(e) => alterarSessao(i, { filmTitle: e.target.value })}
               />
               <Campo rotulo="direção" value={s.director ?? ''} onChange={(e) => alterarSessao(i, { director: e.target.value })} />
-              <Campo rotulo="duração" placeholder="117'" value={s.duration ?? ''} onChange={(e) => alterarSessao(i, { duration: e.target.value })} />
+              <Campo
+                rotulo="duração"
+                placeholder="117'"
+                value={s.duration ?? ''}
+                onChange={(e) => alterarSessao(i, { duration: e.target.value })}
+              />
               <Campo rotulo="país" value={s.country ?? ''} onChange={(e) => alterarSessao(i, { country: e.target.value })} />
               <div className="md:col-span-3 text-right">
-                <Botao variante="texto-perigo" className="text-sm" onClick={() => setV((x) => ({ ...x, screenings: x.screenings.filter((_, j) => j !== i) }))}>
+                <Botao
+                  variante="texto-perigo"
+                  className="text-sm"
+                  onClick={() => setV((x) => ({ ...x, screenings: x.screenings.filter((_, j) => j !== i) }))}
+                >
                   remover sessão {i + 1}
                 </Botao>
               </div>
@@ -159,7 +175,11 @@ export default function CycleForm({ initial, filmes = [], onSave }: CycleFormPro
           ))}
         </ol>
 
-        <Botao variante="texto" className="text-sm mt-3" onClick={() => setV((x) => ({ ...x, screenings: [...x.screenings, { ...sessaoVazia }] }))}>
+        <Botao
+          variante="texto"
+          className="text-sm mt-3"
+          onClick={() => setV((x) => ({ ...x, screenings: [...x.screenings, { ...sessaoVazia }] }))}
+        >
           + adicionar sessão
         </Botao>
       </fieldset>

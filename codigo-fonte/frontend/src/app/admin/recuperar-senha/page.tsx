@@ -13,16 +13,16 @@ export default function RecuperarSenhaPage() {
     <TelaConexao titulo="esqueci a senha">
       <div className="font-sans text-sm text-text-dark flex flex-col gap-3 w-full">
         <p>
-          O painel usa <strong>uma senha só para toda a equipe</strong>. Ela não fica num cadastro de usuários, então não
-          existe link de redefinição por e-mail.
+          O painel usa <strong>uma senha só para toda a equipe</strong>. Ela não fica num cadastro de usuários, então não existe link de
+          redefinição por e-mail.
         </p>
         <p>
           <strong>Para receber a senha atual</strong>, fale com a coordenação do cineclube pelo grupo da equipe.
         </p>
         <p>
-          <strong>Para trocar a senha</strong> (por exemplo, quando alguém sai da equipe), quem administra a hospedagem altera a
-          variável <code className="bg-papel px-1">ADMIN_PASSWORD</code> da API e reinicia o serviço. A senha antiga deixa de
-          funcionar na hora para novos logins.
+          <strong>Para trocar a senha</strong> (por exemplo, quando alguém sai da equipe), quem administra a hospedagem altera a variável{' '}
+          <code className="bg-papel px-1">ADMIN_PASSWORD</code> da API e reinicia o serviço. A senha antiga deixa de funcionar na hora para
+          novos logins.
         </p>
       </div>
       <Link href="/admin/login" className="font-display text-sm text-azul-escuro hover:underline">

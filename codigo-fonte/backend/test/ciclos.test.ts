@@ -42,10 +42,7 @@ test('página do ciclo traz os textos publicados do ciclo agrupados por coluna, 
 
   assert.equal(res.status, 200);
   const titulos = Object.fromEntries(
-    Object.entries(res.body.sections as Record<string, { title: string }[]>).map(([coluna, arts]) => [
-      coluna,
-      arts.map((a) => a.title),
-    ])
+    Object.entries(res.body.sections as Record<string, { title: string }[]>).map(([coluna, arts]) => [coluna, arts.map((a) => a.title)])
   );
   assert.deepEqual(titulos, { textos: ['Primeiro', 'Segundo'], traduções: ['Tradução'] });
 });

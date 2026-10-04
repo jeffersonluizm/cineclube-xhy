@@ -19,11 +19,7 @@ function ipDoVisitante(req: NextRequest): string {
 export function middleware(req: NextRequest) {
   const caminho = req.nextUrl.pathname;
   const ip = ipDoVisitante(req);
-  const permitido = caminho.startsWith('/api/revalidar')
-    ? revalidar(ip)
-    : caminho.startsWith('/busca')
-      ? busca(ip)
-      : paginas(ip);
+  const permitido = caminho.startsWith('/api/revalidar') ? revalidar(ip) : caminho.startsWith('/busca') ? busca(ip) : paginas(ip);
   if (permitido) return NextResponse.next();
 
   const texto = 'Muitas requisições seguidas. Aguarde um minuto e tente de novo.';

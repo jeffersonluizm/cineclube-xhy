@@ -24,32 +24,94 @@ beforeEach(async () => {
   const ci = await Cycle.create({ title: 'Realizadoras', slug: 'realizadoras', year: 2026 });
   const base = { column: 'crítica', order: 0 };
   await Article.create([
-    { ...base, title: 'Chantal Akerman e o tempo', slug: 'chantal', author: 'Lúcia Prado', content: 'Jeanne Dielman e a cozinha', parentType: 'revista', parentId: r._id },
-    { ...base, title: 'Salomé no cinema mudo', slug: 'salome-mudo', author: 'Lúcia Prado', content: 'Nazimova e a dança', parentType: 'catalogo', parentId: c._id, order: 1 },
-    { ...base, title: 'Agnès Varda na praia', slug: 'varda', author: 'Bruno Teles', content: 'As praias de Agnès', parentType: 'ciclo', parentId: ci._id },
-    { ...base, title: 'Rascunho sobre Akerman', slug: 'rascunho', author: 'Lúcia Prado', content: 'Akerman inédito', published: false, parentType: 'revista', parentId: r._id },
+    {
+      ...base,
+      title: 'Chantal Akerman e o tempo',
+      slug: 'chantal',
+      author: 'Lúcia Prado',
+      content: 'Jeanne Dielman e a cozinha',
+      parentType: 'revista',
+      parentId: r._id,
+    },
+    {
+      ...base,
+      title: 'Salomé no cinema mudo',
+      slug: 'salome-mudo',
+      author: 'Lúcia Prado',
+      content: 'Nazimova e a dança',
+      parentType: 'catalogo',
+      parentId: c._id,
+      order: 1,
+    },
+    {
+      ...base,
+      title: 'Agnès Varda na praia',
+      slug: 'varda',
+      author: 'Bruno Teles',
+      content: 'As praias de Agnès',
+      parentType: 'ciclo',
+      parentId: ci._id,
+    },
+    {
+      ...base,
+      title: 'Rascunho sobre Akerman',
+      slug: 'rascunho',
+      author: 'Lúcia Prado',
+      content: 'Akerman inédito',
+      published: false,
+      parentType: 'revista',
+      parentId: r._id,
+    },
   ]);
-  await Film.create({ title: 'Jeanne Dielman', slug: 'jeanne-dielman', director: 'Chantal Akerman', year: 1975, duration: "201'", country: 'Bélgica', synopsis: 'Três dias de uma dona de casa', cycleId: ci._id });
+  await Film.create({
+    title: 'Jeanne Dielman',
+    slug: 'jeanne-dielman',
+    director: 'Chantal Akerman',
+    year: 1975,
+    duration: "201'",
+    country: 'Bélgica',
+    synopsis: 'Três dias de uma dona de casa',
+    cycleId: ci._id,
+  });
 });
 
 test('busca encontra textos publicados e filmes com o endereço de cada um', async () => {
   const res = await request(app).get('/api/busca').query({ q: 'akerman' });
   assert.equal(res.status, 200);
-  assert.deepEqual(res.body.textos.map((t: { href: string }) => t.href), ['/revista/3/artigo/chantal']);
+  assert.deepEqual(
+    res.body.textos.map((t: { href: string }) => t.href),
+    ['/revista/3/artigo/chantal']
+  );
   assert.equal(res.body.textos[0].author, 'Lúcia Prado');
-  assert.deepEqual(res.body.filmes.map((f: { href: string }) => f.href), ['/ciclos-mostras/realizadoras/jeanne-dielman']);
+  assert.deepEqual(
+    res.body.filmes.map((f: { href: string }) => f.href),
+    ['/ciclos-mostras/realizadoras/jeanne-dielman']
+  );
 });
 
 test('busca ignora acentos e monta endereços de catálogo e ciclo', async () => {
   const salome = await request(app).get('/api/busca').query({ q: 'salome' });
-  assert.deepEqual(salome.body.textos.map((t: { href: string }) => t.href), ['/catalogos/salome/salome-mudo']);
+  assert.deepEqual(
+    salome.body.textos.map((t: { href: string }) => t.href),
+    ['/catalogos/salome/salome-mudo']
+  );
   const varda = await request(app).get('/api/busca').query({ q: 'agnes' });
-  assert.deepEqual(varda.body.textos.map((t: { href: string }) => t.href), ['/ciclos-mostras/realizadoras/texto/varda']);
+  assert.deepEqual(
+    varda.body.textos.map((t: { href: string }) => t.href),
+    ['/ciclos-mostras/realizadoras/texto/varda']
+  );
 });
 
 test('busca recusa termo curto ou longo demais', async () => {
   assert.equal((await request(app).get('/api/busca').query({ q: 'a' })).status, 400);
-  assert.equal((await request(app).get('/api/busca').query({ q: 'x'.repeat(101) })).status, 400);
+  assert.equal(
+    (
+      await request(app)
+        .get('/api/busca')
+        .query({ q: 'x'.repeat(101) })
+    ).status,
+    400
+  );
   assert.equal((await request(app).get('/api/busca?q[$ne]=x')).status, 400);
 });
 
@@ -57,7 +119,10 @@ test('página de autor reúne os textos publicados pelo slug do nome', async () 
   const res = await request(app).get('/api/autores/lucia-prado');
   assert.equal(res.status, 200);
   assert.equal(res.body.nome, 'Lúcia Prado');
-  assert.deepEqual(res.body.textos.map((t: { href: string }) => t.href).sort(), ['/catalogos/salome/salome-mudo', '/revista/3/artigo/chantal']);
+  assert.deepEqual(res.body.textos.map((t: { href: string }) => t.href).sort(), [
+    '/catalogos/salome/salome-mudo',
+    '/revista/3/artigo/chantal',
+  ]);
   assert.equal((await request(app).get('/api/autores/ninguem')).status, 404);
 });
 

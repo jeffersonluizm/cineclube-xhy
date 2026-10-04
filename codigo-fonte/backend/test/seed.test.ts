@@ -31,7 +31,8 @@ test('com dados existentes, sem --force e sem confirmação, não apaga nada', a
   await criarRevistaDoEditor();
   let perguntas = 0;
 
-  const resultado = await executarSeed({ banco: BANCO,
+  const resultado = await executarSeed({
+    banco: BANCO,
     force: false,
     confirmar: async () => {
       perguntas++;

@@ -48,7 +48,9 @@ function BlockRenderer({ block }: { block: Block }) {
       return <h2 className="font-display font-bold text-cream text-2xl mt-10 mb-4 clear-both">{block.text}</h2>;
     case 'quote':
       return (
-        <blockquote className="font-serif italic text-gold text-lg leading-relaxed border-l-2 border-gold pl-5 my-8">{block.text}</blockquote>
+        <blockquote className="font-serif italic text-gold text-lg leading-relaxed border-l-2 border-gold pl-5 my-8">
+          {block.text}
+        </blockquote>
       );
     case 'image':
       return <ImageBlock block={block} />;

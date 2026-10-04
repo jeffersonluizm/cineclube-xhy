@@ -13,7 +13,14 @@ export default async function HomePage() {
   // Se a última publicação for um catálogo, ele abre a "prateleira"
   if (latest?.type === 'catalogo') {
     const cat = latest.data as Catalog;
-    slides.push({ key: `cat-${cat._id}`, type: 'catalogo', href: `/catalogos/${cat.slug}`, coverImage: cat.coverImage, catalog: cat, articles: [] });
+    slides.push({
+      key: `cat-${cat._id}`,
+      type: 'catalogo',
+      href: `/catalogos/${cat.slug}`,
+      coverImage: cat.coverImage,
+      catalog: cat,
+      articles: [],
+    });
   }
 
   for (const ed of editions ?? []) {

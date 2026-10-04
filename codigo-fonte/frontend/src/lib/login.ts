@@ -12,7 +12,13 @@ export function destinoSeguro(next: string | null | undefined): string {
 }
 
 /** Segundos até poder tentar de novo, pelos cabeçalhos do limite (RateLimit draft-7 ou Retry-After) */
-export function segundosParaTentarDeNovo({ ratelimit, retryAfter }: { ratelimit: string | null; retryAfter: string | null }): number | null {
+export function segundosParaTentarDeNovo({
+  ratelimit,
+  retryAfter,
+}: {
+  ratelimit: string | null;
+  retryAfter: string | null;
+}): number | null {
   const reset = ratelimit?.match(/reset=(\d+)/);
   if (reset) return Number(reset[1]);
   if (retryAfter && /^\d+$/.test(retryAfter.trim())) return Number(retryAfter);

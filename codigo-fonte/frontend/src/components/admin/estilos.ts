@@ -12,4 +12,3 @@ const VARIANTES: Record<Variante, string> = {
 
 export const classeBotao = (variante: Variante = 'principal', extra = '') =>
   `font-display inline-flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${VARIANTES[variante]} ${extra}`;
-

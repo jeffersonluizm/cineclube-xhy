@@ -17,7 +17,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!dados) return { title: 'Página não encontrada', robots: { index: false } };
   return pageMetadata({
     title: dados.nome,
-    description: `Textos de ${dados.nome} no Cineclube XHY: ${dados.textos.map((t) => t.title).slice(0, 5).join('; ')}.`,
+    description: `Textos de ${dados.nome} no Cineclube XHY: ${dados.textos
+      .map((t) => t.title)
+      .slice(0, 5)
+      .join('; ')}.`,
     path: `/autores/${dados.slug}`,
   });
 }

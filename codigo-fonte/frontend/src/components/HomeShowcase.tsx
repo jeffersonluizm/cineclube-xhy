@@ -166,7 +166,12 @@ export default function HomeShowcase({ slides }: HomeShowcaseProps) {
         const style: React.CSSProperties = {
           transition: `transform ${TRANSITION_MS}ms cubic-bezier(.22,.9,.28,1), opacity ${TRANSITION_MS}ms ease`,
           zIndex: pos < 0 ? 40 : pos === 0 ? 30 : 20 - pos,
-          transform: pos < 0 ? 'translateY(-115%) rotate(-7deg) scale(1.04)' : pos === 0 ? 'none' : `translateY(${2.2 * pos}%) scale(${1 - 0.05 * pos})`,
+          transform:
+            pos < 0
+              ? 'translateY(-115%) rotate(-7deg) scale(1.04)'
+              : pos === 0
+                ? 'none'
+                : `translateY(${2.2 * pos}%) scale(${1 - 0.05 * pos})`,
           opacity: pos < 0 ? 0 : pos === 0 ? 1 : pos === 1 ? 0.16 : 0,
           pointerEvents: pos === 0 ? 'auto' : 'none',
         };
@@ -255,7 +260,11 @@ function SlideContent({ slide, hideInfo, eager }: { slide: ShowcaseSlide; hideIn
 
   return (
     <div className="flex flex-col sm:flex-row gap-5 sm:gap-12 items-center justify-center max-w-5xl w-full">
-      <Link href={slide.href} className="w-[min(440px,42vw)] sm:w-[min(440px,40vw)] shrink-0 block group" aria-label={`abrir ${nomeDoSlide(slide)}`}>
+      <Link
+        href={slide.href}
+        className="w-[min(440px,42vw)] sm:w-[min(440px,40vw)] shrink-0 block group"
+        aria-label={`abrir ${nomeDoSlide(slide)}`}
+      >
         {slide.coverImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -273,7 +282,10 @@ function SlideContent({ slide, hideInfo, eager }: { slide: ShowcaseSlide; hideIn
       <div className="max-w-sm text-center sm:text-left transition-opacity duration-500" style={{ opacity: hideInfo ? 0 : 1 }}>
         {mag && (
           <>
-            <Link href={slide.href} className="font-display font-black text-text-dark hover:text-olive-escuro transition-colors block mb-2 sm:mb-4 text-titulo-edicao">
+            <Link
+              href={slide.href}
+              className="font-display font-black text-text-dark hover:text-olive-escuro transition-colors block mb-2 sm:mb-4 text-titulo-edicao"
+            >
               n<sup className="font-black align-super text-[0.55em]">o</sup>
               {mag.number}
             </Link>
@@ -284,7 +296,10 @@ function SlideContent({ slide, hideInfo, eager }: { slide: ShowcaseSlide; hideIn
                 <ul>
                   {slide.articles.map((a) => (
                     <li key={a._id} className="mb-1">
-                      <Link href={`/revista/${mag.number}/artigo/${a.slug}`} className="font-serif italic text-text-dark text-sm hover:text-olive-escuro hover:underline block">
+                      <Link
+                        href={`/revista/${mag.number}/artigo/${a.slug}`}
+                        className="font-serif italic text-text-dark text-sm hover:text-olive-escuro hover:underline block"
+                      >
                         {a.title}
                       </Link>
                     </li>
@@ -302,7 +317,10 @@ function SlideContent({ slide, hideInfo, eager }: { slide: ShowcaseSlide; hideIn
 
         {cat && (
           <>
-            <Link href={slide.href} className="font-display font-black text-text-dark hover:text-olive-escuro transition-colors block mb-2 sm:mb-4 text-titulo-lista">
+            <Link
+              href={slide.href}
+              className="font-display font-black text-text-dark hover:text-olive-escuro transition-colors block mb-2 sm:mb-4 text-titulo-lista"
+            >
               {cat.title}
             </Link>
             <p className="font-serif text-text-dark text-sm sm:mt-6">{cat.year}</p>

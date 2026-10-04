@@ -29,9 +29,15 @@ router.get(
     // Nome legível do lugar de cada texto ("revista n°3", "catálogo Salomé"), numa consulta por tipo
     const ids = (tipo: string) => [...listaRascunhos, ...ultimos].filter((t) => t.parentType === tipo).map((t) => t.parentId);
     const [revs, cats, cics] = await Promise.all([
-      Magazine.find({ _id: { $in: ids('revista') } }).select('number').lean(),
-      Catalog.find({ _id: { $in: ids('catalogo') } }).select('title').lean(),
-      Cycle.find({ _id: { $in: ids('ciclo') } }).select('title').lean(),
+      Magazine.find({ _id: { $in: ids('revista') } })
+        .select('number')
+        .lean(),
+      Catalog.find({ _id: { $in: ids('catalogo') } })
+        .select('title')
+        .lean(),
+      Cycle.find({ _id: { $in: ids('ciclo') } })
+        .select('title')
+        .lean(),
     ]);
     const nomes = new Map<string, string>([
       ...revs.map((r) => [String(r._id), `revista n°${r.number}`] as [string, string]),

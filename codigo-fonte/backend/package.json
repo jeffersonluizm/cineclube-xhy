@@ -11,7 +11,10 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "seed": "ts-node src/scripts/seed.ts",
-    "test": "tsx --import ./test/preparar.ts --test --test-concurrency=3 --test-timeout=60000 \"test/**/*.test.ts\""
+    "test": "tsx --import ./test/preparar.ts --test --test-concurrency=3 --test-timeout=60000 \"test/**/*.test.ts\"",
+    "lint": "eslint .",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\""
   },
   "dependencies": {
     "cloudinary": "^2.11.0",
@@ -27,17 +30,21 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.2.0",
     "@types/node": "^20.14.0",
     "@types/supertest": "^7.2.1",
+    "eslint": "^9.39.5",
     "mongodb-memory-server": "^11.2.0",
+    "prettier": "^3.9.9",
     "supertest": "^7.3.1",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "tsx": "^4.23.15",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "typescript-eslint": "^8.71.0"
   }
 }

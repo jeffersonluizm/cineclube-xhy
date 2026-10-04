@@ -12,7 +12,13 @@ import { criarLimitadorGeral, criarLimitadorLoginGlobal, pedidoDoServidorDoSite 
 const SEGREDO = 'segredo-do-site-com-mais-de-32-caracteres-123';
 
 test('produção recusa subir com senha do editor curta ou segredos fracos', () => {
-  const base = { NODE_ENV: 'production', MONGODB_URI: 'mongodb+srv://x', JWT_SECRET: 'j'.repeat(40), FRONTEND_URL: 'https://site', ADMIN_PASSWORD: 'senha-bem-longa-ok' };
+  const base = {
+    NODE_ENV: 'production',
+    MONGODB_URI: 'mongodb+srv://x',
+    JWT_SECRET: 'j'.repeat(40),
+    FRONTEND_URL: 'https://site',
+    ADMIN_PASSWORD: 'senha-bem-longa-ok',
+  };
   assert.deepEqual(problemasDeConfiguracao(base), []);
   assert.match(problemasDeConfiguracao({ ...base, ADMIN_PASSWORD: 'curta123' }).join(), /ADMIN_PASSWORD.*12/);
   assert.match(problemasDeConfiguracao({ ...base, JWT_SECRET: 'curto' }).join(), /JWT_SECRET.*32/);

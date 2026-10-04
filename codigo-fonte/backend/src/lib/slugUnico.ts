@@ -29,7 +29,8 @@ export async function criarComSlugUnico<T>(model: Model<any>, titulo: string, da
     try {
       return (await model.create({ ...dados, slug })) as T;
     } catch (err) {
-      const colisaoDeSlug = (err as { code?: number; keyPattern?: Record<string, unknown> }).code === 11000 &&
+      const colisaoDeSlug =
+        (err as { code?: number; keyPattern?: Record<string, unknown> }).code === 11000 &&
         'slug' in ((err as { keyPattern?: Record<string, unknown> }).keyPattern ?? {});
       if (!colisaoDeSlug || i >= tentativas - 1) throw err;
       // Espera aleatória curta: as criações concorrentes deixam de calcular o mesmo sufixo juntas

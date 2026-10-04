@@ -38,7 +38,10 @@ test('com a flag, /api/demo descreve o papel de demonstração sem expor senha',
   const res = await request(app).get('/api/demo');
   assert.equal(res.status, 200);
   assert.equal(res.body.ativo, true);
-  assert.deepEqual(res.body.papeis.map((p: { papel: string }) => p.papel), ['editor']);
+  assert.deepEqual(
+    res.body.papeis.map((p: { papel: string }) => p.papel),
+    ['editor']
+  );
   assert.doesNotMatch(JSON.stringify(res.body), /senha|password/i);
 });
 

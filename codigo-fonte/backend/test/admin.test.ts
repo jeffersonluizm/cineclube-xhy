@@ -64,7 +64,10 @@ test('revistas: cria, recusa incompleta e duplicada, edita e lista', async () =>
 
   await novaRevista(1);
   const lista = await get('/api/admin/revistas');
-  assert.deepEqual(lista.body.map((m: { number: number }) => m.number), [5, 1]);
+  assert.deepEqual(
+    lista.body.map((m: { number: number }) => m.number),
+    [5, 1]
+  );
 
   assert.equal((await put('/api/admin/revistas/0123456789abcdef01234567', { month: 'x' })).status, 404);
 });
@@ -96,7 +99,10 @@ test('artigos: cria com slug único, ordem crescente e texto corrido sem imagens
 test('criações simultâneas com o mesmo título recebem slugs distintos, sem erro', async () => {
   const r = (await novaRevista()).body;
   const respostas = await Promise.all(Array.from({ length: 12 }, () => novoTexto(r._id)));
-  assert.deepEqual(respostas.map((x) => x.status), Array(12).fill(201));
+  assert.deepEqual(
+    respostas.map((x) => x.status),
+    Array(12).fill(201)
+  );
   const slugs = new Set(respostas.map((x) => x.body.slug));
   assert.equal(slugs.size, 12);
   assert.ok(slugs.has('um-texto'));
@@ -114,7 +120,10 @@ test('artigos: edita recalculando o texto corrido, lista por revista e reordena'
 
   assert.equal((await put('/api/admin/artigos/reorder', { ids: [a2._id, a1._id] })).status, 200);
   const lista = await get(`/api/admin/artigos?parentId=${r._id}`);
-  assert.deepEqual(lista.body.map((a: { title: string }) => a.title), ['Outro', 'Um texto']);
+  assert.deepEqual(
+    lista.body.map((a: { title: string }) => a.title),
+    ['Outro', 'Um texto']
+  );
 
   assert.equal((await put('/api/admin/artigos/reorder', {})).status, 400);
   const um = await get(`/api/admin/artigos/${a1._id}`);
@@ -143,7 +152,15 @@ test('ciclos e filmes: CRUD, reordenação e exclusão em cascata', async () => 
   const ciclo = c.body;
 
   const filme = (titulo: string) =>
-    post('/api/admin/filmes', { title: titulo, director: 'D', year: 2000, duration: "90'", country: 'BR', synopsis: 's', cycleId: ciclo._id });
+    post('/api/admin/filmes', {
+      title: titulo,
+      director: 'D',
+      year: 2000,
+      duration: "90'",
+      country: 'BR',
+      synopsis: 's',
+      cycleId: ciclo._id,
+    });
   const f1 = (await filme('Primeiro filme')).body;
   const f2 = (await filme('Segundo filme')).body;
   assert.equal(f1.slug, 'primeiro-filme');
@@ -152,7 +169,10 @@ test('ciclos e filmes: CRUD, reordenação e exclusão em cascata', async () => 
 
   assert.equal((await put('/api/admin/filmes/reorder', { ids: [f2._id, f1._id] })).status, 200);
   const lista = await get(`/api/admin/filmes?cycleId=${ciclo._id}`);
-  assert.deepEqual(lista.body.map((f: { title: string }) => f.title), ['Segundo filme', 'Primeiro filme']);
+  assert.deepEqual(
+    lista.body.map((f: { title: string }) => f.title),
+    ['Segundo filme', 'Primeiro filme']
+  );
 
   const ed = await put(`/api/admin/filmes/${f1._id}`, { synopsis: 'nova sinopse' });
   assert.equal(ed.body.synopsis, 'nova sinopse');

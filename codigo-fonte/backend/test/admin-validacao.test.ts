@@ -97,7 +97,15 @@ test('impacto da exclusão conta o que vai junto', async () => {
   await post('/api/admin/artigos', textoValido(r._id));
   await post('/api/admin/artigos', { ...textoValido(r._id), published: false });
   const ci = (await post('/api/admin/ciclos', { title: 'Realizadoras', year: 2026 })).body;
-  await post('/api/admin/filmes', { title: 'F', director: 'D', year: 2000, duration: "90'", country: 'BR', synopsis: 's', cycleId: ci._id });
+  await post('/api/admin/filmes', {
+    title: 'F',
+    director: 'D',
+    year: 2000,
+    duration: "90'",
+    country: 'BR',
+    synopsis: 's',
+    cycleId: ci._id,
+  });
   await post('/api/admin/artigos', { ...textoValido(ci._id), parentType: 'ciclo' });
 
   assert.deepEqual((await get(`/api/admin/revistas/${r._id}/impacto`)).body, { textos: 2 });
@@ -106,9 +114,29 @@ test('impacto da exclusão conta o que vai junto', async () => {
 
 test('sessões do ciclo guardam o id do filme', async () => {
   const ci = (await post('/api/admin/ciclos', { title: 'Realizadoras', year: 2026 })).body;
-  const f = (await post('/api/admin/filmes', { title: 'Vanda', director: 'Pedro Costa', year: 2000, duration: "171'", country: 'Portugal', synopsis: 's', cycleId: ci._id })).body;
+  const f = (
+    await post('/api/admin/filmes', {
+      title: 'Vanda',
+      director: 'Pedro Costa',
+      year: 2000,
+      duration: "171'",
+      country: 'Portugal',
+      synopsis: 's',
+      cycleId: ci._id,
+    })
+  ).body;
   const res = await put(`/api/admin/ciclos/${ci._id}`, {
-    screenings: [{ date: '09.03', time: '19h', filmTitle: 'No Quarto da Vanda', filmId: f._id, director: 'Pedro Costa', duration: "171'", country: 'Portugal' }],
+    screenings: [
+      {
+        date: '09.03',
+        time: '19h',
+        filmTitle: 'No Quarto da Vanda',
+        filmId: f._id,
+        director: 'Pedro Costa',
+        duration: "171'",
+        country: 'Portugal',
+      },
+    ],
   });
   assert.equal(res.status, 200);
   assert.equal(res.body.screenings[0].filmId, f._id);
@@ -127,7 +155,10 @@ test('resumo do painel conta conteúdo, rascunhos e últimos editados', async ()
   assert.equal(res.body.contagens.ciclos, 0);
   assert.equal(res.body.contagens.textosPublicados, 1);
   assert.equal(res.body.contagens.rascunhos, 1);
-  assert.deepEqual(res.body.rascunhos.map((t: { title: string }) => t.title), ['Rascunho']);
+  assert.deepEqual(
+    res.body.rascunhos.map((t: { title: string }) => t.title),
+    ['Rascunho']
+  );
   assert.equal(res.body.ultimosEditados[0].title, 'Rascunho');
   assert.equal(res.body.ultimosEditados[0].onde, 'revista n°1');
 });

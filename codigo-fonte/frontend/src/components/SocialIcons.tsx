@@ -35,7 +35,15 @@ export default function SocialIcons({ size = 24, className = '' }: SocialIconsPr
             aria-label={`${social.label} do Cineclube XHY (abre em nova aba)`}
             className="opacity-80 hover:opacity-100 transition-opacity"
           >
-            <Image src={social.icon} alt="" width={size} height={size} loading="eager" className="object-contain" style={{ height: size, width: 'auto' }} />
+            <Image
+              src={social.icon}
+              alt=""
+              width={size}
+              height={size}
+              loading="eager"
+              className="object-contain"
+              style={{ height: size, width: 'auto' }}
+            />
           </a>
         )
       )}

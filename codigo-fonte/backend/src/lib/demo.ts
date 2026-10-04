@@ -35,11 +35,14 @@ export async function restaurarDemonstracao({ soSeVazio, log = console.log }: { 
 /** Agenda o reset periódico da demonstração; devolve a função que para o agendamento */
 export function agendarResetDemonstracao(log: (m: string) => void = console.log) {
   const minutos = intervaloResetMinutos();
-  const t = setInterval(() => {
-    restaurarDemonstracao({ soSeVazio: false, log: () => {} })
-      .then(() => log(`Demonstração restaurada aos dados de exemplo (a cada ${minutos} min).`))
-      .catch((e) => log(`Falha ao restaurar a demonstração: ${(e as Error).message}`));
-  }, minutos * 60 * 1000);
+  const t = setInterval(
+    () => {
+      restaurarDemonstracao({ soSeVazio: false, log: () => {} })
+        .then(() => log(`Demonstração restaurada aos dados de exemplo (a cada ${minutos} min).`))
+        .catch((e) => log(`Falha ao restaurar a demonstração: ${(e as Error).message}`));
+    },
+    minutos * 60 * 1000
+  );
   t.unref();
   return () => clearInterval(t);
 }

@@ -19,7 +19,15 @@ export default function GlobalError({ reset }: { error: Error & { digest?: strin
           <button
             type="button"
             onClick={reset}
-            style={{ marginTop: 24, background: 'none', border: 0, color: cores.olive, font: 'bold 16px system-ui, sans-serif', cursor: 'pointer', padding: 0 }}
+            style={{
+              marginTop: 24,
+              background: 'none',
+              border: 0,
+              color: cores.olive,
+              font: 'bold 16px system-ui, sans-serif',
+              cursor: 'pointer',
+              padding: 0,
+            }}
           >
             tentar novamente
           </button>

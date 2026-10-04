@@ -17,7 +17,10 @@ export function rotaReordenar(router: Router, model: Model<any>) {
       const { ids } = reordenacao.parse(req.body ?? {});
       // Uma ida ao banco para a lista inteira (antes: um findByIdAndUpdate por id)
       if (ids.length) {
-        await model.bulkWrite(ids.map((id, i) => ({ updateOne: { filter: { _id: id }, update: { $set: { order: i } } } })), { ordered: false });
+        await model.bulkWrite(
+          ids.map((id, i) => ({ updateOne: { filter: { _id: id }, update: { $set: { order: i } } } })),
+          { ordered: false }
+        );
       }
       res.json({ ok: true });
     })
@@ -43,4 +46,3 @@ export async function proximaOrdem(model: Model<any>, filtro: object): Promise<n
   const ultimo = await model.findOne(filtro).sort({ order: -1 }).select('order').lean<{ order: number }>();
   return ultimo ? ultimo.order + 1 : 0;
 }
-

@@ -20,7 +20,10 @@ export default function AboutForm({ initial, onSave }: AboutFormProps) {
     initial?.blocks?.length
       ? initial.blocks
       : initial?.content
-        ? initial.content.split('\n').filter(Boolean).map((text) => ({ type: 'paragraph' as const, text }))
+        ? initial.content
+            .split('\n')
+            .filter(Boolean)
+            .map((text) => ({ type: 'paragraph' as const, text }))
         : [{ type: 'paragraph', text: '' }]
   );
   const [team, setTeam] = useState<TeamMember[]>(initial?.team ?? []);
@@ -28,7 +31,8 @@ export default function AboutForm({ initial, onSave }: AboutFormProps) {
   const [salvando, setSalvando] = useState(false);
   const { sujo, marcarSalvo } = useSujo({ blocks, team });
 
-  const atualizarMembro = (i: number, patch: Partial<TeamMember>) => setTeam((prev) => prev.map((m, j) => (j === i ? { ...m, ...patch } : m)));
+  const atualizarMembro = (i: number, patch: Partial<TeamMember>) =>
+    setTeam((prev) => prev.map((m, j) => (j === i ? { ...m, ...patch } : m)));
   const atualizarLinks = (i: number, f: (links: TeamMemberLink[]) => TeamMemberLink[]) =>
     setTeam((prev) => prev.map((m, j) => (j === i ? { ...m, links: f(m.links ?? []) } : m)));
 
@@ -69,7 +73,12 @@ export default function AboutForm({ initial, onSave }: AboutFormProps) {
             <li key={i} className="border border-text-dark/30 p-4 flex flex-col gap-3">
               <div className="grid gap-3 md:grid-cols-3">
                 <Campo rotulo="nome" value={m.name} onChange={(e) => atualizarMembro(i, { name: e.target.value })} />
-                <Campo rotulo="função" dica="ex.: coordenação, editorial" value={m.role} onChange={(e) => atualizarMembro(i, { role: e.target.value })} />
+                <Campo
+                  rotulo="função"
+                  dica="ex.: coordenação, editorial"
+                  value={m.role}
+                  onChange={(e) => atualizarMembro(i, { role: e.target.value })}
+                />
                 <Campo rotulo="e-mail" type="email" value={m.email ?? ''} onChange={(e) => atualizarMembro(i, { email: e.target.value })} />
               </div>
 
@@ -90,12 +99,20 @@ export default function AboutForm({ initial, onSave }: AboutFormProps) {
                       erro={l.url && !urlValida(l.url) ? 'Use um endereço que comece com https:// ou mailto:' : undefined}
                       onChange={(e) => atualizarLinks(i, (ls) => ls.map((x, k) => (k === j ? { ...x, url: e.target.value } : x)))}
                     />
-                    <Botao variante="texto-perigo" className="mt-7 text-sm" onClick={() => atualizarLinks(i, (ls) => ls.filter((_, k) => k !== j))}>
+                    <Botao
+                      variante="texto-perigo"
+                      className="mt-7 text-sm"
+                      onClick={() => atualizarLinks(i, (ls) => ls.filter((_, k) => k !== j))}
+                    >
                       remover link
                     </Botao>
                   </div>
                 ))}
-                <Botao variante="texto" className="self-start text-xs" onClick={() => atualizarLinks(i, (ls) => [...ls, { label: '', url: '' }])}>
+                <Botao
+                  variante="texto"
+                  className="self-start text-xs"
+                  onClick={() => atualizarLinks(i, (ls) => [...ls, { label: '', url: '' }])}
+                >
                   + adicionar link
                 </Botao>
               </fieldset>
@@ -107,7 +124,11 @@ export default function AboutForm({ initial, onSave }: AboutFormProps) {
           ))}
         </ol>
 
-        <Botao variante="texto" className="text-sm mt-3" onClick={() => setTeam((prev) => [...prev, { name: '', role: '', email: '', links: [] }])}>
+        <Botao
+          variante="texto"
+          className="text-sm mt-3"
+          onClick={() => setTeam((prev) => [...prev, { name: '', role: '', email: '', links: [] }])}
+        >
           + adicionar integrante
         </Botao>
       </fieldset>

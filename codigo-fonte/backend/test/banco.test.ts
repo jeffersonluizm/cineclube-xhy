@@ -58,9 +58,7 @@ test('conecta na URI configurada quando ela responde', async () => {
 test('em produção, URI fora do ar é erro e não sobe banco embutido', async () => {
   const dbPath = path.join(os.tmpdir(), `cineclube-nao-criar-${process.pid}`);
 
-  await assert.rejects(
-    conectarBanco({ uri: URI_FORA_DO_AR, producao: true, timeoutMs: 300, dbPath, log: silencioso })
-  );
+  await assert.rejects(conectarBanco({ uri: URI_FORA_DO_AR, producao: true, timeoutMs: 300, dbPath, log: silencioso }));
   assert.equal(fs.existsSync(dbPath), false);
 });
 
@@ -121,7 +119,10 @@ test('descrição do banco mostra hosts e nome, sem usuário e senha', () => {
     descreverBanco('mongodb://u%40x:p%3Aw@h1:27017,h2:27018/?replicaSet=rs0', 'outro', 'configurado'),
     'h1:27017,h2:27018/outro (configurado)'
   );
-  assert.equal(descreverBanco('mongodb://localhost:27017/cineclube_xhy', 'cineclube_xhy', 'configurado'), 'localhost:27017/cineclube_xhy (configurado)');
+  assert.equal(
+    descreverBanco('mongodb://localhost:27017/cineclube_xhy', 'cineclube_xhy', 'configurado'),
+    'localhost:27017/cineclube_xhy (configurado)'
+  );
 });
 
 test('URI configurada com usuário e senha: descrição e log não expõem as credenciais', async () => {
@@ -136,7 +137,10 @@ test('URI configurada com usuário e senha: descrição e log não expõem as cr
     const conexao = await conectarSoNaUri(uri, { log: (l) => linhas.push(l) });
 
     assert.equal(conexao.descricao, `127.0.0.1:${porta}/cineclube_xhy (configurado)`);
-    assert.ok(linhas.some((l) => l.includes(conexao.descricao)), 'o log de conexão mostra o banco');
+    assert.ok(
+      linhas.some((l) => l.includes(conexao.descricao)),
+      'o log de conexão mostra o banco'
+    );
     assert.doesNotMatch([conexao.descricao, ...linhas].join(' '), /editorsecreto|SenhaMuitoSecreta123/);
     await conexao.desconectar();
   } finally {
@@ -196,7 +200,10 @@ test('embutido iniciado por este processo continua no ar enquanto outro cliente 
 
     assert.equal(terminou, false, 'não pode derrubar o banco com a API conectada');
     await api.connection.db!.collection('marcas').insertOne({ depois: true });
-    assert.ok(linhas.some((l) => /outros clientes/i.test(l)), 'avisa no log');
+    assert.ok(
+      linhas.some((l) => /outros clientes/i.test(l)),
+      'avisa no log'
+    );
 
     await api.disconnect();
     await desligando;
@@ -263,7 +270,10 @@ test('aviso de espera pela API diz que Ctrl+C encerra o banco', async () => {
     await api.disconnect();
     await desligando;
 
-    assert.ok(linhas.some((l) => /outros clientes/i.test(l) && /Ctrl\+C/.test(l)), linhas.join('\n'));
+    assert.ok(
+      linhas.some((l) => /outros clientes/i.test(l) && /Ctrl\+C/.test(l)),
+      linhas.join('\n')
+    );
   } finally {
     await api.disconnect();
     await removerComPaciencia(dbPath);

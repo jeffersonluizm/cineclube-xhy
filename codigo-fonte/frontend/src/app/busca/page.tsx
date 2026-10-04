@@ -112,7 +112,10 @@ export default async function BuscaPage({ searchParams }: Props) {
           <ul className="flex flex-wrap gap-x-6 gap-y-2">
             {autores.map((a) => (
               <li key={a.slug}>
-                <Link href={`/autores/${a.slug}`} className="font-serif italic text-text-dark text-lg hover:text-olive-escuro hover:underline">
+                <Link
+                  href={`/autores/${a.slug}`}
+                  className="font-serif italic text-text-dark text-lg hover:text-olive-escuro hover:underline"
+                >
                   {a.nome}
                 </Link>{' '}
                 <span className="font-sans text-xs text-text-suave">({a.textos})</span>

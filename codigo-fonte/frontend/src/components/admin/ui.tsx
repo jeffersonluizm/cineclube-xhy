@@ -91,16 +91,32 @@ import { classeBotao, type Variante } from './estilos';
 
 export { classeBotao };
 
-export function Botao({ variante = 'principal', className = '', ...props }: { variante?: Variante } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+export function Botao({
+  variante = 'principal',
+  className = '',
+  ...props
+}: { variante?: Variante } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return <button type="button" className={classeBotao(variante, className)} {...props} />;
 }
 
-export function BotaoLink({ variante = 'principal', className = '', ...props }: { variante?: Variante } & React.ComponentProps<typeof Link>) {
+export function BotaoLink({
+  variante = 'principal',
+  className = '',
+  ...props
+}: { variante?: Variante } & React.ComponentProps<typeof Link>) {
   return <Link className={classeBotao(variante, className)} {...props} />;
 }
 
 /** Mensagem dentro da página. Erros usam role=alert (lidos na hora); avisos, role=status */
-export function Alerta({ tipo = 'erro', children, className = '' }: { tipo?: 'erro' | 'sucesso' | 'aviso'; children: React.ReactNode; className?: string }) {
+export function Alerta({
+  tipo = 'erro',
+  children,
+  className = '',
+}: {
+  tipo?: 'erro' | 'sucesso' | 'aviso';
+  children: React.ReactNode;
+  className?: string;
+}) {
   const estilo = {
     erro: 'border-pink-escuro text-pink-escuro',
     sucesso: 'border-olive-escuro text-olive-escuro',
@@ -114,7 +130,19 @@ export function Alerta({ tipo = 'erro', children, className = '' }: { tipo?: 'er
 }
 
 /** Seção do painel: título com fio fino em cima, como uma seção do impresso */
-export function Secao({ titulo, descricao, acoes, children, className = '' }: { titulo: string; descricao?: string; acoes?: React.ReactNode; children: React.ReactNode; className?: string }) {
+export function Secao({
+  titulo,
+  descricao,
+  acoes,
+  children,
+  className = '',
+}: {
+  titulo: string;
+  descricao?: string;
+  acoes?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}) {
   const id = useId();
   return (
     <section aria-labelledby={id} className={`border-t-2 border-text-dark pt-4 ${className}`}>
@@ -181,7 +209,17 @@ export function EstadoVazio({ children }: { children: React.ReactNode }) {
 }
 
 /** Barra fixa no rodapé do formulário com o botão de salvar e o estado das alterações */
-export function BarraSalvar({ salvando, sujo, rotulo = 'salvar', children }: { salvando: boolean; sujo?: boolean; rotulo?: string; children?: React.ReactNode }) {
+export function BarraSalvar({
+  salvando,
+  sujo,
+  rotulo = 'salvar',
+  children,
+}: {
+  salvando: boolean;
+  sujo?: boolean;
+  rotulo?: string;
+  children?: React.ReactNode;
+}) {
   return (
     <div className="sticky bottom-0 z-10 bg-cream/95 border-t border-text-dark/20 py-3 flex flex-wrap items-center gap-4">
       <button type="submit" disabled={salvando} className={classeBotao('principal', 'px-8')}>
@@ -198,14 +236,36 @@ export function BarraSalvar({ salvando, sujo, rotulo = 'salvar', children }: { s
 }
 
 /** Botões de mover para cima/baixo (alternativa de teclado ao arrastar) */
-export function MoverItem({ indice, total, rotulo, aoMover }: { indice: number; total: number; rotulo: string; aoMover: (dir: -1 | 1) => void }) {
+export function MoverItem({
+  indice,
+  total,
+  rotulo,
+  aoMover,
+}: {
+  indice: number;
+  total: number;
+  rotulo: string;
+  aoMover: (dir: -1 | 1) => void;
+}) {
   const estilo = 'text-text-dark hover:text-pink-escuro disabled:opacity-30 leading-none p-1';
   return (
     <div className="flex flex-col">
-      <button type="button" onClick={() => aoMover(-1)} disabled={indice === 0} aria-label={`mover "${rotulo}" para cima`} className={estilo}>
+      <button
+        type="button"
+        onClick={() => aoMover(-1)}
+        disabled={indice === 0}
+        aria-label={`mover "${rotulo}" para cima`}
+        className={estilo}
+      >
         ▲
       </button>
-      <button type="button" onClick={() => aoMover(1)} disabled={indice === total - 1} aria-label={`mover "${rotulo}" para baixo`} className={estilo}>
+      <button
+        type="button"
+        onClick={() => aoMover(1)}
+        disabled={indice === total - 1}
+        aria-label={`mover "${rotulo}" para baixo`}
+        className={estilo}
+      >
         ▼
       </button>
     </div>

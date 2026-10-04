@@ -20,7 +20,10 @@ export default function AdminRevistasPage() {
         <ul className="border-t border-text-dark/20">
           {revistas.map((mag) => (
             <li key={mag._id}>
-              <Link href={`/admin/revistas/${mag._id}`} className="group flex items-baseline gap-4 py-4 border-b border-text-dark/20 hover:bg-papel px-2">
+              <Link
+                href={`/admin/revistas/${mag._id}`}
+                className="group flex items-baseline gap-4 py-4 border-b border-text-dark/20 hover:bg-papel px-2"
+              >
                 <span className="font-display font-black text-pink-escuro text-2xl">n°{mag.number}</span>
                 <span className="font-serif text-text-dark text-lg">
                   v.{mag.volume}, {mag.month}, {mag.year}

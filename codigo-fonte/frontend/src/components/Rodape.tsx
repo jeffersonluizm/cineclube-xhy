@@ -11,7 +11,9 @@ export default function Rodape({ tom = 'cream' }: { tom?: 'cream' | 'dark' }) {
   const link = `${texto} hover:underline ${escuro ? 'hover:text-olive' : 'hover:text-olive-escuro'}`;
 
   return (
-    <footer className={`border-t ${escuro ? 'border-cream/15 bg-dark-purple' : 'border-text-dark/15 bg-cream'} px-5 sm:px-8 md:px-10 py-10`}>
+    <footer
+      className={`border-t ${escuro ? 'border-cream/15 bg-dark-purple' : 'border-text-dark/15 bg-cream'} px-5 sm:px-8 md:px-10 py-10`}
+    >
       <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 max-w-6xl">
         <section aria-labelledby="rodape-participe">
           <h2 id="rodape-participe" className={`font-display font-black text-xs tracking-widest mb-3 ${rotulo}`}>

@@ -21,7 +21,11 @@ export default function Credit({ className = '' }: CreditProps) {
         <div className="flex flex-wrap items-center gap-y-1 mt-1">
           {LINKS.map((link, i) => (
             <span key={link.label} className="flex items-center">
-              {i > 0 && <span aria-hidden="true" className="text-text-suave text-sm mx-2">·</span>}
+              {i > 0 && (
+                <span aria-hidden="true" className="text-text-suave text-sm mx-2">
+                  ·
+                </span>
+              )}
               <a
                 href={link.href}
                 target="_blank"

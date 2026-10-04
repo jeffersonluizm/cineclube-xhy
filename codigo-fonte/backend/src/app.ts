@@ -80,9 +80,7 @@ app.use('/api/admin', adminRouter);
 app.use('/api/demo', demoRouter);
 app.use('/api', descobertaRouter);
 
-app.get('/api/health', (_req, res) =>
-  res.json({ status: 'ok', db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' })
-);
+app.get('/api/health', (_req, res) => res.json({ status: 'ok', db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' }));
 app.get('/', (_req, res) => res.json({ name: 'Cineclube XHY API', status: 'ok' }));
 
 app.use('/api', rotaInexistente);

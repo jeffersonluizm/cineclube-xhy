@@ -80,7 +80,13 @@ export default function FilmForm({ cycleId, initial, onSave }: FilmFormProps) {
         <Campo rotulo="autor(a) do texto" value={v.author} onChange={alterar('author')} />
         <Campo rotulo="epígrafe" value={v.epigraph} onChange={alterar('epigraph')} />
       </div>
-      <AreaTexto rotulo="nota sobre o autor(a)" dica="vira a nota 1" value={v.authorFootnote} onChange={alterar('authorFootnote')} rows={2} />
+      <AreaTexto
+        rotulo="nota sobre o autor(a)"
+        dica="vira a nota 1"
+        value={v.authorFootnote}
+        onChange={alterar('authorFootnote')}
+        rows={2}
+      />
       <CampoNotas notas={v.footnotes} aoMudar={(footnotes) => setV((x) => ({ ...x, footnotes }))} />
       {erro && <Alerta>{erro}</Alerta>}
       <BarraSalvar salvando={salvando} sujo={initial ? sujo : undefined} rotulo={initial ? 'salvar' : 'criar página do filme'} />

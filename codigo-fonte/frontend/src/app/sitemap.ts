@@ -21,7 +21,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const paginas = await api.mapa();
     return [
       ...fixas,
-      ...paginas.map((p) => ({ url: `${SITE_URL}${p.href}`, lastModified: p.atualizado, priority: p.href.split('/').length > 3 ? 0.6 : 0.7 })),
+      ...paginas.map((p) => ({
+        url: `${SITE_URL}${p.href}`,
+        lastModified: p.atualizado,
+        priority: p.href.split('/').length > 3 ? 0.6 : 0.7,
+      })),
     ];
   } catch {
     // API indisponível: devolve só as páginas fixas

@@ -81,7 +81,9 @@ export default function BlocksEditor({
               setOverIndex(null);
             }}
           >
-            <div className={`bg-papel border p-4 flex gap-3 transition-colors ${overIndex === i && dragIndex !== null && dragIndex !== i ? 'border-olive-escuro border-2' : 'border-text-dark/30'}`}>
+            <div
+              className={`bg-papel border p-4 flex gap-3 transition-colors ${overIndex === i && dragIndex !== null && dragIndex !== i ? 'border-olive-escuro border-2' : 'border-text-dark/30'}`}
+            >
               <div className="flex flex-col items-center gap-1 shrink-0">
                 <div
                   draggable
@@ -133,7 +135,13 @@ export default function BlocksEditor({
                     value={block.text ?? ''}
                     onChange={(e) => updateBlock(i, { text: e.target.value })}
                     rows={block.type === 'subtitle' ? 1 : 4}
-                    placeholder={block.type === 'subtitle' ? 'Texto do subtítulo…' : block.type === 'quote' ? 'Texto da citação…' : 'Escreva o parágrafo…'}
+                    placeholder={
+                      block.type === 'subtitle'
+                        ? 'Texto do subtítulo…'
+                        : block.type === 'quote'
+                          ? 'Texto da citação…'
+                          : 'Escreva o parágrafo…'
+                    }
                     className={`${campo} ${block.type === 'subtitle' ? 'font-display font-bold text-lg' : 'font-serif'} ${block.type === 'quote' ? 'italic' : ''}`}
                   />
                 )}
@@ -175,7 +183,11 @@ function ImageBlockFields({ block, indice, onChange }: { block: Block; indice: n
     <div className="flex flex-col gap-3">
       {block.src ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={imageUrl(block.src)} alt={block.caption || `imagem do bloco ${indice + 1}`} className="max-h-64 object-contain self-start border border-text-dark/20" />
+        <img
+          src={imageUrl(block.src)}
+          alt={block.caption || `imagem do bloco ${indice + 1}`}
+          className="max-h-64 object-contain self-start border border-text-dark/20"
+        />
       ) : (
         <div className="border-2 border-dashed border-text-dark/40 p-6 text-center">
           <p className="font-sans text-sm text-text-suave">Nenhuma imagem enviada</p>
@@ -201,7 +213,11 @@ function ImageBlockFields({ block, indice, onChange }: { block: Block; indice: n
 
         <label className="font-sans text-xs text-text-dark flex flex-col">
           posição
-          <select value={block.align ?? 'full'} onChange={(e) => onChange({ align: e.target.value as Block['align'] })} className="border border-text-dark/60 px-2 py-1 bg-papel">
+          <select
+            value={block.align ?? 'full'}
+            onChange={(e) => onChange({ align: e.target.value as Block['align'] })}
+            className="border border-text-dark/60 px-2 py-1 bg-papel"
+          >
             <option value="full">largura total</option>
             <option value="center">centralizada</option>
             <option value="left">à esquerda (texto contorna)</option>
@@ -211,7 +227,11 @@ function ImageBlockFields({ block, indice, onChange }: { block: Block; indice: n
 
         <label className="font-sans text-xs text-text-dark flex flex-col">
           tamanho
-          <select value={block.width ?? 'large'} onChange={(e) => onChange({ width: e.target.value as Block['width'] })} className="border border-text-dark/60 px-2 py-1 bg-papel">
+          <select
+            value={block.width ?? 'large'}
+            onChange={(e) => onChange({ width: e.target.value as Block['width'] })}
+            className="border border-text-dark/60 px-2 py-1 bg-papel"
+          >
             <option value="small">pequeno</option>
             <option value="medium">médio</option>
             <option value="large">grande</option>

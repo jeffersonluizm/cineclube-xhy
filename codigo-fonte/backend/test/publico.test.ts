@@ -36,7 +36,15 @@ async function criarRevistas() {
   await Article.create([
     texto({ title: 'Terceiro', slug: 'terceiro', order: 2, parentType: 'revista', parentId: r2._id }),
     texto({ title: 'Primeiro', slug: 'primeiro', order: 0, parentType: 'revista', parentId: r2._id }),
-    texto({ title: 'Segundo', slug: 'segundo', order: 1, parentType: 'revista', parentId: r2._id, column: 'ensaio', author: 'Bruno Teles' }),
+    texto({
+      title: 'Segundo',
+      slug: 'segundo',
+      order: 1,
+      parentType: 'revista',
+      parentId: r2._id,
+      column: 'ensaio',
+      author: 'Bruno Teles',
+    }),
     texto({ title: 'Rascunho', slug: 'rascunho', order: 3, parentType: 'revista', parentId: r2._id, published: false }),
     texto({ title: 'Da edição 1', slug: 'da-edicao-1', order: 0, parentType: 'revista', parentId: r1._id }),
   ]);
@@ -82,7 +90,10 @@ test('home destaca o catálogo quando ele é mais novo que a última revista', a
 test('lista de revistas vem da maior para a menor', async () => {
   await criarRevistas();
   const res = await request(app).get('/api/revista');
-  assert.deepEqual(res.body.map((m: { number: number }) => m.number), [2, 1]);
+  assert.deepEqual(
+    res.body.map((m: { number: number }) => m.number),
+    [2, 1]
+  );
 });
 
 test('sumário agrupa textos publicados por coluna, em ordem, sem rascunhos', async () => {
@@ -160,7 +171,10 @@ test('catálogos: lista por ano, detalhe por seção e texto com vizinhos', asyn
   ]);
 
   const lista = await request(app).get('/api/catalogos');
-  assert.deepEqual(lista.body.map((x: { slug: string }) => x.slug), ['atrizes', 'salome']);
+  assert.deepEqual(
+    lista.body.map((x: { slug: string }) => x.slug),
+    ['atrizes', 'salome']
+  );
 
   const det = await request(app).get('/api/catalogos/salome');
   assert.equal(det.status, 200);

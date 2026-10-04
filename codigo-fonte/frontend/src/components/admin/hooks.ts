@@ -65,7 +65,13 @@ export function useUploadImagem(aoEnviar: (url: string) => void) {
         const { url } = await adminApi.upload(arquivo);
         aoEnviar(url);
       } catch (e) {
-        setErro(e instanceof ErroSessaoExpirada ? 'Sessão expirada: entre de novo e reenvie a imagem.' : e instanceof Error ? e.message : 'Erro no envio');
+        setErro(
+          e instanceof ErroSessaoExpirada
+            ? 'Sessão expirada: entre de novo e reenvie a imagem.'
+            : e instanceof Error
+              ? e.message
+              : 'Erro no envio'
+        );
       } finally {
         setEnviando(false);
       }

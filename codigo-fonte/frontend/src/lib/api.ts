@@ -84,15 +84,21 @@ export const api = {
     }>('/api/home'),
   revista: {
     list: () => buscar<Magazine[]>('/api/revista'),
-    get: (number: string) => buscar<{ magazine: Magazine; columns: Record<string, ArticleResumo[]> }>(`/api/revista/${encodeURIComponent(number)}`),
+    get: (number: string) =>
+      buscar<{ magazine: Magazine; columns: Record<string, ArticleResumo[]> }>(`/api/revista/${encodeURIComponent(number)}`),
     article: (number: string, slug: string) =>
-      buscar<{ article: Article; magazine: Magazine } & ComVizinhos>(`/api/revista/${encodeURIComponent(number)}/artigo/${encodeURIComponent(slug)}`),
+      buscar<{ article: Article; magazine: Magazine } & ComVizinhos>(
+        `/api/revista/${encodeURIComponent(number)}/artigo/${encodeURIComponent(slug)}`
+      ),
   },
   catalogos: {
     list: () => buscar<Catalog[]>('/api/catalogos'),
-    get: (slug: string) => buscar<{ catalog: Catalog; sections: Record<string, ArticleResumo[]> }>(`/api/catalogos/${encodeURIComponent(slug)}`),
+    get: (slug: string) =>
+      buscar<{ catalog: Catalog; sections: Record<string, ArticleResumo[]> }>(`/api/catalogos/${encodeURIComponent(slug)}`),
     text: (slug: string, textSlug: string) =>
-      buscar<{ article: Article; catalog: Catalog } & ComVizinhos>(`/api/catalogos/${encodeURIComponent(slug)}/texto/${encodeURIComponent(textSlug)}`),
+      buscar<{ article: Article; catalog: Catalog } & ComVizinhos>(
+        `/api/catalogos/${encodeURIComponent(slug)}/texto/${encodeURIComponent(textSlug)}`
+      ),
   },
   ciclos: {
     list: () => buscar<Cycle[]>('/api/ciclos'),
@@ -101,7 +107,9 @@ export const api = {
     film: (slug: string, filmSlug: string) =>
       buscar<{ film: Film; cycle: Cycle } & ComVizinhos>(`/api/ciclos/${encodeURIComponent(slug)}/filme/${encodeURIComponent(filmSlug)}`),
     text: (slug: string, textSlug: string) =>
-      buscar<{ article: Article; cycle: Cycle } & ComVizinhos>(`/api/ciclos/${encodeURIComponent(slug)}/texto/${encodeURIComponent(textSlug)}`),
+      buscar<{ article: Article; cycle: Cycle } & ComVizinhos>(
+        `/api/ciclos/${encodeURIComponent(slug)}/texto/${encodeURIComponent(textSlug)}`
+      ),
   },
   sobre: () => buscar<About>('/api/sobre'),
   busca: (termo: string) =>

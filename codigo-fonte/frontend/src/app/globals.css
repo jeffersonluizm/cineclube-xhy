@@ -21,7 +21,11 @@
   }
 
   /* Palavras muito longas (títulos de filmes, e-mails) não estouram a tela no celular */
-  h1, h2, h3, p, a {
+  h1,
+  h2,
+  h3,
+  p,
+  a {
     overflow-wrap: break-word;
   }
 
@@ -50,7 +54,9 @@
     html {
       scroll-behavior: auto;
     }
-    *, *::before, *::after {
+    *,
+    *::before,
+    *::after {
       transition-duration: 0.01ms !important;
       animation-duration: 0.01ms !important;
     }

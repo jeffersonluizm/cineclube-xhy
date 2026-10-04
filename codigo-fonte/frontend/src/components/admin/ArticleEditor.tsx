@@ -40,7 +40,10 @@ function estadoInicial(initial?: Article): Estado {
     blocks: initial?.blocks?.length
       ? initial.blocks
       : initial?.content
-        ? initial.content.split('\n').filter(Boolean).map((text) => ({ type: 'paragraph' as const, text }))
+        ? initial.content
+            .split('\n')
+            .filter(Boolean)
+            .map((text) => ({ type: 'paragraph' as const, text }))
         : [{ type: 'paragraph', text: '' }],
   };
 }
@@ -97,7 +100,9 @@ export default function ArticleEditor({ parentId, parentType = 'revista', initia
 
       {temRascunho && rascunho && (
         <Alerta tipo="aviso">
-          <p className="mb-2">Há um rascunho deste texto guardado neste navegador em {quando(rascunho.em)}, com alterações que não foram salvas.</p>
+          <p className="mb-2">
+            Há um rascunho deste texto guardado neste navegador em {quando(rascunho.em)}, com alterações que não foram salvas.
+          </p>
           <div className="flex flex-wrap gap-4">
             <Botao
               variante="texto"
@@ -133,10 +138,17 @@ export default function ArticleEditor({ parentId, parentType = 'revista', initia
             value={v.coverImage}
             onChange={(url) => setV((x) => ({ ...x, coverImage: url }))}
           />
-          <p className="font-sans text-xs text-text-suave mt-1">Aparece na prévia do link em redes e aplicativos. Sem ela, usa a capa da edição.</p>
+          <p className="font-sans text-xs text-text-suave mt-1">
+            Aparece na prévia do link em redes e aplicativos. Sem ela, usa a capa da edição.
+          </p>
         </div>
         <label className="flex items-center gap-2 md:col-span-2 font-display text-sm text-text-dark">
-          <input type="checkbox" checked={v.published} onChange={(e) => setV((x) => ({ ...x, published: e.target.checked }))} className="w-4 h-4 accent-text-dark" />
+          <input
+            type="checkbox"
+            checked={v.published}
+            onChange={(e) => setV((x) => ({ ...x, published: e.target.checked }))}
+            className="w-4 h-4 accent-text-dark"
+          />
           publicado (desmarque para manter como rascunho, fora do site)
         </label>
       </div>
@@ -151,7 +163,11 @@ export default function ArticleEditor({ parentId, parentType = 'revista', initia
 
       {erro && <Alerta>{erro}</Alerta>}
 
-      <BarraSalvar salvando={salvando} sujo={sujo} rotulo={initial ? 'salvar alterações' : v.published ? 'publicar texto' : 'salvar rascunho'} />
+      <BarraSalvar
+        salvando={salvando}
+        sujo={sujo}
+        rotulo={initial ? 'salvar alterações' : v.published ? 'publicar texto' : 'salvar rascunho'}
+      />
     </form>
   );
 }

@@ -44,7 +44,11 @@ export default function CatalogoAdminPage() {
         }
       />
 
-      <Secao titulo="textos" descricao="Agrupados por seção na página do catálogo, nesta ordem." acoes={<BotaoLink href={`/admin/catalogos/${id}/textos/novo`}>+ novo texto</BotaoLink>}>
+      <Secao
+        titulo="textos"
+        descricao="Agrupados por seção na página do catálogo, nesta ordem."
+        acoes={<BotaoLink href={`/admin/catalogos/${id}/textos/novo`}>+ novo texto</BotaoLink>}
+      >
         <ListaReordenavel<Article>
           itens={articles}
           aoMudar={(novos) => setDados((d) => (d ? { ...d, articles: novos } : d))}

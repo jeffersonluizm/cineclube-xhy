@@ -12,7 +12,9 @@ export function problemasDeConfiguracao(env: NodeJS.ProcessEnv = process.env): s
     problemas.push('ADMIN_PASSWORD precisa ter pelo menos 12 caracteres');
   }
   if (env.JWT_SECRET && env.JWT_SECRET.length < 32) {
-    problemas.push('JWT_SECRET precisa ter pelo menos 32 caracteres (gere com: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))")');
+    problemas.push(
+      "JWT_SECRET precisa ter pelo menos 32 caracteres (gere com: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\")"
+    );
   }
   if (env.SERVIDOR_SEGREDO !== undefined && env.SERVIDOR_SEGREDO.length < 32) {
     problemas.push('SERVIDOR_SEGREDO precisa ter pelo menos 32 caracteres');

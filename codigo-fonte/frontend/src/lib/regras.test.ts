@@ -44,7 +44,13 @@ test('agrupa por ano, do mais recente ao mais antigo, mantendo a ordem dentro do
   ];
   assert.deepEqual(agruparPorAno(itens), [
     [2026, [{ year: 2026, t: 'b' }]],
-    [2024, [{ year: 2024, t: 'a' }, { year: 2024, t: 'c' }]],
+    [
+      2024,
+      [
+        { year: 2024, t: 'a' },
+        { year: 2024, t: 'c' },
+      ],
+    ],
   ]);
 });
 

@@ -20,7 +20,10 @@ export default function AdminCatalogosPage() {
         <ul className="border-t border-text-dark/20">
           {catalogos.map((cat) => (
             <li key={cat._id}>
-              <Link href={`/admin/catalogos/${cat._id}`} className="group flex items-baseline gap-4 py-4 border-b border-text-dark/20 hover:bg-papel px-2">
+              <Link
+                href={`/admin/catalogos/${cat._id}`}
+                className="group flex items-baseline gap-4 py-4 border-b border-text-dark/20 hover:bg-papel px-2"
+              >
                 <span className="font-display font-black text-gold-escuro text-lg">{cat.year}</span>
                 <span className="font-display font-bold text-text-dark text-xl">{cat.title}</span>
                 <span className="ml-auto font-display text-sm text-azul-escuro group-hover:underline">gerenciar →</span>

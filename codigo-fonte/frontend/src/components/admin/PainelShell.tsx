@@ -26,7 +26,9 @@ export default function PainelShell({ children }: { children: React.ReactNode })
   }
 
   const ativo = (href: string, exato?: boolean) =>
-    exato ? caminho === href : caminho === href || caminho.startsWith(`${href}/`) || (href === '/admin/revistas' && caminho.startsWith('/admin/artigos'));
+    exato
+      ? caminho === href
+      : caminho === href || caminho.startsWith(`${href}/`) || (href === '/admin/revistas' && caminho.startsWith('/admin/artigos'));
 
   return (
     <ToastProvider>

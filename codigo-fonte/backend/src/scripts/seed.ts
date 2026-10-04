@@ -20,6 +20,7 @@ import { conectarBanco } from '../lib/banco';
  */
 
 // Model<any>: só usamos countDocuments/deleteMany, iguais em todos os modelos
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const COLECOES: Model<any>[] = [Magazine, Article, Catalog, Cycle, Film, About];
 
 export interface OpcoesSeed {
@@ -62,7 +63,11 @@ export async function executarSeed({ banco, force, confirmar, log = console.log 
 
   // Conteúdo de exemplo escrito para o projeto (textos e equipe fictícios, sem material de terceiros)
   const p = (text: string) => ({ type: 'paragraph' as const, text });
-  const corrido = (blocos: { text?: string }[]) => blocos.map((b) => b.text).filter(Boolean).join('\n');
+  const corrido = (blocos: { text?: string }[]) =>
+    blocos
+      .map((b) => b.text)
+      .filter(Boolean)
+      .join('\n');
 
   // Revista n°1
   const magazine = await Magazine.create({
@@ -78,11 +83,17 @@ export async function executarSeed({ banco, force, confirmar, log = console.log 
   });
 
   const fantasmas = [
-    p('Há filmes que parecem assombrados não pelo que mostram, mas pelo que deixam fora do quadro. A câmera se detém num corredor vazio e a espera vira personagem.'),
+    p(
+      'Há filmes que parecem assombrados não pelo que mostram, mas pelo que deixam fora do quadro. A câmera se detém num corredor vazio e a espera vira personagem.'
+    ),
     { type: 'quote' as const, text: 'Filmar um fantasma é filmar o tempo que alguém deixou num lugar.' },
-    p('Nas sessões do cineclube, a pergunta que mais voltou foi simples: como a imagem consegue guardar uma ausência? A resposta passa menos pelos efeitos e mais pela paciência do plano.'),
+    p(
+      'Nas sessões do cineclube, a pergunta que mais voltou foi simples: como a imagem consegue guardar uma ausência? A resposta passa menos pelos efeitos e mais pela paciência do plano.'
+    ),
     { type: 'subtitle' as const, text: 'O corredor e a janela' },
-    p('Quando a montagem recusa o corte que resolveria a cena, o espectador é convidado a habitar o vazio. O fantasma, então, é o próprio tempo que sobra.'),
+    p(
+      'Quando a montagem recusa o corte que resolveria a cena, o espectador é convidado a habitar o vazio. O fantasma, então, é o próprio tempo que sobra.'
+    ),
   ];
   await Article.create({
     title: 'Como filmar os próprios fantasmas?',
@@ -99,8 +110,12 @@ export async function executarSeed({ banco, force, confirmar, log = console.log 
   });
 
   const tati = [
-    p('Em Tati, o gag não explode: ele se espalha pelo quadro e espera ser encontrado. O riso chega atrasado, como quem percebe uma piada só ao sair da sala.'),
-    p('A cidade moderna vira um grande mecanismo de portas, vidros e corredores, e o corpo desajeitado do protagonista é o grão de areia que mostra o funcionamento da máquina.'),
+    p(
+      'Em Tati, o gag não explode: ele se espalha pelo quadro e espera ser encontrado. O riso chega atrasado, como quem percebe uma piada só ao sair da sala.'
+    ),
+    p(
+      'A cidade moderna vira um grande mecanismo de portas, vidros e corredores, e o corpo desajeitado do protagonista é o grão de areia que mostra o funcionamento da máquina.'
+    ),
     p('Rever esses filmes em grupo muda tudo: cada pessoa ri de um canto diferente da tela.'),
   ];
   await Article.create({
@@ -117,8 +132,12 @@ export async function executarSeed({ banco, force, confirmar, log = console.log 
   });
 
   const melodrama = [
-    p('O melodrama nunca saiu de cena; mudou de endereço. Está nas novelas, nos vídeos curtos, nas canções que contam uma vida inteira em três minutos.'),
-    p('O que o cinema contemporâneo faz com esse excesso? Às vezes o esconde sob uma superfície fria; às vezes o assume sem vergonha, com cor saturada e música alta.'),
+    p(
+      'O melodrama nunca saiu de cena; mudou de endereço. Está nas novelas, nos vídeos curtos, nas canções que contam uma vida inteira em três minutos.'
+    ),
+    p(
+      'O que o cinema contemporâneo faz com esse excesso? Às vezes o esconde sob uma superfície fria; às vezes o assume sem vergonha, com cor saturada e música alta.'
+    ),
   ];
   await Article.create({
     title: 'Notas sobre o melodrama contemporâneo',
@@ -142,8 +161,12 @@ export async function executarSeed({ banco, force, confirmar, log = console.log 
   });
 
   const bressane = [
-    p('Em vez de contar uma história, os filmes de Bressane parecem conversar com outros filmes, livros e músicas. Assistir é entrar numa biblioteca que se move.'),
-    p('Este texto acompanha a mostra e propõe um roteiro de leitura: começar pelos curtas, voltar aos longas e terminar onde a obra começou.'),
+    p(
+      'Em vez de contar uma história, os filmes de Bressane parecem conversar com outros filmes, livros e músicas. Assistir é entrar numa biblioteca que se move.'
+    ),
+    p(
+      'Este texto acompanha a mostra e propõe um roteiro de leitura: começar pelos curtas, voltar aos longas e terminar onde a obra começou.'
+    ),
   ];
   await Article.create({
     title: 'Uma biblioteca em movimento',
@@ -158,7 +181,9 @@ export async function executarSeed({ banco, force, confirmar, log = console.log 
   });
 
   const traducao = [
-    p('Apresentamos uma tradução livre de anotações de trabalho, escrita para a equipe do cineclube a partir das sessões de estudo da mostra.'),
+    p(
+      'Apresentamos uma tradução livre de anotações de trabalho, escrita para a equipe do cineclube a partir das sessões de estudo da mostra.'
+    ),
   ];
   await Article.create({
     title: 'Notas de trabalho sobre a montagem',
@@ -192,8 +217,24 @@ export async function executarSeed({ banco, force, confirmar, log = console.log 
     epigraph: 'Esperar também é uma forma de olhar.',
     footnotes: ['As sessões longas têm intervalo de quinze minutos.'],
     screenings: [
-      { date: '09.03', time: '14h', filmTitle: 'No Quarto da Vanda (2000)', filmSlug: 'no-quarto-de-vanda', director: 'Pedro Costa', duration: "171'", country: 'Portugal' },
-      { date: '16.03', time: '14h', filmTitle: 'Sátántangó (1994)', filmSlug: 'satantango', director: 'Béla Tarr', duration: "432'", country: 'Hungria' },
+      {
+        date: '09.03',
+        time: '14h',
+        filmTitle: 'No Quarto da Vanda (2000)',
+        filmSlug: 'no-quarto-de-vanda',
+        director: 'Pedro Costa',
+        duration: "171'",
+        country: 'Portugal',
+      },
+      {
+        date: '16.03',
+        time: '14h',
+        filmTitle: 'Sátántangó (1994)',
+        filmSlug: 'satantango',
+        director: 'Béla Tarr',
+        duration: "432'",
+        country: 'Hungria',
+      },
       { date: '23.03', time: '19h', filmTitle: 'Conversa de encerramento', director: 'equipe do cineclube', duration: "60'", country: '' },
     ],
   });
@@ -205,7 +246,8 @@ export async function executarSeed({ banco, force, confirmar, log = console.log 
     year: 2000,
     duration: "171'",
     country: 'Portugal',
-    synopsis: 'Num bairro de Lisboa em demolição, Vanda passa os dias no quarto, entre conversas, tosse e o barulho das máquinas que derrubam as casas vizinhas.',
+    synopsis:
+      'Num bairro de Lisboa em demolição, Vanda passa os dias no quarto, entre conversas, tosse e o barulho das máquinas que derrubam as casas vizinhas.',
     content:
       'O filme se instala no quarto e quase não sai dele. O tempo é o do bairro, não o da narrativa.\n' +
       'Na sessão, vale reparar na luz que entra pela janela: ela marca as horas melhor do que qualquer relógio.',
@@ -223,7 +265,8 @@ export async function executarSeed({ banco, force, confirmar, log = console.log 
     year: 1994,
     duration: "432'",
     country: 'Hungria',
-    synopsis: 'Numa fazenda coletiva em ruínas, moradores à espera de dinheiro ouvem que um antigo vizinho, dado como morto, está voltando.',
+    synopsis:
+      'Numa fazenda coletiva em ruínas, moradores à espera de dinheiro ouvem que um antigo vizinho, dado como morto, está voltando.',
     content: 'Sete horas de chuva, lama e dança. A duração não é um desafio de resistência: é a matéria do filme.',
     author: 'Davi Bastos',
     cycleId: cycle2026._id,
@@ -232,7 +275,9 @@ export async function executarSeed({ banco, force, confirmar, log = console.log 
 
   const depois = [
     p('Organizar esta mostra foi aceitar que o público sairia cansado e, ainda assim, voltaria. Foi o que aconteceu.'),
-    p('Estas notas registram o que se discutiu depois das sessões: o lugar do trabalho, a amizade e o tempo que o cinema ainda consegue guardar.'),
+    p(
+      'Estas notas registram o que se discutiu depois das sessões: o lugar do trabalho, a amizade e o tempo que o cinema ainda consegue guardar.'
+    ),
   ];
   await Article.create({
     title: 'Depois do fim: notas sobre a mostra',
@@ -254,7 +299,9 @@ export async function executarSeed({ banco, force, confirmar, log = console.log 
   // Sobre (equipe fictícia: o conteúdo real é cadastrado pelo painel)
   const sobre = [
     p('O Cineclube XHY reúne pessoas para ver e pensar cinema juntas, fora dos circuitos comerciais.'),
-    p('Além das sessões, publicamos uma revista, catálogos das mostras e textos sobre os filmes exibidos. Tudo o que está neste site foi escrito pela equipe e por convidados.'),
+    p(
+      'Além das sessões, publicamos uma revista, catálogos das mostras e textos sobre os filmes exibidos. Tudo o que está neste site foi escrito pela equipe e por convidados.'
+    ),
   ];
   await About.create({
     blocks: sobre,

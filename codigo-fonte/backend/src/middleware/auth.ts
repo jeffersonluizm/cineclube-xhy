@@ -9,7 +9,12 @@ export const VALIDADE_TOKEN_S = 8 * 60 * 60;
 
 function bancoLocal(uri?: string): boolean {
   if (!uri) return true; // sem URI a API usa o MongoDB local ou o embutido
-  const hosts = uri.replace(/^mongodb(\+srv)?:\/\//, '').split('/')[0].split('@').pop() ?? '';
+  const hosts =
+    uri
+      .replace(/^mongodb(\+srv)?:\/\//, '')
+      .split('/')[0]
+      .split('@')
+      .pop() ?? '';
   return hosts.split(',').every((h) => /^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(h));
 }
 

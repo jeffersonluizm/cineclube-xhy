@@ -21,9 +21,21 @@ interface FilmeComCiclo {
 
 async function mapaDePais(revistas: unknown[], catalogos: unknown[], ciclos: unknown[]) {
   const [revs, cats, cics] = await Promise.all([
-    revistas.length ? Magazine.find({ _id: { $in: revistas } }).select('number').lean() : [],
-    catalogos.length ? Catalog.find({ _id: { $in: catalogos } }).select('slug').lean() : [],
-    ciclos.length ? Cycle.find({ _id: { $in: ciclos } }).select('slug').lean() : [],
+    revistas.length
+      ? Magazine.find({ _id: { $in: revistas } })
+          .select('number')
+          .lean()
+      : [],
+    catalogos.length
+      ? Catalog.find({ _id: { $in: catalogos } })
+          .select('slug')
+          .lean()
+      : [],
+    ciclos.length
+      ? Cycle.find({ _id: { $in: ciclos } })
+          .select('slug')
+          .lean()
+      : [],
   ]);
   return {
     revista: new Map(revs.map((r) => [String(r._id), String(r.number)])),
@@ -49,7 +61,11 @@ export async function comEnderecos<T extends TextoComPai>(textos: T[]): Promise<
 }
 
 export async function filmesComEnderecos<T extends FilmeComCiclo>(filmes: T[]): Promise<(T & { href: string })[]> {
-  const { ciclo } = await mapaDePais([], [], filmes.map((f) => f.cycleId));
+  const { ciclo } = await mapaDePais(
+    [],
+    [],
+    filmes.map((f) => f.cycleId)
+  );
   return filmes.flatMap((f) => {
     const slugCiclo = ciclo.get(String(f.cycleId));
     return slugCiclo ? [{ ...f, href: `/ciclos-mostras/${slugCiclo}/${f.slug}` }] : [];

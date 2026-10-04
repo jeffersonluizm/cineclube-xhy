@@ -26,16 +26,29 @@ export function rotaInexistente(_req: Request, res: Response) {
 }
 
 const ROTULOS: Record<string, string> = {
-  number: 'número', volume: 'volume', month: 'mês', year: 'ano', title: 'título', author: 'autor',
-  column: 'coluna', blocks: 'blocos', parentId: 'destino', parentType: 'destino', cycleId: 'ciclo',
-  ids: 'lista de ids', team: 'equipe', screenings: 'programação', coverImage: 'capa', image: 'imagem',
+  number: 'número',
+  volume: 'volume',
+  month: 'mês',
+  year: 'ano',
+  title: 'título',
+  author: 'autor',
+  column: 'coluna',
+  blocks: 'blocos',
+  parentId: 'destino',
+  parentType: 'destino',
+  cycleId: 'ciclo',
+  ids: 'lista de ids',
+  team: 'equipe',
+  screenings: 'programação',
+  coverImage: 'capa',
+  image: 'imagem',
 };
 
 /** Mensagem do primeiro problema de validação; as genéricas ganham o nome do campo em português */
 export function mensagemDeValidacao(erro: ZodError): string {
   const primeiro = erro.issues[0];
   if (!/^Entrada inválida/.test(primeiro.message)) return primeiro.message;
-  const campo = primeiro.path.map((p) => (typeof p === 'number' ? `#${p + 1}` : ROTULOS[String(p)] ?? String(p))).join(' ');
+  const campo = primeiro.path.map((p) => (typeof p === 'number' ? `#${p + 1}` : (ROTULOS[String(p)] ?? String(p)))).join(' ');
   return campo ? `${campo}: ${primeiro.message}` : primeiro.message;
 }
 
@@ -43,7 +56,6 @@ export function mensagemDeValidacao(erro: ZodError): string {
  * Tratador central: traduz os erros conhecidos para status HTTP e nunca devolve stack.
  * Rotas lançam (ou rejeitam) e este é o único lugar que decide a resposta.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function tratadorDeErros(err: unknown, _req: Request, res: Response, _next: NextFunction) {
   if (err instanceof ErroHttp) return res.status(err.status).json({ error: err.message });
   if (err instanceof ZodError) return res.status(400).json({ error: mensagemDeValidacao(err) });

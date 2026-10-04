@@ -62,24 +62,34 @@ export default async function FilmPage({ params }: Props) {
         {film.image ? (
           <div className="mb-6 w-full max-w-2xl">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={imageUrl(film.image)} alt={`Fotograma de ${film.title}`} decoding="async" className="w-full max-h-[480px] object-cover" />
+            <img
+              src={imageUrl(film.image)}
+              alt={`Fotograma de ${film.title}`}
+              decoding="async"
+              className="w-full max-h-[480px] object-cover"
+            />
           </div>
         ) : (
           <div className="mb-6 w-full max-w-2xl h-48 sm:h-80 bg-text-dark opacity-60" aria-hidden="true" />
         )}
 
-        {film.epigraph && <p className="font-serif italic text-gold text-base leading-relaxed mb-6 max-w-2xl md:ml-[30%] md:text-right">{film.epigraph}</p>}
+        {film.epigraph && (
+          <p className="font-serif italic text-gold text-base leading-relaxed mb-6 max-w-2xl md:ml-[30%] md:text-right">{film.epigraph}</p>
+        )}
 
         <p className="font-display font-bold text-cream text-base leading-relaxed mb-8 max-w-2xl">{film.synopsis}</p>
 
         {(film.content || film.author || notas.length > 0) && (
           <div className="flex flex-col md:flex-row gap-8">
             <div className="flex-1 min-w-0 max-w-2xl">
-              {(film.content ?? '').split('\n').filter((p) => p.trim()).map((p, i) => (
-                <p key={i} className="font-serif text-cream text-base md:text-lg leading-relaxed mb-4">
-                  {p}
-                </p>
-              ))}
+              {(film.content ?? '')
+                .split('\n')
+                .filter((p) => p.trim())
+                .map((p, i) => (
+                  <p key={i} className="font-serif text-cream text-base md:text-lg leading-relaxed mb-4">
+                    {p}
+                  </p>
+                ))}
               {film.author && (
                 <p className="font-serif italic text-pink-claro text-base mt-6">
                   por {film.author}

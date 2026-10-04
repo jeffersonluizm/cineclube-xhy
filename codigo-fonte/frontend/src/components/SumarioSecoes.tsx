@@ -36,9 +36,7 @@ export default function SumarioSecoes({ secoes, hrefTexto, compacto = false, vaz
                 <Link href={`/autores/${slugAutor(t.author)}`} className="font-display font-bold text-text-dark text-xs hover:underline">
                   {t.author}
                 </Link>
-                {!compacto && t.trecho && (
-                  <p className="font-serif italic text-text-suave text-xs leading-snug">{excerpt(t.trecho)}</p>
-                )}
+                {!compacto && t.trecho && <p className="font-serif italic text-text-suave text-xs leading-snug">{excerpt(t.trecho)}</p>}
               </li>
             ))}
           </ul>

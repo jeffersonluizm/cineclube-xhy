@@ -22,7 +22,10 @@ export default async function AutoresPage() {
         <ul className="columns-1 sm:columns-2 lg:columns-3 gap-10">
           {autores.map((a) => (
             <li key={a.slug} className="mb-3 break-inside-avoid">
-              <Link href={`/autores/${a.slug}`} className="font-serif italic text-text-dark text-xl hover:text-olive-escuro hover:underline">
+              <Link
+                href={`/autores/${a.slug}`}
+                className="font-serif italic text-text-dark text-xl hover:text-olive-escuro hover:underline"
+              >
                 {a.nome}
               </Link>{' '}
               <span className="font-sans text-xs text-text-suave">

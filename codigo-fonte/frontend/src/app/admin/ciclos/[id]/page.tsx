@@ -38,7 +38,12 @@ export default function CicloAdminPage() {
         sobretitulo="exibição"
         titulo={cycle.title}
         acoes={
-          <a href={`/ciclos-mostras/${cycle.slug}`} target="_blank" rel="noopener" className="font-display text-azul-escuro hover:underline">
+          <a
+            href={`/ciclos-mostras/${cycle.slug}`}
+            target="_blank"
+            rel="noopener"
+            className="font-display text-azul-escuro hover:underline"
+          >
             ver no site ↗
           </a>
         }

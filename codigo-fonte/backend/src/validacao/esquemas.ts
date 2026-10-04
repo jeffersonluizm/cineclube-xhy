@@ -12,9 +12,17 @@ z.config(z.locales.pt());
 
 export const objectId = z.string({ error: 'Informe um id' }).regex(/^[a-f\d]{24}$/i, { error: 'id inválido' });
 
-const texto = (max: number) => z.string().trim().max(max, { error: `no máximo ${max} caracteres` });
+const texto = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max, { error: `no máximo ${max} caracteres` });
 const obrigatorio = (rotulo: string, max = 300) =>
-  z.string({ error: `Preencha ${rotulo}` }).trim().min(1, { error: `Preencha ${rotulo}` }).max(max, { error: `${rotulo}: no máximo ${max} caracteres` });
+  z
+    .string({ error: `Preencha ${rotulo}` })
+    .trim()
+    .min(1, { error: `Preencha ${rotulo}` })
+    .max(max, { error: `${rotulo}: no máximo ${max} caracteres` });
 const inteiro = (rotulo: string, min: number, max: number) =>
   z.coerce
     .number({ error: `Preencha ${rotulo} com um número` })
@@ -22,11 +30,7 @@ const inteiro = (rotulo: string, min: number, max: number) =>
     .min(min, { error: `${rotulo} deve ser no mínimo ${min}` })
     .max(max, { error: `${rotulo} deve ser no máximo ${max}` });
 const ano = inteiro('o ano', 1890, 2100);
-const imagem = z
-  .string()
-  .trim()
-  .max(2000)
-  .refine(imagemSegura, { error: 'Imagem precisa ser um upload do painel ou um endereço https' });
+const imagem = z.string().trim().max(2000).refine(imagemSegura, { error: 'Imagem precisa ser um upload do painel ou um endereço https' });
 const notas = z.array(texto(5000)).max(100);
 
 export const bloco = z.object({
@@ -131,11 +135,7 @@ export const filtroFilmes = z.object({ cycleId: objectId.optional() });
 // ---------- sobre ----------
 const link = z.object({
   label: obrigatorio('o nome do link', 80),
-  url: z
-    .string()
-    .trim()
-    .max(2000)
-    .refine(linkSeguro, { error: 'Links precisam começar com https:// ou mailto:' }),
+  url: z.string().trim().max(2000).refine(linkSeguro, { error: 'Links precisam começar com https:// ou mailto:' }),
 });
 export const sobre = z.object({
   blocks: blocos.min(1, { error: 'Monte o texto de apresentação em ao menos um bloco' }),
