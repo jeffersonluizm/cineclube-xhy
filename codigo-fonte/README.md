@@ -10,7 +10,8 @@ codigo-fonte/
 
 ## Requisitos
 
-- Node.js 18+
+- Node.js 22+ (o banco embutido de desenvolvimento, `mongodb-memory-server`, exige
+  20.19 ou superior, e os testes usam `node --test` com glob, que só existe a partir do 21)
 - MongoDB (opcional em desenvolvimento — sem um MongoDB acessível, o backend
   sobe automaticamente um MongoDB embutido com dados salvos em `backend/data/`)
 
@@ -23,7 +24,18 @@ cd backend
 npm install
 npm run seed   # popula o banco com dados de exemplo
 npm run dev    # inicia em http://localhost:3001
+npm test       # testes automatizados (node:test + supertest, banco em memória)
 ```
+
+O seed usa a mesma conexão da API: `MONGODB_URI` (ou o MongoDB local padrão) e, em
+desenvolvimento, o banco embutido de `backend/data/db`, inclusive quando a API já está
+rodando com ele. **O seed apaga revistas, textos, catálogos, ciclos, filmes e o Sobre**
+antes de inserir os exemplos: se o banco já tiver dados, ele pergunta antes (`s/N`) e,
+sem terminal interativo, não apaga nada. Para substituir sem perguntar:
+`npm run seed -- --force`.
+
+Os testes rodam com `tsx` e sobem um MongoDB só em memória: não tocam em
+`backend/data/` nem no banco configurado no `.env`.
 
 **Variáveis de ambiente** (`backend/.env` — copie de `.env.example`):
 ```
@@ -109,6 +121,7 @@ Todas as rotas `/api/admin/*` e `/api/upload` exigem `Authorization: Bearer <tok
 | `/ciclos-mostras` | Lista de ciclos e mostras por ano |
 | `/ciclos-mostras/[slug]` | Ciclo/mostra com programação |
 | `/ciclos-mostras/[slug]/[filmSlug]` | Página do filme |
+| `/ciclos-mostras/[slug]/texto/[textSlug]` | Texto do ciclo (os textos publicados aparecem na página do ciclo) |
 | `/sobre` | Sobre o cineclube e equipe |
 | `/robots.txt`, `/sitemap.xml` | Gerados automaticamente (o painel `/admin` fica fora dos buscadores) |
 
@@ -200,6 +213,18 @@ visual do cineclube em vez de uma página em branco.
 ---
 
 ## Histórico de versões
+
+### [Não lançado]
+#### Adicionado
+- Textos de ciclo no site público: listados na página do ciclo e abertos em
+  `/ciclos-mostras/[slug]/texto/[textSlug]` (API: `GET /api/ciclos/:slug/texto/:textSlug`)
+- `iniciar.bat` na raiz para subir API e site no Windows
+- Testes automatizados de rotas (`npm test` no backend)
+#### Alterado
+- O seed usa o mesmo banco da API e pede confirmação (ou `--force`) antes de apagar dados
+- Dados de exemplo da equipe com nomes e e-mails fictícios
+#### Segurança
+- Upload deixa de aceitar SVG (só jpg, png, webp, gif e avif)
 
 ### [1.2.0] - 15/09/2026
 #### Adicionado

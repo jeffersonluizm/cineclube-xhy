@@ -29,7 +29,7 @@ editor de blocos e upload de imagens.
 - **Revista** — listagem por ano, sumário de cada edição e leitura dos textos com epígrafe,
   imagens no corpo e notas laterais
 - **Catálogos** — capa, apresentação e textos de cada catálogo
-- **Exibições** — ciclos e mostras com programação de sessões e página de cada filme
+- **Exibições** — ciclos e mostras com programação de sessões, página de cada filme e textos do ciclo
 - **Sobre** — apresentação do cineclube e equipe com contatos
 - **Painel do editor** (`/admin`) — criação e edição de todo o conteúdo, editor de texto em
   blocos (parágrafo, subtítulo, citação, imagem) com arrastar e soltar, rascunhos e reordenação
@@ -61,7 +61,13 @@ editor de blocos e upload de imagens.
 
 ## Como rodar
 
-Pré-requisito: Node.js 18 ou superior.
+Pré-requisito: Node.js 22 ou superior.
+
+No Windows, dê dois cliques em **`iniciar.bat`** (na raiz do repositório): ele instala as
+dependências na primeira vez e abre uma janela para a API e outra para o site. Para
+parar, feche as duas janelas.
+
+Ou, manualmente:
 
 ```bash
 # API
@@ -76,7 +82,9 @@ npm run dev          # http://localhost:3000
 ```
 
 Sem um MongoDB configurado, a API sobe automaticamente um banco embutido para
-desenvolvimento. Detalhes de configuração, variáveis de ambiente e rotas da API estão em
+desenvolvimento. Para preencher com dados de exemplo, rode `npm run seed` em
+`codigo-fonte/backend` (ele pede confirmação antes de apagar dados existentes).
+Os testes da API rodam com `npm test` na mesma pasta. Detalhes de configuração, variáveis de ambiente e rotas da API estão em
 [`codigo-fonte/README.md`](codigo-fonte/README.md).
 
 ## Hospedagem
