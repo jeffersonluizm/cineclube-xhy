@@ -14,7 +14,7 @@ const carregar = (slug: string) => ouNulo(api.autor(slug));
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const dados = await carregar(params.slug).catch(() => null);
-  if (!dados) return { title: 'Autor' };
+  if (!dados) return { title: 'Página não encontrada', robots: { index: false } };
   return pageMetadata({
     title: dados.nome,
     description: `Textos de ${dados.nome} no Cineclube XHY: ${dados.textos.map((t) => t.title).slice(0, 5).join('; ')}.`,

@@ -12,7 +12,7 @@ const carregar = (p: Props['params']) => ouNulo(api.ciclos.text(p.slug, p.textSl
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const dados = await carregar(params).catch(() => null);
-  if (!dados) return { title: 'Texto' };
+  if (!dados) return { title: 'Página não encontrada', robots: { index: false } };
   const { article, cycle } = dados;
   return pageMetadata({
     title: `${article.title} · ${cycle.title}`,

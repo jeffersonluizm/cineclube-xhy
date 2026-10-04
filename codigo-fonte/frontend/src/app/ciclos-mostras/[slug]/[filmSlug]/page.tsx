@@ -16,7 +16,7 @@ const carregar = (p: Props['params']) => ouNulo(api.ciclos.film(p.slug, p.filmSl
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const dados = await carregar(params).catch(() => null);
-  if (!dados) return { title: 'Filme' };
+  if (!dados) return { title: 'Página não encontrada', robots: { index: false } };
   const { film, cycle } = dados;
   return pageMetadata({
     title: `${film.title} (${film.year})`,

@@ -16,7 +16,7 @@ const carregar = (numero: string) => ouNulo(api.revista.get(numero));
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const dados = await carregar(params.number).catch(() => null);
-  if (!dados) return { title: 'Revista' };
+  if (!dados) return { title: 'Página não encontrada', robots: { index: false } };
   const { magazine } = dados;
   return pageMetadata({
     title: `Revista XHY n°${magazine.number}`,

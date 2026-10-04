@@ -15,7 +15,7 @@ const carregar = (slug: string) => ouNulo(api.catalogos.get(slug));
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const dados = await carregar(params.slug).catch(() => null);
-  if (!dados) return { title: 'Catálogo' };
+  if (!dados) return { title: 'Página não encontrada', robots: { index: false } };
   const { catalog } = dados;
   return pageMetadata({
     title: catalog.title,
