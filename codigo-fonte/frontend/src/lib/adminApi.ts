@@ -1,43 +1,72 @@
-import type { About, Article, Block, Catalog, Cycle, Film, Magazine, Screening, TeamMember } from './types';
+import type { About, Article, Block, Catalog, Cycle, Film, Magazine, ResumoPainel, Screening, TeamMember } from './types';
 import { API_URL, imageUrl } from './media';
+import { apagarToken, EVENTO_SESSAO_EXPIRADA, guardarToken, lerToken } from './sessao';
+import { segundosParaTentarDeNovo } from './login';
 
 export { API_URL, imageUrl };
 
-const TOKEN_KEY = 'xhy_editor_token';
-
-export function getToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem(TOKEN_KEY);
+/** A API recusou o token: o painel abre o re-login por cima da página, sem perder o que foi digitado */
+export class ErroSessaoExpirada extends Error {
+  constructor() {
+    super('Sua sessão expirou. Entre de novo para salvar.');
+  }
 }
 
-export function setToken(token: string) {
-  localStorage.setItem(TOKEN_KEY, token);
-}
-
-export function clearToken() {
-  localStorage.removeItem(TOKEN_KEY);
+/** Muitas tentativas de login: quanto falta para tentar de novo */
+export class ErroLimiteLogin extends Error {
+  constructor(
+    mensagem: string,
+    public segundos: number | null
+  ) {
+    super(mensagem);
+  }
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const headers: Record<string, string> = {
-    ...(options.headers as Record<string, string>),
-  };
+  const headers: Record<string, string> = { ...(options.headers as Record<string, string>) };
   if (!(options.body instanceof FormData)) headers['Content-Type'] = 'application/json';
-  const token = getToken();
+  const token = lerToken();
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(`${API_URL}${path}`, { ...options, headers, cache: 'no-store' });
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, { ...options, headers, cache: 'no-store' });
+  } catch {
+    throw new Error('Não foi possível falar com o servidor. Confira a conexão e tente de novo.');
+  }
 
-  if (res.status === 401 && typeof window !== 'undefined' && !path.startsWith('/api/auth')) {
-    clearToken();
-    window.location.href = '/admin/login';
-    throw new Error('Sessão expirada');
+  if (res.status === 401 && !path.startsWith('/api/auth/login')) {
+    apagarToken();
+    if (typeof window !== 'undefined') window.dispatchEvent(new Event(EVENTO_SESSAO_EXPIRADA));
+    throw new ErroSessaoExpirada();
   }
 
   const data = await res.json().catch(() => ({}));
+  if (res.status === 429) {
+    const segundos = segundosParaTentarDeNovo({ ratelimit: res.headers.get('RateLimit'), retryAfter: res.headers.get('Retry-After') });
+    throw new ErroLimiteLogin((data as { error?: string }).error || 'Muitas tentativas.', segundos);
+  }
   if (!res.ok) throw new Error((data as { error?: string }).error || `Erro ${res.status}`);
   return data as T;
 }
+
+/** Avisa o site (Next) para refazer as páginas em cache depois de uma alteração do editor */
+async function revalidarSite() {
+  try {
+    await fetch('/api/revalidar', { method: 'POST', headers: { Authorization: `Bearer ${lerToken() ?? ''}` } });
+  } catch {
+    /* o cache expira sozinho em até 60 s */
+  }
+}
+
+/** Escritas do painel: depois de gravar na API, avisa o site para atualizar as páginas */
+async function escrever<T>(path: string, options: RequestInit): Promise<T> {
+  const resultado = await request<T>(path, options);
+  void revalidarSite();
+  return resultado;
+}
+
+const corpo = (data: unknown) => JSON.stringify(data);
 
 export interface ArticleInput {
   title: string;
@@ -102,9 +131,23 @@ export interface FilmInput {
   cycleId: string;
 }
 
+function crud<T, Entrada>(base: string) {
+  return {
+    list: () => request<T[]>(base),
+    get: (id: string) => request<T>(`${base}/${id}`),
+    create: (data: Entrada) => escrever<T>(base, { method: 'POST', body: corpo(data) }),
+    update: (id: string, data: Partial<Entrada>) => escrever<T>(`${base}/${id}`, { method: 'PUT', body: corpo(data) }),
+    remove: (id: string) => escrever<{ ok: true }>(`${base}/${id}`, { method: 'DELETE' }),
+  };
+}
+
 export const adminApi = {
-  login: (password: string) =>
-    request<{ token: string }>('/api/auth/login', { method: 'POST', body: JSON.stringify({ password }) }),
+  async login(password: string) {
+    const r = await request<{ token: string; expiraEm: number }>('/api/auth/login', { method: 'POST', body: corpo({ password }) });
+    guardarToken(r.token);
+    return r;
+  },
+  sessao: () => request<{ ok: true; expiraEm: number }>('/api/auth/sessao'),
 
   upload: (file: File) => {
     const form = new FormData();
@@ -112,55 +155,32 @@ export const adminApi = {
     return request<{ url: string }>('/api/upload', { method: 'POST', body: form });
   },
 
+  resumo: () => request<ResumoPainel>('/api/admin/resumo'),
+
   revistas: {
-    list: () => request<Magazine[]>('/api/admin/revistas'),
-    create: (data: MagazineInput) => request<Magazine>('/api/admin/revistas', { method: 'POST', body: JSON.stringify(data) }),
-    update: (id: string, data: Partial<MagazineInput>) =>
-      request<Magazine>(`/api/admin/revistas/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-    remove: (id: string) => request<{ ok: true }>(`/api/admin/revistas/${id}`, { method: 'DELETE' }),
+    ...crud<Magazine, MagazineInput>('/api/admin/revistas'),
+    impacto: (id: string) => request<{ textos: number }>(`/api/admin/revistas/${id}/impacto`),
   },
-
   artigos: {
-    list: (parentId?: string) =>
-      request<Article[]>(`/api/admin/artigos${parentId ? `?parentId=${parentId}` : ''}`),
-    get: (id: string) => request<Article>(`/api/admin/artigos/${id}`),
-    create: (data: ArticleInput) => request<Article>('/api/admin/artigos', { method: 'POST', body: JSON.stringify(data) }),
-    update: (id: string, data: Partial<ArticleInput>) =>
-      request<Article>(`/api/admin/artigos/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-    remove: (id: string) => request<{ ok: true }>(`/api/admin/artigos/${id}`, { method: 'DELETE' }),
-    reorder: (ids: string[]) =>
-      request<{ ok: true }>('/api/admin/artigos/reorder', { method: 'PUT', body: JSON.stringify({ ids }) }),
+    ...crud<Article, ArticleInput>('/api/admin/artigos'),
+    list: (parentId?: string) => request<Article[]>(`/api/admin/artigos${parentId ? `?parentId=${encodeURIComponent(parentId)}` : ''}`),
+    reorder: (ids: string[]) => escrever<{ ok: true }>('/api/admin/artigos/reorder', { method: 'PUT', body: corpo({ ids }) }),
   },
-
   catalogos: {
-    list: () => request<Catalog[]>('/api/admin/catalogos'),
-    create: (data: CatalogInput) => request<Catalog>('/api/admin/catalogos', { method: 'POST', body: JSON.stringify(data) }),
-    update: (id: string, data: Partial<CatalogInput>) =>
-      request<Catalog>(`/api/admin/catalogos/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-    remove: (id: string) => request<{ ok: true }>(`/api/admin/catalogos/${id}`, { method: 'DELETE' }),
+    ...crud<Catalog, CatalogInput>('/api/admin/catalogos'),
+    impacto: (id: string) => request<{ textos: number }>(`/api/admin/catalogos/${id}/impacto`),
   },
-
   ciclos: {
-    list: () => request<Cycle[]>('/api/admin/ciclos'),
-    create: (data: CycleInput) => request<Cycle>('/api/admin/ciclos', { method: 'POST', body: JSON.stringify(data) }),
-    update: (id: string, data: Partial<CycleInput>) =>
-      request<Cycle>(`/api/admin/ciclos/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-    remove: (id: string) => request<{ ok: true }>(`/api/admin/ciclos/${id}`, { method: 'DELETE' }),
+    ...crud<Cycle, CycleInput>('/api/admin/ciclos'),
+    impacto: (id: string) => request<{ textos: number; filmes: number }>(`/api/admin/ciclos/${id}/impacto`),
   },
-
   filmes: {
-    list: (cycleId?: string) => request<Film[]>(`/api/admin/filmes${cycleId ? `?cycleId=${cycleId}` : ''}`),
-    get: (id: string) => request<Film>(`/api/admin/filmes/${id}`),
-    create: (data: FilmInput) => request<Film>('/api/admin/filmes', { method: 'POST', body: JSON.stringify(data) }),
-    update: (id: string, data: Partial<FilmInput>) =>
-      request<Film>(`/api/admin/filmes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-    remove: (id: string) => request<{ ok: true }>(`/api/admin/filmes/${id}`, { method: 'DELETE' }),
-    reorder: (ids: string[]) =>
-      request<{ ok: true }>('/api/admin/filmes/reorder', { method: 'PUT', body: JSON.stringify({ ids }) }),
+    ...crud<Film, FilmInput>('/api/admin/filmes'),
+    list: (cycleId?: string) => request<Film[]>(`/api/admin/filmes${cycleId ? `?cycleId=${encodeURIComponent(cycleId)}` : ''}`),
+    reorder: (ids: string[]) => escrever<{ ok: true }>('/api/admin/filmes/reorder', { method: 'PUT', body: corpo({ ids }) }),
   },
-
   sobre: {
     get: () => request<About>('/api/admin/sobre'),
-    update: (data: AboutInput) => request<About>('/api/admin/sobre', { method: 'PUT', body: JSON.stringify(data) }),
+    update: (data: AboutInput) => escrever<About>('/api/admin/sobre', { method: 'PUT', body: corpo(data) }),
   },
 };

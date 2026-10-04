@@ -27,6 +27,58 @@ export interface Article {
   updatedAt?: string;
 }
 
+/** Texto nas listas públicas (sumário, seções): sem o corpo, com um trecho */
+export interface ArticleResumo {
+  _id: string;
+  title: string;
+  slug: string;
+  author: string;
+  column: string;
+  order: number;
+  trecho: string;
+}
+
+/** Texto com endereço público (busca, autor, recentes) */
+export interface TextoComEndereco {
+  _id: string;
+  title: string;
+  slug: string;
+  author: string;
+  column: string;
+  parentType: 'revista' | 'catalogo' | 'ciclo';
+  href: string;
+  trecho: string;
+  createdAt: string;
+}
+
+export interface FilmeComEndereco {
+  _id: string;
+  title: string;
+  slug: string;
+  director: string;
+  year: number;
+  href: string;
+}
+
+export interface Vizinho {
+  title: string;
+  slug: string;
+  author?: string;
+  director?: string;
+}
+
+export interface Autor {
+  nome: string;
+  slug: string;
+  textos: number;
+}
+
+export interface ResumoPainel {
+  contagens: { revistas: number; catalogos: number; ciclos: number; filmes: number; textosPublicados: number; rascunhos: number };
+  rascunhos: (Pick<Article, '_id' | 'title' | 'parentType' | 'parentId' | 'published' | 'updatedAt'> & { onde: string })[];
+  ultimosEditados: (Pick<Article, '_id' | 'title' | 'parentType' | 'parentId' | 'published' | 'updatedAt'> & { onde: string })[];
+}
+
 export interface Magazine {
   _id: string;
   number: number;
@@ -53,10 +105,12 @@ export interface Screening {
   date: string;
   time: string;
   filmTitle: string;
-  filmSlug: string;
-  director: string;
-  duration: string;
-  country: string;
+  /** Página do filme desta sessão; sessões antigas usam só o slug */
+  filmId?: string;
+  filmSlug?: string;
+  director?: string;
+  duration?: string;
+  country?: string;
 }
 
 export interface Cycle {
@@ -111,9 +165,4 @@ export interface About {
   content: string;
   blocks?: Block[];
   team: TeamMember[];
-}
-
-export interface NavItem {
-  label: string;
-  href: string;
 }

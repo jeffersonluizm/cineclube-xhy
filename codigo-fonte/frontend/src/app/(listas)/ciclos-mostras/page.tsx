@@ -1,9 +1,6 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import PageShell from '@/components/PageShell';
-import Breadcrumb from '@/components/Breadcrumb';
+import ListaPorAno from '@/components/ListaPorAno';
 import { api } from '@/lib/api';
-import { Cycle } from '@/lib/types';
 
 export const metadata: Metadata = {
   title: 'Exibições',
@@ -12,45 +9,16 @@ export const metadata: Metadata = {
 };
 
 export default async function CiclosMostrasPage() {
-  let cycles: Cycle[] = [];
-  try {
-    cycles = await api.ciclos.list();
-  } catch {
-    // sem dados
-  }
-
-  const byYear: Record<number, Cycle[]> = {};
-  for (const cycle of cycles) {
-    if (!byYear[cycle.year]) byYear[cycle.year] = [];
-    byYear[cycle.year].push(cycle);
-  }
-  const years = Object.keys(byYear)
-    .map(Number)
-    .sort((a, b) => b - a);
-
+  const ciclos = await api.ciclos.list();
   return (
-    <PageShell>
-      <Breadcrumb crumbs={[{ label: 'exibições' }]} />
-
-      {years.map((year) => (
-        <section key={year} className="mb-12">
-          <p className="font-display font-bold text-gold text-xl mb-2">{year}</p>
-          {byYear[year].map((cycle) => (
-            <Link
-              key={cycle._id}
-              href={`/ciclos-mostras/${cycle.slug}`}
-              className="block font-display font-black text-text-dark hover:text-olive hover:underline transition-colors leading-tight mb-2"
-              style={{ fontSize: 'clamp(2rem, 7vw, 4.5rem)' }}
-            >
-              {cycle.title}
-            </Link>
-          ))}
-        </section>
-      ))}
-
-      {cycles.length === 0 && (
-        <p className="font-serif italic text-text-dark">Nenhuma exibição disponível.</p>
-      )}
-    </PageShell>
+    <ListaPorAno
+      titulo="Exibições: ciclos e mostras"
+      migalha="exibições"
+      itens={ciclos}
+      href={(c) => `/ciclos-mostras/${c.slug}`}
+      rotulo={(c) => c.title}
+      detalhe={(c) => c.subtitle}
+      vazio="Nenhuma exibição publicada ainda."
+    />
   );
 }

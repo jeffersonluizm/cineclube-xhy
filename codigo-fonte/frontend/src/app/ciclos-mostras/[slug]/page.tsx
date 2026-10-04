@@ -3,70 +3,50 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import PageShell from '@/components/PageShell';
 import Breadcrumb from '@/components/Breadcrumb';
-import { api } from '@/lib/api';
+import SumarioSecoes from '@/components/SumarioSecoes';
+import Notas, { ChamadaNota } from '@/components/Notas';
+import { api, ouNulo } from '@/lib/api';
 import { imageUrl } from '@/lib/media';
-import { excerpt } from '@/lib/text';
+import { filmeDaSessao } from '@/lib/conteudo';
 import { pageMetadata } from '@/lib/seo';
 
 interface Props {
   params: { slug: string };
 }
 
+const carregar = (slug: string) => ouNulo(api.ciclos.get(slug));
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  try {
-    const { cycle } = await api.ciclos.get(params.slug);
-    return pageMetadata({
-      title: cycle.subtitle ? `${cycle.title}: ${cycle.subtitle}` : cycle.title,
-      description: cycle.description || `${cycle.title} (${cycle.year}), exibição do Cineclube XHY.`,
-      path: `/ciclos-mostras/${cycle.slug}`,
-      image: cycle.coverImage,
-    });
-  } catch {
-    return { title: 'Exibição não encontrada' };
-  }
+  const dados = await carregar(params.slug).catch(() => null);
+  if (!dados) return { title: 'Exibição' };
+  const { cycle } = dados;
+  return pageMetadata({
+    title: cycle.subtitle ? `${cycle.title}: ${cycle.subtitle}` : cycle.title,
+    description: cycle.description || `${cycle.title} (${cycle.year}), exibição do Cineclube XHY.`,
+    path: `/ciclos-mostras/${cycle.slug}`,
+    image: cycle.coverImage,
+  });
 }
 
 export default async function CicloDetailPage({ params }: Props) {
-  let data;
-  try {
-    data = await api.ciclos.get(params.slug);
-  } catch {
-    notFound();
-  }
+  const dados = await carregar(params.slug);
+  if (!dados) notFound();
+  const { cycle, films, sections } = dados;
 
-  const { cycle, films } = data;
-  const textSections = Object.entries(data.sections ?? {});
-
-  const filmsBySlug = Object.fromEntries(films.map((f) => [f.slug, f]));
+  // A nota do autor (se houver) é a 1; as notas do ciclo vêm depois
+  const notas = [...(cycle.authorFootnote ? [cycle.authorFootnote] : []), ...(cycle.footnotes ?? [])].filter((n) => n.trim());
 
   return (
     <PageShell>
       <Breadcrumb crumbs={[{ label: 'exibições', href: '/ciclos-mostras' }, { label: cycle.title.toLowerCase() }]} />
 
-      <h1
-        className="font-display font-black text-text-dark leading-none mb-2"
-        style={{ fontSize: 'clamp(2.5rem, 9vw, 5.5rem)' }}
-      >
-        {cycle.title}
-      </h1>
+      <h1 className="font-display font-black text-text-dark text-titulo-pagina mb-2">{cycle.title}</h1>
 
-      {cycle.subtitle && (
-        <p
-          className="font-display italic text-text-dark mb-6 md:mb-8"
-          style={{ fontSize: 'clamp(1.25rem, 4vw, 2.2rem)' }}
-        >
-          {cycle.subtitle}
-        </p>
-      )}
+      {cycle.subtitle && <p className="font-display italic text-text-dark text-subtitulo mb-6 md:mb-8">{cycle.subtitle}</p>}
 
       {cycle.coverImage && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={imageUrl(cycle.coverImage)}
-          alt={cycle.title}
-          decoding="async"
-          className="w-full max-w-3xl max-h-[420px] object-cover mb-8"
-        />
+        <img src={imageUrl(cycle.coverImage)} alt="" decoding="async" className="w-full max-w-3xl max-h-[420px] object-cover mb-8" />
       )}
 
       <div className="flex flex-col md:flex-row gap-8">
@@ -74,86 +54,72 @@ export default async function CicloDetailPage({ params }: Props) {
           {cycle.description && (
             <div className="mb-4">
               {cycle.description.split('\n').map((p, i) => (
-                <p key={i} className="font-serif text-text-dark text-base md:text-lg leading-relaxed mb-3">{p}</p>
+                <p key={i} className="font-serif text-text-dark text-base md:text-lg leading-relaxed mb-3">
+                  {p}
+                </p>
               ))}
             </div>
           )}
 
           {cycle.author && (
-            <p className="font-serif italic text-pink text-base mb-8">
+            <p className="font-serif italic text-pink-escuro text-base mb-8">
               por {cycle.author}
-              {cycle.authorFootnote && <sup>1</sup>}
+              {cycle.authorFootnote && <ChamadaNota n={1} />}
             </p>
           )}
 
           {cycle.screenings.length > 0 && (
             <section aria-labelledby="programacao">
-              <p id="programacao" className="font-display font-black text-pink text-sm tracking-widest mb-6">
+              <h2 id="programacao" className="font-display font-black text-pink-escuro text-sm tracking-widest mb-6">
                 PROGRAMAÇÃO
-              </p>
+              </h2>
 
-              {cycle.screenings.map((s, i) => {
-                const film = filmsBySlug[s.filmSlug];
-                const isLinked = !!film;
-                return (
-                  <div key={i} className="mb-6">
-                    <p className="font-serif text-text-dark text-sm mb-1">
-                      {s.date} | {s.time}
-                    </p>
-                    {isLinked ? (
-                      <Link
-                        href={`/ciclos-mostras/${cycle.slug}/${s.filmSlug}`}
-                        className="font-display font-bold text-text-dark text-base hover:text-olive block"
-                      >
-                        {s.filmTitle}
-                      </Link>
-                    ) : (
-                      <p className="font-display font-bold text-text-dark text-base">{s.filmTitle}</p>
-                    )}
-                    <p className="font-serif text-blue-link text-sm">
-                      {s.director}, {s.duration}, {s.country}
-                    </p>
-                  </div>
-                );
-              })}
+              <ol>
+                {cycle.screenings.map((s, i) => {
+                  const filme = filmeDaSessao(s, films);
+                  const ficha = [s.director, s.duration, s.country].filter(Boolean).join(', ');
+                  return (
+                    <li key={i} className="mb-6">
+                      <p className="font-serif text-text-dark text-sm mb-1">
+                        {s.date} | {s.time}
+                      </p>
+                      {filme ? (
+                        <Link
+                          href={`/ciclos-mostras/${cycle.slug}/${filme.slug}`}
+                          className="font-display font-bold text-text-dark text-base underline decoration-text-dark/30 underline-offset-4 hover:text-olive-escuro hover:decoration-current block"
+                        >
+                          {s.filmTitle}
+                        </Link>
+                      ) : (
+                        <p className="font-display font-bold text-text-dark text-base">{s.filmTitle}</p>
+                      )}
+                      {ficha && <p className="font-serif text-azul-escuro text-sm">{ficha}</p>}
+                    </li>
+                  );
+                })}
+              </ol>
             </section>
           )}
 
-          {textSections.length > 0 && (
+          {Object.keys(sections ?? {}).length > 0 && (
             <section aria-labelledby="textos" className="mt-10">
-              <p id="textos" className="font-display font-black text-pink text-sm tracking-widest mb-6">
+              <h2 id="textos" className="font-display font-black text-pink-escuro text-sm tracking-widest mb-6">
                 TEXTOS
-              </p>
-
-              {textSections.map(([section, arts]) => (
-                <div key={section} className="mb-8">
-                  <p className="font-display font-bold text-text-dark text-sm mb-3">{section}</p>
-                  {arts.map((art) => (
-                    <div key={art._id} className="mb-4">
-                      <Link
-                        href={`/ciclos-mostras/${cycle.slug}/texto/${art.slug}`}
-                        className="font-serif italic text-text-dark text-base sm:text-sm block hover:text-olive hover:underline leading-snug"
-                      >
-                        {art.title}
-                      </Link>
-                      <p className="font-display font-bold text-text-dark text-xs">{art.author}</p>
-                      {art.content && (
-                        <p className="font-serif italic text-text-dark text-xs opacity-70 leading-snug">
-                          {excerpt(art.content)}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ))}
+              </h2>
+              <SumarioSecoes secoes={sections} hrefTexto={(t) => `/ciclos-mostras/${cycle.slug}/texto/${t.slug}`} nivelTitulo="h3" />
             </section>
           )}
         </div>
 
-        {cycle.epigraph && (
-          <aside className="md:w-48 shrink-0 border-t border-text-dark/10 pt-6 md:border-0 md:pt-0">
-            <p className="font-serif italic text-light-text text-xs leading-relaxed">{cycle.epigraph}</p>
-          </aside>
+        {(cycle.epigraph || notas.length > 0) && (
+          <div className="md:w-48 shrink-0 flex flex-col gap-8">
+            {cycle.epigraph && (
+              <aside aria-label="epígrafe" className="border-t border-text-dark/10 pt-6 md:border-0 md:pt-0">
+                <p className="font-serif italic text-light-escuro text-sm leading-relaxed">{cycle.epigraph}</p>
+              </aside>
+            )}
+            <Notas notas={notas} tom="cream" />
+          </div>
         )}
       </div>
     </PageShell>
