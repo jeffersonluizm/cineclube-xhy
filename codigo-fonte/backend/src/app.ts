@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import path from 'path';
 import mongoose from 'mongoose';
 
 import revistaRouter from './routes/revista';
@@ -12,6 +13,7 @@ import authRouter from './routes/auth';
 import uploadRouter from './routes/upload';
 import adminRouter from './routes/admin/index';
 import descobertaRouter from './routes/descoberta';
+import demoRouter from './routes/demo';
 import { ErroHttp, rotaInexistente, tratadorDeErros } from './middleware/erros';
 import { criarLimitadorGeral } from './middleware/limitadores';
 import { pastaUploads } from './lib/uploads';
@@ -64,6 +66,9 @@ app.use(
   })
 );
 
+// Capas dos dados de demonstração (geradas por demo-imagens/gerar-capas.mjs, sem material de terceiros)
+app.use('/demo', express.static(path.resolve(__dirname, '../demo-imagens'), { maxAge: IS_PRODUCTION ? '7d' : 0 }));
+
 app.use('/api/home', homeRouter);
 app.use('/api/revista', revistaRouter);
 app.use('/api/catalogos', catalogosRouter);
@@ -72,6 +77,7 @@ app.use('/api/sobre', sobreRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/demo', demoRouter);
 app.use('/api', descobertaRouter);
 
 app.get('/api/health', (_req, res) =>

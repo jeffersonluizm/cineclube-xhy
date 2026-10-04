@@ -11,7 +11,7 @@ export function linkSeguro(valor: string): boolean {
   }
 }
 
-/** Origem de imagem aceita no conteúdo: https ou um upload local (/uploads/...) */
+/** Origem de imagem aceita no conteúdo: https, um upload local (/uploads/...) ou uma capa de demonstração (/demo/...) */
 export function imagemSegura(valor: string): boolean {
-  return valor === '' || /^\/uploads\/[\w.-]+$/.test(valor) || linkSeguro(valor);
+  return valor === '' || /^\/(uploads|demo)\/[\w-]+(\.\w+)?$/.test(valor) || linkSeguro(valor);
 }

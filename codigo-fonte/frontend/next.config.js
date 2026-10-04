@@ -3,11 +3,13 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 const DEV = process.env.NODE_ENV !== 'production';
 
-// Permite usar next/image com imagens vindas da API e do Cloudinary
-const remotePatterns = [
-  { protocol: 'http', hostname: 'localhost', port: '3001' },
-  { protocol: 'https', hostname: 'res.cloudinary.com' },
-];
+// next/image só otimiza imagens destas origens: a API, a conta do Cloudinary do cineclube
+// (CLOUDINARY_CLOUD_NAME, variável de build) e, só em desenvolvimento, a API local
+const remotePatterns = [];
+if (DEV) remotePatterns.push({ protocol: 'http', hostname: 'localhost', port: '3001' });
+if (process.env.CLOUDINARY_CLOUD_NAME) {
+  remotePatterns.push({ protocol: 'https', hostname: 'res.cloudinary.com', pathname: `/${process.env.CLOUDINARY_CLOUD_NAME}/**` });
+}
 
 let origemApi = '';
 try {

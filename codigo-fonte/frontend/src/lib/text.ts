@@ -16,3 +16,9 @@ export function slugAutor(nome: string): string {
     .replace(/^-+|-+$/g, '')
     .slice(0, 80);
 }
+
+/** Valor de um parâmetro de busca da URL: ?q=a&q=b chega como lista; fica o primeiro */
+export function primeiroValor(valor: string | string[] | undefined): string {
+  if (Array.isArray(valor)) return valor[0] ?? '';
+  return valor ?? '';
+}

@@ -81,9 +81,18 @@ export default function Rodape({ tom = 'cream' }: { tom?: 'cream' | 'dark' }) {
           <p className={`font-serif text-base leading-snug mb-3 ${texto}`}>
             Revista, catálogos e exibições do Cineclube XHY, com painel de publicação próprio.
           </p>
-          <Link href="/como-foi-feito" className={`font-display text-sm ${link}`}>
-            como foi feito →
-          </Link>
+          <ul className="flex flex-col gap-1 font-display text-sm">
+            <li>
+              <Link href="/como-foi-feito" className={link}>
+                como foi feito →
+              </Link>
+            </li>
+            <li>
+              <Link href="/admin/login" className={link}>
+                painel do editor (demonstração) →
+              </Link>
+            </li>
+          </ul>
         </section>
       </div>
     </footer>

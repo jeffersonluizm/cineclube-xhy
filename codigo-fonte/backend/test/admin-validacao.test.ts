@@ -131,3 +131,10 @@ test('resumo do painel conta conteúdo, rascunhos e últimos editados', async ()
   assert.equal(res.body.ultimosEditados[0].title, 'Rascunho');
   assert.equal(res.body.ultimosEditados[0].onde, 'revista n°1');
 });
+
+test('capa dos dados de demonstração continua aceita ao reeditar, mas sem subir de pasta', async () => {
+  const ok = await post('/api/admin/catalogos', { title: 'Demo', year: 2026, coverImage: '/demo/capa-catalogo-sirk.png' });
+  assert.equal(ok.status, 201);
+  const ruim = await post('/api/admin/catalogos', { title: 'Demo 2', year: 2026, coverImage: '/demo/../segredo.png' });
+  assert.equal(ruim.status, 400);
+});

@@ -1,11 +1,13 @@
 import { Router, Request, Response } from 'express';
 import { AuthRequest, requireAuth, signToken, VALIDADE_TOKEN_S } from '../middleware/auth';
-import { limitadorLogin } from '../middleware/limitadores';
+import { criarLimitadorLoginGlobal, limitadorLogin } from '../middleware/limitadores';
 import { senhaConfere } from '../lib/senha';
 
 const router = Router();
 
-router.post('/login', limitadorLogin, (req: Request, res: Response) => {
+const limitadorLoginGlobal = criarLimitadorLoginGlobal(Number(process.env.LOGIN_ERRADOS_POR_HORA ?? 100));
+
+router.post('/login', limitadorLoginGlobal, limitadorLogin, (req: Request, res: Response) => {
   const { password } = (req.body ?? {}) as { password?: unknown };
   const adminPassword = process.env.ADMIN_PASSWORD;
 

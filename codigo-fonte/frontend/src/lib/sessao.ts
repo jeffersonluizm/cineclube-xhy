@@ -55,3 +55,21 @@ export function segundosRestantes(token: string | null, agoraMs = Date.now()): n
   if (!exp) return 0;
   return Math.max(0, Math.floor(exp - agoraMs / 1000));
 }
+
+/** Formato de JWT (três partes) e ainda dentro da validade: filtro barato antes de chamar a API */
+export function tokenPareceValido(token: string, agoraMs = Date.now()): boolean {
+  if (!/^[\w-]+\.[\w-]+\.[\w-]+$/.test(token)) return false;
+  return segundosRestantes(token, agoraMs) > 0;
+}
+
+const PREFIXO_RASCUNHO = 'xhy_rascunho:';
+
+/** Ao sair, os rascunhos locais dos textos também saem do navegador (computador compartilhado) */
+export function apagarRascunhos(armazenamento: Pick<Storage, 'length' | 'key' | 'removeItem'> = localStorage) {
+  const chaves: string[] = [];
+  for (let i = 0; i < armazenamento.length; i++) {
+    const chave = armazenamento.key(i);
+    if (chave?.startsWith(PREFIXO_RASCUNHO)) chaves.push(chave);
+  }
+  chaves.forEach((c) => armazenamento.removeItem(c));
+}

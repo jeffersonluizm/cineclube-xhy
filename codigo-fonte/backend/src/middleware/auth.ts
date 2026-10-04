@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { createHash } from 'crypto';
 
 const SEGREDO_DEV = 'segredo-apenas-para-desenvolvimento';
 
@@ -24,6 +25,13 @@ export function segredoJwt(env: NodeJS.ProcessEnv = process.env): string {
   return SEGREDO_DEV;
 }
 
+/**
+ * Versão da senha do editor gravada no token: trocar ADMIN_PASSWORD invalida na hora
+ * todas as sessões abertas com a senha antiga (o hash não revela a senha).
+ */
+export const versaoDaSenha = (senha = process.env.ADMIN_PASSWORD ?? '') =>
+  createHash('sha256').update(`cineclube-xhy:${senha}`, 'utf8').digest('hex').slice(0, 16);
+
 export interface AuthRequest extends Request {
   editor?: { role: string; exp?: number };
 }
@@ -35,8 +43,9 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
   }
 
   try {
-    const payload = jwt.verify(header.slice(7), segredoJwt(), { algorithms: ['HS256'] }) as { role: string; exp?: number };
+    const payload = jwt.verify(header.slice(7), segredoJwt(), { algorithms: ['HS256'] }) as { role: string; exp?: number; v?: string };
     if (payload.role !== 'editor') throw new Error('papel inválido');
+    if (payload.v !== versaoDaSenha()) throw new Error('senha do editor foi trocada');
     req.editor = payload;
     next();
   } catch {
@@ -45,5 +54,5 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
 }
 
 export function signToken() {
-  return jwt.sign({ role: 'editor' }, segredoJwt(), { expiresIn: VALIDADE_TOKEN_S, algorithm: 'HS256' });
+  return jwt.sign({ role: 'editor', v: versaoDaSenha() }, segredoJwt(), { expiresIn: VALIDADE_TOKEN_S, algorithm: 'HS256' });
 }

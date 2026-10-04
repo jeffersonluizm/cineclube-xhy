@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import PageShell from '@/components/PageShell';
 import Breadcrumb from '@/components/Breadcrumb';
+import ConviteDemo from '@/components/ConviteDemo';
 import { DATA_CARGA, RESUMO_CARGA } from '@/lib/resultadosCarga';
 
 export const metadata: Metadata = {
@@ -83,6 +84,8 @@ export default function ComoFoiFeitoPage() {
         das mostras e a programação das exibições. É feito para dois públicos: quem lê e frequenta as sessões, muitas vezes pelo
         celular, e a equipe, que publica tudo sozinha por um painel próprio, sem mexer em código.
       </p>
+
+      <ConviteDemo />
 
       <nav aria-label="nesta página" className="font-display text-sm flex flex-wrap gap-x-5 gap-y-1 mb-4">
         {[

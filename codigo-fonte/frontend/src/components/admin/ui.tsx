@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { forwardRef, useId } from 'react';
+import { forwardRef, useEffect, useId, useState } from 'react';
 
 /**
  * Peças base do painel, na estética do impresso: papel creme, fios finos, sem cantos
@@ -145,12 +145,20 @@ export function CabecalhoPagina({ titulo, sobretitulo, acoes }: { titulo: string
 }
 
 export function EstadoCarregando({ texto = 'carregando…' }: { texto?: string }) {
+  // Depois de alguns segundos, explica a espera: a API gratuita pode estar acordando
+  const [demorando, setDemorando] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setDemorando(true), 4000);
+    return () => clearTimeout(t);
+  }, []);
   return (
     <div role="status" aria-live="polite" className="animate-pulse flex flex-col gap-3 max-w-xl">
       <div className="h-6 w-1/2 bg-text-dark/10" />
       <div className="h-4 w-full bg-text-dark/10" />
       <div className="h-4 w-4/5 bg-text-dark/10" />
-      <span className="font-sans text-sm text-text-suave">{texto}</span>
+      <span className="font-sans text-sm text-text-suave">
+        {demorando ? 'Acordando o servidor… na hospedagem gratuita ele leva até um minuto na primeira visita.' : texto}
+      </span>
     </div>
   );
 }

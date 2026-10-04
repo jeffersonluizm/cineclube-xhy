@@ -5,27 +5,31 @@ dotenv.config();
 
 import app from './app';
 import { conectarBanco } from './lib/banco';
+import { problemasDeConfiguracao } from './lib/configuracao';
+import { agendarResetDemonstracao, demoLigado, restaurarDemonstracao } from './lib/demo';
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 const PORT = process.env.PORT || 3001;
 
-// Em produção, segredos precisam estar definidos — sem fallback silencioso
-if (IS_PRODUCTION) {
-  const missing = ['MONGODB_URI', 'ADMIN_PASSWORD', 'JWT_SECRET', 'FRONTEND_URL'].filter((k) => !process.env[k]);
-  if (missing.length > 0) {
-    console.error(`Variáveis de ambiente obrigatórias em produção não definidas: ${missing.join(', ')}`);
-    process.exit(1);
-  }
-  if (!process.env.CLOUDINARY_URL) {
-    console.warn(
-      'AVISO: CLOUDINARY_URL não definida. Imagens serão salvas em disco local e podem ser perdidas a cada deploy.'
-    );
-  }
+// Em produção, configuração faltando ou fraca impede a partida, com mensagem do que corrigir
+const problemas = problemasDeConfiguracao();
+if (problemas.length > 0) {
+  console.error(`Configuração inválida para produção:\n- ${problemas.join('\n- ')}`);
+  process.exit(1);
+}
+if (IS_PRODUCTION && !process.env.CLOUDINARY_URL) {
+  console.warn('AVISO: CLOUDINARY_URL não definida. Imagens serão salvas em disco local e podem ser perdidas a cada deploy.');
 }
 
 // MONGODB_TIMEOUT_MS: prazo para achar o banco (padrão 8 s); maior ajuda com Atlas acordando ou máquina ocupada
 conectarBanco({ timeoutMs: Number(process.env.MONGODB_TIMEOUT_MS) || undefined })
-  .then(() => {
+  .then(async () => {
+    if (demoLigado()) {
+      // Demonstração: popula o banco vazio na primeira partida e restaura os exemplos periodicamente
+      const r = await restaurarDemonstracao({ soSeVazio: true, log: () => {} });
+      console.log(`Modo demonstração LIGADO (dados de exemplo ${r === 'restaurado' ? 'criados' : 'mantidos'}).`);
+      agendarResetDemonstracao();
+    }
     app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
   })
   .catch((err) => {

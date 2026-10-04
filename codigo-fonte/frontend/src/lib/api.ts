@@ -37,10 +37,21 @@ export class ErroApi extends Error {}
 
 const NA_COMPILACAO = process.env.NEXT_PHASE === 'phase-production-build';
 
+/**
+ * Identifica o servidor do site para a API (fora do limite geral por IP, que veria todos os
+ * visitantes como um só). SERVIDOR_SEGREDO é variável só de servidor: nunca NEXT_PUBLIC_*.
+ */
+export function cabecalhosDoServidor(): Record<string, string> {
+  return process.env.SERVIDOR_SEGREDO ? { 'X-Servidor-Site': process.env.SERVIDOR_SEGREDO } : {};
+}
+
 async function buscar<T>(path: string): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`${API_URL}${path}`, { next: { revalidate: REVALIDAR_S, tags: [ETIQUETA_CONTEUDO] } });
+    res = await fetch(`${API_URL}${path}`, {
+      headers: cabecalhosDoServidor(),
+      next: { revalidate: REVALIDAR_S, tags: [ETIQUETA_CONTEUDO] },
+    });
   } catch (err) {
     if (NA_COMPILACAO) noStore(); // sem API no build: a rota fica dinâmica em vez de falhar
     throw new ErroApi(`API indisponível em ${path}: ${(err as Error).message}`);
@@ -99,4 +110,5 @@ export const api = {
   autor: (slug: string) => buscar<{ nome: string; slug: string; textos: TextoComEndereco[] }>(`/api/autores/${encodeURIComponent(slug)}`),
   recentes: () => buscar<TextoComEndereco[]>('/api/recentes'),
   mapa: () => buscar<{ href: string; atualizado: string }[]>('/api/mapa'),
+  demo: () => buscar<{ ativo: true; resetMinutos: number }>('/api/demo'),
 };

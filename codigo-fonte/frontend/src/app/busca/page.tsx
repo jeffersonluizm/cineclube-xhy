@@ -4,13 +4,14 @@ import PageShell from '@/components/PageShell';
 import Breadcrumb from '@/components/Breadcrumb';
 import ListaDeTextos from '@/components/ListaDeTextos';
 import { api } from '@/lib/api';
+import { primeiroValor } from '@/lib/text';
 
 interface Props {
-  searchParams: { q?: string };
+  searchParams: { q?: string | string[] };
 }
 
 export function generateMetadata({ searchParams }: Props): Metadata {
-  const termo = (searchParams.q ?? '').trim();
+  const termo = primeiroValor(searchParams.q).trim();
   return {
     title: termo ? `Busca: ${termo}` : 'Busca',
     description: 'Busque textos da revista, dos catálogos e das exibições, filmes e autores.',
@@ -20,7 +21,7 @@ export function generateMetadata({ searchParams }: Props): Metadata {
 }
 
 export default async function BuscaPage({ searchParams }: Props) {
-  const termo = (searchParams.q ?? '').trim().slice(0, 100);
+  const termo = primeiroValor(searchParams.q).trim().slice(0, 100);
   const curto = termo.length > 0 && termo.length < 2;
   const resultado = termo.length >= 2 ? await api.busca(termo) : null;
   const autores = resultado ? null : await api.autores();

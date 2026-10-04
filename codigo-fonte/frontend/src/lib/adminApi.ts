@@ -12,6 +12,16 @@ export class ErroSessaoExpirada extends Error {
   }
 }
 
+/** Resposta de erro da API com o status HTTP (a mensagem já vem pronta para o editor) */
+export class ErroDaApi extends Error {
+  constructor(
+    mensagem: string,
+    public status: number
+  ) {
+    super(mensagem);
+  }
+}
+
 /** Muitas tentativas de login: quanto falta para tentar de novo */
 export class ErroLimiteLogin extends Error {
   constructor(
@@ -46,7 +56,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     const segundos = segundosParaTentarDeNovo({ ratelimit: res.headers.get('RateLimit'), retryAfter: res.headers.get('Retry-After') });
     throw new ErroLimiteLogin((data as { error?: string }).error || 'Muitas tentativas.', segundos);
   }
-  if (!res.ok) throw new Error((data as { error?: string }).error || `Erro ${res.status}`);
+  if (!res.ok) throw new ErroDaApi((data as { error?: string }).error || `Erro ${res.status}`, res.status);
   return data as T;
 }
 
@@ -67,6 +77,12 @@ async function escrever<T>(path: string, options: RequestInit): Promise<T> {
 }
 
 const corpo = (data: unknown) => JSON.stringify(data);
+
+export interface InfoDemo {
+  ativo: true;
+  papeis: { papel: 'editor'; rotulo: string; descricao: string }[];
+  resetMinutos: number;
+}
 
 export interface ArticleInput {
   title: string;
@@ -148,6 +164,21 @@ export const adminApi = {
     return r;
   },
   sessao: () => request<{ ok: true; expiraEm: number }>('/api/auth/sessao'),
+
+  /** Modo demonstração: null quando desligado (a API responde 404) */
+  async demo(): Promise<InfoDemo | null> {
+    try {
+      return await request<InfoDemo>('/api/demo');
+    } catch (e) {
+      if (e instanceof ErroDaApi && e.status === 404) return null;
+      throw e;
+    }
+  },
+  async entrarDemo(papel: 'editor') {
+    const r = await request<{ token: string; expiraEm: number }>('/api/demo/entrar', { method: 'POST', body: corpo({ papel }) });
+    guardarToken(r.token);
+    return r;
+  },
 
   upload: (file: File) => {
     const form = new FormData();

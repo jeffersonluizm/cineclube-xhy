@@ -71,6 +71,7 @@ export async function executarSeed({ banco, force, confirmar, log = console.log 
     month: 'abril',
     year: 2026,
     slug: 'n1',
+    coverImage: '/demo/capa-revista-1.png',
     editorial:
       'Esta primeira edição nasce das conversas depois das sessões: o que fica de um filme quando a sala acende. ' +
       'Reunimos textos sobre a duração, o fantasma e o melodrama, três maneiras de o cinema lidar com o que não cabe no presente.',
@@ -135,6 +136,7 @@ export async function executarSeed({ banco, force, confirmar, log = console.log 
   const cat2026 = await Catalog.create({
     title: 'Júlio Bressane',
     slug: 'julio-bressane',
+    coverImage: '/demo/capa-catalogo-bressane.png',
     year: 2026,
     description: 'Catálogo da mostra dedicada ao cineasta, com traduções, ensaios inéditos e a programação comentada.',
   });
@@ -173,13 +175,14 @@ export async function executarSeed({ banco, force, confirmar, log = console.log 
   await Catalog.create({ title: 'Atrizes, Atrizes', slug: 'atrizes-atrizes', year: 2025 });
   await Catalog.create({ title: 'David Lynch e seus precursores', slug: 'david-lynch-e-seus-precursores', year: 2025 });
   await Catalog.create({ title: 'Salomé', slug: 'salome', year: 2024 });
-  await Catalog.create({ title: 'Sirk & Fassbinder', slug: 'sirk-fassbinder', year: 2024 });
+  await Catalog.create({ title: 'Sirk & Fassbinder', slug: 'sirk-fassbinder', year: 2024, coverImage: '/demo/capa-catalogo-sirk.png' });
 
   // Ciclos & Mostras
   const cycle2026 = await Cycle.create({
     title: 'O Tempo do Depois',
     subtitle: 'o cinema de Béla Tarr e Pedro Costa',
     slug: 'o-tempo-do-depois',
+    coverImage: '/demo/capa-ciclo-tempo.png',
     year: 2026,
     description:
       'Dois cineastas que filmam o que vem depois: depois da fábrica, depois do bairro, depois da promessa de futuro.\n' +
