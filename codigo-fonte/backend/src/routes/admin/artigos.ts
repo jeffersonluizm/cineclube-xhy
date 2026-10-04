@@ -1,19 +1,19 @@
 import { Router } from 'express';
 import Article from '../../models/Article';
-import { assincrono, ErroHttp, naoEncontrado } from '../../middleware/erros';
+import { assincrono, naoEncontrado } from '../../middleware/erros';
 import { slugUnico } from '../../lib/slugUnico';
 import { soDefinidos, textoCorrido } from '../../lib/conteudo';
-import { proximaOrdem, rotaReordenar } from './comum';
+import { artigoEdicao, artigoNovo, filtroArtigos, objectId } from '../../validacao/esquemas';
+import { ATUALIZAR, proximaOrdem, rotaBuscarPorId, rotaReordenar } from './comum';
 
 const router = Router();
 
 router.get(
   '/',
   assincrono(async (req, res) => {
-    const filter: Record<string, unknown> = {};
-    if (req.query.parentId) filter.parentId = req.query.parentId;
-    if (req.query.parentType) filter.parentType = req.query.parentType;
-    const articles = await Article.find(filter)
+    // Filtro validado: só ids e tipos como texto, nunca objetos com operadores ($ne, $gt...)
+    const filtro = soDefinidos(filtroArtigos.parse(req.query));
+    const articles = await Article.find(filtro)
       .sort({ order: 1, createdAt: -1 })
       .select('title slug author column order published parentType parentId updatedAt');
     res.json(articles);
@@ -22,37 +22,20 @@ router.get(
 
 // Reordenação precisa vir antes de /:id
 rotaReordenar(router, Article);
-
-router.get(
-  '/:id',
-  assincrono(async (req, res) => {
-    const article = await Article.findById(req.params.id);
-    if (!article) throw naoEncontrado('Artigo não encontrado');
-    res.json(article);
-  })
-);
+rotaBuscarPorId(router, Article, 'Artigo não encontrado');
 
 router.post(
   '/',
   assincrono(async (req, res) => {
-    const { title, author, column, epigraph, blocks, footnotes, coverImage, published, parentType, parentId } = req.body;
-    if (!title || !author || !column || !parentType || !parentId) {
-      throw new ErroHttp(400, 'Preencha título, autor, coluna e a revista de destino');
-    }
+    const dados = artigoNovo.parse(req.body ?? {});
     const article = await Article.create({
-      title,
-      slug: await slugUnico(Article, title),
-      author,
-      column,
-      epigraph,
-      blocks: blocks || [],
-      content: textoCorrido(blocks),
-      footnotes: footnotes || [],
-      coverImage,
-      published: published !== false,
-      parentType,
-      parentId,
-      order: await proximaOrdem(Article, { parentId, parentType }),
+      ...dados,
+      slug: await slugUnico(Article, dados.title),
+      blocks: dados.blocks ?? [],
+      content: textoCorrido(dados.blocks),
+      footnotes: dados.footnotes ?? [],
+      published: dados.published !== false,
+      order: await proximaOrdem(Article, { parentId: dados.parentId, parentType: dados.parentType }),
     });
     res.status(201).json(article);
   })
@@ -61,10 +44,10 @@ router.post(
 router.put(
   '/:id',
   assincrono(async (req, res) => {
-    const { title, author, column, epigraph, blocks, footnotes, coverImage, published, order } = req.body;
-    const update: Record<string, unknown> = soDefinidos({ title, author, column, epigraph, blocks, footnotes, coverImage, published, order });
-    if (blocks) update.content = textoCorrido(blocks);
-    const article = await Article.findByIdAndUpdate(req.params.id, update, { new: true });
+    const dados = artigoEdicao.parse(req.body ?? {});
+    const update: Record<string, unknown> = soDefinidos(dados);
+    if (dados.blocks) update.content = textoCorrido(dados.blocks);
+    const article = await Article.findByIdAndUpdate(objectId.parse(req.params.id), update, ATUALIZAR);
     if (!article) throw naoEncontrado('Artigo não encontrado');
     res.json(article);
   })
@@ -73,7 +56,7 @@ router.put(
 router.delete(
   '/:id',
   assincrono(async (req, res) => {
-    const article = await Article.findByIdAndDelete(req.params.id);
+    const article = await Article.findByIdAndDelete(objectId.parse(req.params.id));
     if (!article) throw naoEncontrado('Artigo não encontrado');
     res.json({ ok: true });
   })

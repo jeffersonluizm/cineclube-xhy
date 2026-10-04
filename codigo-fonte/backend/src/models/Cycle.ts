@@ -4,10 +4,12 @@ export interface IScreening {
   date: string;
   time: string;
   filmTitle: string;
-  filmSlug: string;
-  director: string;
-  duration: string;
-  country: string;
+  filmSlug?: string;
+  /** Página do filme desta sessão (o slug fica só para sessões antigas) */
+  filmId?: mongoose.Types.ObjectId;
+  director?: string;
+  duration?: string;
+  country?: string;
 }
 
 export interface ICycle extends Document {
@@ -30,10 +32,11 @@ const ScreeningSchema = new Schema<IScreening>({
   date: { type: String, required: true },
   time: { type: String, required: true },
   filmTitle: { type: String, required: true },
-  filmSlug: { type: String, required: true },
-  director: { type: String, required: true },
-  duration: { type: String, required: true },
-  country: { type: String, required: true },
+  filmSlug: { type: String },
+  filmId: { type: Schema.Types.ObjectId, ref: 'Film' },
+  director: { type: String, default: '' },
+  duration: { type: String, default: '' },
+  country: { type: String, default: '' },
 });
 
 const CycleSchema = new Schema<ICycle>(

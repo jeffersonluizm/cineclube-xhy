@@ -6,6 +6,7 @@ import catalogos from './catalogos';
 import ciclos from './ciclos';
 import filmes from './filmes';
 import sobre from './sobre';
+import resumo from './resumo';
 
 /** Painel do editor: todas as rotas exigem token */
 const router = Router();
@@ -16,5 +17,6 @@ router.use('/catalogos', catalogos);
 router.use('/ciclos', ciclos);
 router.use('/filmes', filmes);
 router.use('/sobre', sobre);
+router.use('/resumo', resumo);
 
 export default router;

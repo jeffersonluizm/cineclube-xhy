@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import Catalog from '../../models/Catalog';
 import Article from '../../models/Article';
-import { assincrono, ErroHttp, naoEncontrado } from '../../middleware/erros';
+import { assincrono, naoEncontrado } from '../../middleware/erros';
 import { slugUnico } from '../../lib/slugUnico';
 import { soDefinidos } from '../../lib/conteudo';
+import { catalogoEdicao, catalogoNovo, objectId } from '../../validacao/esquemas';
+import { ATUALIZAR, rotaBuscarPorId } from './comum';
 
 const router = Router();
 
@@ -14,12 +16,21 @@ router.get(
   })
 );
 
+rotaBuscarPorId(router, Catalog, 'Catálogo não encontrado');
+
+router.get(
+  '/:id/impacto',
+  assincrono(async (req, res) => {
+    const id = objectId.parse(req.params.id);
+    res.json({ textos: await Article.countDocuments({ parentId: id, parentType: 'catalogo' }) });
+  })
+);
+
 router.post(
   '/',
   assincrono(async (req, res) => {
-    const { title, year, coverImage, description } = req.body;
-    if (!title || year == null) throw new ErroHttp(400, 'Preencha título e ano');
-    const catalog = await Catalog.create({ title, year, coverImage, description, slug: await slugUnico(Catalog, title) });
+    const dados = catalogoNovo.parse(req.body ?? {});
+    const catalog = await Catalog.create({ ...dados, slug: await slugUnico(Catalog, dados.title) });
     res.status(201).json(catalog);
   })
 );
@@ -27,8 +38,8 @@ router.post(
 router.put(
   '/:id',
   assincrono(async (req, res) => {
-    const { title, year, coverImage, description } = req.body;
-    const catalog = await Catalog.findByIdAndUpdate(req.params.id, soDefinidos({ title, year, coverImage, description }), { new: true });
+    const dados = catalogoEdicao.parse(req.body ?? {});
+    const catalog = await Catalog.findByIdAndUpdate(objectId.parse(req.params.id), soDefinidos(dados), ATUALIZAR);
     if (!catalog) throw naoEncontrado('Catálogo não encontrado');
     res.json(catalog);
   })
@@ -37,7 +48,7 @@ router.put(
 router.delete(
   '/:id',
   assincrono(async (req, res) => {
-    const catalog = await Catalog.findByIdAndDelete(req.params.id);
+    const catalog = await Catalog.findByIdAndDelete(objectId.parse(req.params.id));
     if (!catalog) throw naoEncontrado('Catálogo não encontrado');
     await Article.deleteMany({ parentId: catalog._id, parentType: 'catalogo' });
     res.json({ ok: true });

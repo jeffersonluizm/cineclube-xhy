@@ -25,10 +25,17 @@ export function rotaInexistente(_req: Request, res: Response) {
   res.status(404).json({ error: 'Rota não encontrada' });
 }
 
-/** Mensagem do primeiro problema de validação, no formato "campo: motivo" */
+const ROTULOS: Record<string, string> = {
+  number: 'número', volume: 'volume', month: 'mês', year: 'ano', title: 'título', author: 'autor',
+  column: 'coluna', blocks: 'blocos', parentId: 'destino', parentType: 'destino', cycleId: 'ciclo',
+  ids: 'lista de ids', team: 'equipe', screenings: 'programação', coverImage: 'capa', image: 'imagem',
+};
+
+/** Mensagem do primeiro problema de validação; as genéricas ganham o nome do campo em português */
 export function mensagemDeValidacao(erro: ZodError): string {
   const primeiro = erro.issues[0];
-  const campo = primeiro.path.join('.');
+  if (!/^Entrada inválida/.test(primeiro.message)) return primeiro.message;
+  const campo = primeiro.path.map((p) => (typeof p === 'number' ? `#${p + 1}` : ROTULOS[String(p)] ?? String(p))).join(' ');
   return campo ? `${campo}: ${primeiro.message}` : primeiro.message;
 }
 

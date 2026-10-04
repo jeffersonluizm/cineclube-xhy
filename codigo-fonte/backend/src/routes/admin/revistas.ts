@@ -4,9 +4,11 @@ import Article from '../../models/Article';
 import { assincrono, ErroHttp, naoEncontrado } from '../../middleware/erros';
 import { slugify } from '../../lib/slugify';
 import { soDefinidos } from '../../lib/conteudo';
+import { objectId, revistaEdicao, revistaNova } from '../../validacao/esquemas';
+import { ATUALIZAR, duplicado, rotaBuscarPorId } from './comum';
 
 const router = Router();
-const duplicada = (err: unknown) => (err as { code?: number }).code === 11000;
+const JA_EXISTE = 'Já existe uma revista com esse número';
 
 router.get(
   '/',
@@ -15,18 +17,26 @@ router.get(
   })
 );
 
+rotaBuscarPorId(router, Magazine, 'Revista não encontrada');
+
+/** O que a exclusão leva junto, para o diálogo de confirmação */
+router.get(
+  '/:id/impacto',
+  assincrono(async (req, res) => {
+    const id = objectId.parse(req.params.id);
+    res.json({ textos: await Article.countDocuments({ parentId: id, parentType: 'revista' }) });
+  })
+);
+
 router.post(
   '/',
   assincrono(async (req, res) => {
-    const { number, volume, month, year, coverImage, editorial } = req.body;
-    if (number == null || volume == null || !month || year == null) {
-      throw new ErroHttp(400, 'Preencha número, volume, mês e ano');
-    }
+    const dados = revistaNova.parse(req.body ?? {});
     try {
-      const magazine = await Magazine.create({ number, volume, month, year, coverImage, editorial, slug: slugify(`revista-${number}`) });
+      const magazine = await Magazine.create({ ...dados, slug: slugify(`revista-${dados.number}`) });
       res.status(201).json(magazine);
     } catch (err) {
-      if (duplicada(err)) throw new ErroHttp(409, 'Já existe uma revista com esse número');
+      if (duplicado(err)) throw new ErroHttp(409, JA_EXISTE);
       throw err;
     }
   })
@@ -35,19 +45,24 @@ router.post(
 router.put(
   '/:id',
   assincrono(async (req, res) => {
-    const { number, volume, month, year, coverImage, editorial } = req.body;
-    const update: Record<string, unknown> = soDefinidos({ number, volume, month, year, coverImage, editorial });
-    if (number != null) update.slug = slugify(`revista-${number}`);
-    const magazine = await Magazine.findByIdAndUpdate(req.params.id, update, { new: true });
-    if (!magazine) throw naoEncontrado('Revista não encontrada');
-    res.json(magazine);
+    const dados = revistaEdicao.parse(req.body ?? {});
+    const update: Record<string, unknown> = soDefinidos(dados);
+    if (dados.number != null) update.slug = slugify(`revista-${dados.number}`);
+    try {
+      const magazine = await Magazine.findByIdAndUpdate(objectId.parse(req.params.id), update, ATUALIZAR);
+      if (!magazine) throw naoEncontrado('Revista não encontrada');
+      res.json(magazine);
+    } catch (err) {
+      if (duplicado(err)) throw new ErroHttp(409, JA_EXISTE);
+      throw err;
+    }
   })
 );
 
 router.delete(
   '/:id',
   assincrono(async (req, res) => {
-    const magazine = await Magazine.findByIdAndDelete(req.params.id);
+    const magazine = await Magazine.findByIdAndDelete(objectId.parse(req.params.id));
     if (!magazine) throw naoEncontrado('Revista não encontrada');
     await Article.deleteMany({ parentId: magazine._id, parentType: 'revista' });
     res.json({ ok: true });
