@@ -1,22 +1,34 @@
 'use client';
 
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import ArticleEditor from '@/components/admin/ArticleEditor';
+import { useToast } from '@/components/admin/Toasts';
+import { CabecalhoPagina } from '@/components/admin/ui';
 import { adminApi, ArticleInput } from '@/lib/adminApi';
 
-export default function NovoTextoCatalogoPage() {
+export default function NovoTextoPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const avisar = useToast();
 
-  async function handleSave(data: ArticleInput) {
-    await adminApi.artigos.create(data);
+  async function salvar(data: ArticleInput) {
+    const novo = await adminApi.artigos.create(data);
+    avisar(novo.published === false ? 'Rascunho criado. Ele não aparece no site.' : 'Texto publicado.');
     router.replace(`/admin/catalogos/${id}`);
   }
 
   return (
     <div>
-      <h1 className="font-display font-black text-text-dark text-3xl mb-8">novo texto do catálogo</h1>
-      <ArticleEditor parentId={id} parentType="catalogo" onSave={handleSave} />
+      <CabecalhoPagina
+        titulo="novo texto"
+        acoes={
+          <Link href={`/admin/catalogos/${id}`} className="font-display text-azul-escuro hover:underline">
+            cancelar
+          </Link>
+        }
+      />
+      <ArticleEditor parentId={id} parentType="catalogo" onSave={salvar} />
     </div>
   );
 }

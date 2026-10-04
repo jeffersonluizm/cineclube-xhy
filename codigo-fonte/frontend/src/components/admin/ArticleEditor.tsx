@@ -2,8 +2,13 @@
 
 import { useState } from 'react';
 import { ArticleInput } from '@/lib/adminApi';
-import BlocksEditor from './BlocksEditor';
 import type { Article, Block } from '@/lib/types';
+import BlocksEditor from './BlocksEditor';
+import ImageUploadField from './ImageUploadField';
+import CampoNotas from './CampoNotas';
+import AvisoSaida from './AvisoSaida';
+import { useRascunhoLocal, useSujo } from './hooks';
+import { Alerta, AreaTexto, BarraSalvar, Botao, Campo } from './ui';
 
 interface ArticleEditorProps {
   parentId: string;
@@ -12,126 +17,141 @@ interface ArticleEditorProps {
   onSave: (data: ArticleInput) => Promise<void>;
 }
 
-const inputClass =
-  'mt-1 w-full border border-text-dark/30 rounded px-3 py-2 bg-white font-sans text-text-dark focus:outline-none focus:border-pink';
+interface Estado {
+  title: string;
+  author: string;
+  column: string;
+  epigraph: string;
+  coverImage: string;
+  footnotes: string[];
+  published: boolean;
+  blocks: Block[];
+}
 
-export default function ArticleEditor({ parentId, parentType = 'revista', initial, onSave }: ArticleEditorProps) {
-  const [title, setTitle] = useState(initial?.title ?? '');
-  const [author, setAuthor] = useState(initial?.author ?? '');
-  const [column, setColumn] = useState(initial?.column ?? '');
-  const [epigraph, setEpigraph] = useState(initial?.epigraph ?? '');
-  const [footnotes, setFootnotes] = useState<string[]>(initial?.footnotes ?? []);
-  const [published, setPublished] = useState(initial?.published !== false);
-  const [blocks, setBlocks] = useState<Block[]>(
-    initial?.blocks?.length
+function estadoInicial(initial?: Article): Estado {
+  return {
+    title: initial?.title ?? '',
+    author: initial?.author ?? '',
+    column: initial?.column ?? '',
+    epigraph: initial?.epigraph ?? '',
+    coverImage: initial?.coverImage ?? '',
+    footnotes: initial?.footnotes ?? [],
+    published: initial?.published !== false,
+    blocks: initial?.blocks?.length
       ? initial.blocks
       : initial?.content
         ? initial.content.split('\n').filter(Boolean).map((text) => ({ type: 'paragraph' as const, text }))
-        : [{ type: 'paragraph', text: '' }]
-  );
-  const [error, setError] = useState('');
-  const [saving, setSaving] = useState(false);
+        : [{ type: 'paragraph', text: '' }],
+  };
+}
 
-  async function handleSubmit(e: React.FormEvent) {
+const quando = (ms: number) => new Date(ms).toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+/**
+ * Editor de textos (revista, catálogo, ciclo). O que é digitado fica também num rascunho
+ * local do navegador: se a aba fechar, a página recarregar ou a sessão expirar, dá para
+ * restaurar. Sair com alterações não salvas pede confirmação.
+ */
+export default function ArticleEditor({ parentId, parentType = 'revista', initial, onSave }: ArticleEditorProps) {
+  const [v, setV] = useState<Estado>(() => estadoInicial(initial));
+  const [erro, setErro] = useState('');
+  const [salvando, setSalvando] = useState(false);
+  const { sujo, marcarSalvo } = useSujo(v);
+  const chaveRascunho = initial ? `texto:${initial._id}` : `novo:${parentType}:${parentId}`;
+  const { rascunho, descartarRascunho } = useRascunhoLocal(chaveRascunho, v, sujo);
+  const [ofereceuRascunho, setOfereceuRascunho] = useState(false);
+  const alterar = (campo: 'title' | 'author' | 'column' | 'epigraph') => (e: { target: { value: string } }) =>
+    setV((x) => ({ ...x, [campo]: e.target.value }));
+
+  const temRascunho = !ofereceuRascunho && rascunho && JSON.stringify(rascunho.valor) !== JSON.stringify(v);
+
+  async function enviar(e: React.FormEvent) {
     e.preventDefault();
-    setError('');
-    setSaving(true);
+    setErro('');
+    setSalvando(true);
     try {
-      const cleanBlocks = blocks.filter((b) =>
-        b.type === 'image' ? Boolean(b.src) : Boolean(b.text?.trim())
-      );
       await onSave({
-        title: title.trim(),
-        author: author.trim(),
-        column: column.trim().toLowerCase(),
-        epigraph: epigraph.trim() || undefined,
-        blocks: cleanBlocks,
-        footnotes: footnotes.map((f) => f.trim()).filter(Boolean),
-        published,
+        title: v.title.trim(),
+        author: v.author.trim(),
+        column: v.column.trim().toLowerCase(),
+        epigraph: v.epigraph.trim(),
+        coverImage: v.coverImage,
+        blocks: v.blocks.filter((b) => (b.type === 'image' ? Boolean(b.src) : Boolean(b.text?.trim()))),
+        footnotes: v.footnotes.map((f) => f.trim()).filter(Boolean),
+        published: v.published,
         parentType,
         parentId,
       });
+      descartarRascunho();
+      marcarSalvo();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao salvar');
-      setSaving(false);
+      setErro(err instanceof Error ? err.message : 'Erro ao salvar');
+    } finally {
+      setSalvando(false);
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+    <form onSubmit={enviar} className="flex flex-col gap-8">
+      <AvisoSaida sujo={sujo && !salvando} />
+
+      {temRascunho && rascunho && (
+        <Alerta tipo="aviso">
+          <p className="mb-2">Há um rascunho deste texto guardado neste navegador em {quando(rascunho.em)}, com alterações que não foram salvas.</p>
+          <div className="flex flex-wrap gap-4">
+            <Botao
+              variante="texto"
+              onClick={() => {
+                setV(rascunho.valor);
+                setOfereceuRascunho(true);
+              }}
+            >
+              restaurar rascunho
+            </Botao>
+            <Botao
+              variante="texto-perigo"
+              onClick={() => {
+                descartarRascunho();
+                setOfereceuRascunho(true);
+              }}
+            >
+              descartar
+            </Botao>
+          </div>
+        </Alerta>
+      )}
+
       {/* Metadados */}
-      <div className="bg-white rounded-lg p-6 border border-text-dark/10 grid gap-4 md:grid-cols-2">
-        <label className="md:col-span-2">
-          <span className="font-display text-sm text-text-dark">título</span>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} required className={inputClass} />
-        </label>
-        <label>
-          <span className="font-display text-sm text-text-dark">autor(a)</span>
-          <input value={author} onChange={(e) => setAuthor(e.target.value)} required className={inputClass} />
-        </label>
-        <label>
-          <span className="font-display text-sm text-text-dark">coluna / seção (ex.: crítica, ensaio, entrevista)</span>
-          <input value={column} onChange={(e) => setColumn(e.target.value)} required className={inputClass} />
-        </label>
-        <label className="md:col-span-2">
-          <span className="font-display text-sm text-text-dark">epígrafe (opcional)</span>
-          <textarea value={epigraph} onChange={(e) => setEpigraph(e.target.value)} rows={2} className={inputClass} />
-        </label>
-        <label className="flex items-center gap-2 md:col-span-2">
-          <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} />
-          <span className="font-display text-sm text-text-dark">publicado (desmarque para manter como rascunho)</span>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Campo className="md:col-span-2" rotulo="título" value={v.title} onChange={alterar('title')} required />
+        <Campo rotulo="autor(a)" value={v.author} onChange={alterar('author')} required />
+        <Campo rotulo="coluna / seção" dica="ex.: crítica, ensaio, entrevista" value={v.column} onChange={alterar('column')} required />
+        <AreaTexto className="md:col-span-2" rotulo="epígrafe" value={v.epigraph} onChange={alterar('epigraph')} rows={2} />
+        <div className="md:col-span-2">
+          <ImageUploadField
+            label="imagem de compartilhamento (opcional)"
+            value={v.coverImage}
+            onChange={(url) => setV((x) => ({ ...x, coverImage: url }))}
+          />
+          <p className="font-sans text-xs text-text-suave mt-1">Aparece na prévia do link em redes e aplicativos. Sem ela, usa a capa da edição.</p>
+        </div>
+        <label className="flex items-center gap-2 md:col-span-2 font-display text-sm text-text-dark">
+          <input type="checkbox" checked={v.published} onChange={(e) => setV((x) => ({ ...x, published: e.target.checked }))} className="w-4 h-4 accent-text-dark" />
+          publicado (desmarque para manter como rascunho, fora do site)
         </label>
       </div>
 
-      <BlocksEditor
-        blocks={blocks}
-        onChange={setBlocks}
-        title="corpo do artigo"
-        description="Monte o texto em blocos: escreva parágrafos, intercale imagens onde quiser e use as setas ou arraste (⠿) para reorganizar."
+      <BlocksEditor blocks={v.blocks} onChange={(blocks) => setV((x) => ({ ...x, blocks }))} title="corpo do texto" />
+
+      <CampoNotas
+        notas={v.footnotes}
+        aoMudar={(footnotes) => setV((x) => ({ ...x, footnotes }))}
+        dica="A nota 1 ganha uma chamada ao lado do nome do autor; as outras aparecem na coluna lateral."
       />
 
-      {/* Notas de rodapé */}
-      <div className="bg-white rounded-lg p-6 border border-text-dark/10">
-        <h2 className="font-display font-bold text-text-dark text-lg mb-3">notas de rodapé</h2>
-        {footnotes.map((note, i) => (
-          <div key={i} className="flex gap-2 mb-2">
-            <span className="font-serif text-text-dark/50 pt-2">{i + 1}.</span>
-            <textarea
-              value={note}
-              onChange={(e) => setFootnotes((prev) => prev.map((n, j) => (j === i ? e.target.value : n)))}
-              rows={2}
-              className={inputClass + ' mt-0'}
-            />
-            <button
-              type="button"
-              onClick={() => setFootnotes((prev) => prev.filter((_, j) => j !== i))}
-              aria-label="remover nota"
-              className="text-pink hover:opacity-70 px-1"
-            >
-              ✕
-            </button>
-          </div>
-        ))}
-        <button
-          type="button"
-          onClick={() => setFootnotes((prev) => [...prev, ''])}
-          className="font-display text-sm text-blue-link hover:underline"
-        >
-          + adicionar nota
-        </button>
-      </div>
+      {erro && <Alerta>{erro}</Alerta>}
 
-      {error && <p className="font-sans text-pink">{error}</p>}
-
-      <div className="flex items-center gap-4 sticky bottom-0 bg-cream/95 py-4 border-t border-text-dark/10">
-        <button
-          type="submit"
-          disabled={saving}
-          className="bg-pink text-white font-display font-bold px-8 py-2.5 rounded hover:opacity-90 disabled:opacity-50 transition-opacity"
-        >
-          {saving ? 'salvando…' : initial ? 'salvar alterações' : 'publicar artigo'}
-        </button>
-      </div>
+      <BarraSalvar salvando={salvando} sujo={sujo} rotulo={initial ? 'salvar alterações' : v.published ? 'publicar texto' : 'salvar rascunho'} />
     </form>
   );
 }

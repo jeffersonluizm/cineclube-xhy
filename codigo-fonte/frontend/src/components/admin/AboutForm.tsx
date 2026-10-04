@@ -2,19 +2,18 @@
 
 import { useState } from 'react';
 import { AboutInput } from '@/lib/adminApi';
-import BlocksEditor from './BlocksEditor';
 import type { About, Block, TeamMember, TeamMemberLink } from '@/lib/types';
+import BlocksEditor from './BlocksEditor';
+import AvisoSaida from './AvisoSaida';
+import { useSujo } from './hooks';
+import { Alerta, BarraSalvar, Botao, Campo } from './ui';
 
 interface AboutFormProps {
   initial?: About;
   onSave: (data: AboutInput) => Promise<void>;
 }
 
-const inputClass =
-  'mt-1 w-full border border-text-dark/30 rounded px-3 py-2 bg-white font-sans text-text-dark focus:outline-none focus:border-pink';
-
-const emptyMember: TeamMember = { name: '', role: '', email: '', links: [] };
-const emptyLink: TeamMemberLink = { label: '', url: '' };
+const urlValida = (url: string) => /^(https:\/\/|mailto:)\S+$/i.test(url.trim());
 
 export default function AboutForm({ initial, onSave }: AboutFormProps) {
   const [blocks, setBlocks] = useState<Block[]>(
@@ -25,59 +24,36 @@ export default function AboutForm({ initial, onSave }: AboutFormProps) {
         : [{ type: 'paragraph', text: '' }]
   );
   const [team, setTeam] = useState<TeamMember[]>(initial?.team ?? []);
-  const [error, setError] = useState('');
-  const [saving, setSaving] = useState(false);
+  const [erro, setErro] = useState('');
+  const [salvando, setSalvando] = useState(false);
+  const { sujo, marcarSalvo } = useSujo({ blocks, team });
 
-  function updateMember(index: number, patch: Partial<TeamMember>) {
-    setTeam((prev) => prev.map((m, i) => (i === index ? { ...m, ...patch } : m)));
-  }
+  const atualizarMembro = (i: number, patch: Partial<TeamMember>) => setTeam((prev) => prev.map((m, j) => (j === i ? { ...m, ...patch } : m)));
+  const atualizarLinks = (i: number, f: (links: TeamMemberLink[]) => TeamMemberLink[]) =>
+    setTeam((prev) => prev.map((m, j) => (j === i ? { ...m, links: f(m.links ?? []) } : m)));
 
-  function addLink(memberIndex: number) {
-    setTeam((prev) =>
-      prev.map((m, i) => (i === memberIndex ? { ...m, links: [...(m.links ?? []), { ...emptyLink }] } : m))
-    );
-  }
-
-  function updateLink(memberIndex: number, linkIndex: number, patch: Partial<TeamMemberLink>) {
-    setTeam((prev) =>
-      prev.map((m, i) =>
-        i === memberIndex
-          ? { ...m, links: (m.links ?? []).map((l, j) => (j === linkIndex ? { ...l, ...patch } : l)) }
-          : m
-      )
-    );
-  }
-
-  function removeLink(memberIndex: number, linkIndex: number) {
-    setTeam((prev) =>
-      prev.map((m, i) => (i === memberIndex ? { ...m, links: (m.links ?? []).filter((_, j) => j !== linkIndex) } : m))
-    );
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
+  async function enviar(e: React.FormEvent) {
     e.preventDefault();
-    setError('');
-    setSaving(true);
+    setErro('');
+    setSalvando(true);
     try {
-      const cleanBlocks = blocks.filter((b) => (b.type === 'image' ? Boolean(b.src) : Boolean(b.text?.trim())));
       await onSave({
-        blocks: cleanBlocks,
+        blocks: blocks.filter((b) => (b.type === 'image' ? Boolean(b.src) : Boolean(b.text?.trim()))),
         team: team
           .filter((m) => m.name.trim() && m.role.trim())
-          .map((m) => ({
-            ...m,
-            email: m.email?.trim() || undefined,
-            links: (m.links ?? []).filter((l) => l.label.trim() && l.url.trim()),
-          })),
+          .map((m) => ({ ...m, email: m.email?.trim() || '', links: (m.links ?? []).filter((l) => l.label.trim() && l.url.trim()) })),
       });
+      marcarSalvo();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao salvar');
-      setSaving(false);
+      setErro(err instanceof Error ? err.message : 'Erro ao salvar');
+    } finally {
+      setSalvando(false);
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-8 max-w-2xl">
+    <form onSubmit={enviar} className="flex flex-col gap-8 max-w-3xl">
+      <AvisoSaida sujo={sujo && !salvando} />
       <BlocksEditor
         blocks={blocks}
         onChange={setBlocks}
@@ -85,92 +61,59 @@ export default function AboutForm({ initial, onSave }: AboutFormProps) {
         description="Monte a apresentação em blocos: escreva parágrafos, intercale fotos onde quiser e use as setas ou arraste (⠿) para reorganizar."
       />
 
-      <div className="bg-white rounded-lg p-6 border border-text-dark/10">
-        <h3 className="font-display font-bold text-pink text-sm tracking-widest mb-3">EQUIPE/INTEGRANTES/CORPO</h3>
+      <fieldset className="border-t-2 border-text-dark pt-4">
+        <legend className="font-display font-black text-pink-escuro text-sm tracking-widest pr-2">EQUIPE/INTEGRANTES/CORPO</legend>
 
-        {team.map((member, i) => (
-          <div key={i} className="border border-text-dark/10 rounded p-4 mb-3 flex flex-col gap-3">
-            <div className="grid gap-3 md:grid-cols-[1fr,1fr,1fr,auto]">
-              <label>
-                <span className="font-sans text-xs text-text-dark/70">nome</span>
-                <input value={member.name} onChange={(e) => updateMember(i, { name: e.target.value })} className={inputClass} />
-              </label>
-              <label>
-                <span className="font-sans text-xs text-text-dark/70">função (ex.: coordenação, editorial)</span>
-                <input value={member.role} onChange={(e) => updateMember(i, { role: e.target.value })} className={inputClass} />
-              </label>
-              <label>
-                <span className="font-sans text-xs text-text-dark/70">e-mail (opcional)</span>
-                <input value={member.email ?? ''} onChange={(e) => updateMember(i, { email: e.target.value })} className={inputClass} />
-              </label>
-              <button
-                type="button"
-                onClick={() => setTeam((prev) => prev.filter((_, j) => j !== i))}
-                aria-label="remover integrante"
-                className="text-pink hover:opacity-70 self-end pb-2"
-              >
-                ✕
-              </button>
-            </div>
+        <ol className="flex flex-col gap-3 mt-2">
+          {team.map((m, i) => (
+            <li key={i} className="border border-text-dark/30 p-4 flex flex-col gap-3">
+              <div className="grid gap-3 md:grid-cols-3">
+                <Campo rotulo="nome" value={m.name} onChange={(e) => atualizarMembro(i, { name: e.target.value })} />
+                <Campo rotulo="função" dica="ex.: coordenação, editorial" value={m.role} onChange={(e) => atualizarMembro(i, { role: e.target.value })} />
+                <Campo rotulo="e-mail" type="email" value={m.email ?? ''} onChange={(e) => atualizarMembro(i, { email: e.target.value })} />
+              </div>
 
-            {/* Redes sociais e contatos do integrante */}
-            <div className="pl-3 border-l-2 border-text-dark/10 flex flex-col gap-2">
-              <span className="font-sans text-xs text-text-dark/70">
-                redes sociais / contato (aparecem como links clicáveis ao lado do nome)
-              </span>
-              {(member.links ?? []).map((link, j) => (
-                <div key={j} className="flex gap-2 items-start">
-                  <input
-                    value={link.label}
-                    onChange={(e) => updateLink(i, j, { label: e.target.value })}
-                    placeholder="ex.: Instagram, Letterboxd, site"
-                    className={inputClass + ' mt-0 flex-1'}
-                  />
-                  <input
-                    value={link.url}
-                    onChange={(e) => updateLink(i, j, { url: e.target.value })}
-                    placeholder="https://…"
-                    className={inputClass + ' mt-0 flex-[2]'}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeLink(i, j)}
-                    aria-label="remover link"
-                    className="text-pink hover:opacity-70 px-1 pt-2"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => addLink(i)}
-                className="self-start font-display text-xs text-blue-link hover:underline"
-              >
-                + adicionar link
-              </button>
-            </div>
-          </div>
-        ))}
+              <fieldset className="pl-3 border-l-2 border-text-dark/20 flex flex-col gap-2">
+                <legend className="font-sans text-xs text-text-suave">redes sociais e contatos (links https:// ou mailto:)</legend>
+                {(m.links ?? []).map((l, j) => (
+                  <div key={j} className="grid gap-2 sm:grid-cols-[1fr,2fr,auto] items-start">
+                    <Campo
+                      rotulo={`nome do link ${j + 1}`}
+                      placeholder="Instagram, Letterboxd, site"
+                      value={l.label}
+                      onChange={(e) => atualizarLinks(i, (ls) => ls.map((x, k) => (k === j ? { ...x, label: e.target.value } : x)))}
+                    />
+                    <Campo
+                      rotulo={`endereço do link ${j + 1}`}
+                      placeholder="https://…"
+                      value={l.url}
+                      erro={l.url && !urlValida(l.url) ? 'Use um endereço que comece com https:// ou mailto:' : undefined}
+                      onChange={(e) => atualizarLinks(i, (ls) => ls.map((x, k) => (k === j ? { ...x, url: e.target.value } : x)))}
+                    />
+                    <Botao variante="texto-perigo" className="mt-7 text-sm" onClick={() => atualizarLinks(i, (ls) => ls.filter((_, k) => k !== j))}>
+                      remover link
+                    </Botao>
+                  </div>
+                ))}
+                <Botao variante="texto" className="self-start text-xs" onClick={() => atualizarLinks(i, (ls) => [...ls, { label: '', url: '' }])}>
+                  + adicionar link
+                </Botao>
+              </fieldset>
 
-        <button
-          type="button"
-          onClick={() => setTeam((prev) => [...prev, { ...emptyMember, links: [] }])}
-          className="font-display text-sm text-blue-link hover:underline"
-        >
+              <Botao variante="texto-perigo" className="self-end text-sm" onClick={() => setTeam((prev) => prev.filter((_, j) => j !== i))}>
+                remover {m.name || 'integrante'}
+              </Botao>
+            </li>
+          ))}
+        </ol>
+
+        <Botao variante="texto" className="text-sm mt-3" onClick={() => setTeam((prev) => [...prev, { name: '', role: '', email: '', links: [] }])}>
           + adicionar integrante
-        </button>
-      </div>
+        </Botao>
+      </fieldset>
 
-      {error && <p className="font-sans text-sm text-pink">{error}</p>}
-
-      <button
-        type="submit"
-        disabled={saving}
-        className="self-start bg-pink text-white font-display font-bold px-6 py-2 rounded hover:opacity-90 disabled:opacity-50 transition-opacity"
-      >
-        {saving ? 'salvando…' : 'salvar'}
-      </button>
+      {erro && <Alerta>{erro}</Alerta>}
+      <BarraSalvar salvando={salvando} sujo={sujo} />
     </form>
   );
 }

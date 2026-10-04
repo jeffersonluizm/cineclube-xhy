@@ -2,84 +2,65 @@
 
 import { useState } from 'react';
 import { MagazineInput } from '@/lib/adminApi';
-import ImageUploadField from './ImageUploadField';
 import type { Magazine } from '@/lib/types';
+import ImageUploadField from './ImageUploadField';
+import AvisoSaida from './AvisoSaida';
+import { useSujo } from './hooks';
+import { Alerta, AreaTexto, BarraSalvar, Campo } from './ui';
 
 interface MagazineFormProps {
   initial?: Magazine;
   onSave: (data: MagazineInput) => Promise<void>;
 }
 
-const inputClass =
-  'mt-1 w-full border border-text-dark/30 rounded px-3 py-2 bg-white font-sans text-text-dark focus:outline-none focus:border-pink';
-
 export default function MagazineForm({ initial, onSave }: MagazineFormProps) {
-  const [number, setNumber] = useState(initial ? String(initial.number) : '');
-  const [volume, setVolume] = useState(initial ? String(initial.volume) : '1');
-  const [month, setMonth] = useState(initial?.month ?? '');
-  const [year, setYear] = useState(initial ? String(initial.year) : String(new Date().getFullYear()));
-  const [editorial, setEditorial] = useState(initial?.editorial ?? '');
-  const [coverImage, setCoverImage] = useState(initial?.coverImage ?? '');
-  const [error, setError] = useState('');
-  const [saving, setSaving] = useState(false);
+  const [v, setV] = useState({
+    number: initial ? String(initial.number) : '',
+    volume: initial ? String(initial.volume) : '1',
+    month: initial?.month ?? '',
+    year: initial ? String(initial.year) : String(new Date().getFullYear()),
+    editorial: initial?.editorial ?? '',
+    coverImage: initial?.coverImage ?? '',
+  });
+  const [erro, setErro] = useState('');
+  const [salvando, setSalvando] = useState(false);
+  const { sujo, marcarSalvo } = useSujo(v);
+  const alterar = (campo: keyof typeof v) => (e: { target: { value: string } }) => setV((x) => ({ ...x, [campo]: e.target.value }));
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function enviar(e: React.FormEvent) {
     e.preventDefault();
-    setError('');
-    setSaving(true);
+    setErro('');
+    setSalvando(true);
     try {
       await onSave({
-        number: Number(number),
-        volume: Number(volume),
-        month: month.trim().toLowerCase(),
-        year: Number(year),
-        editorial: editorial.trim() || undefined,
-        coverImage: coverImage || undefined,
+        number: Number(v.number),
+        volume: Number(v.volume),
+        month: v.month.trim().toLowerCase(),
+        year: Number(v.year),
+        editorial: v.editorial.trim(),
+        coverImage: v.coverImage,
       });
+      marcarSalvo();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao salvar');
-      setSaving(false);
+      setErro(err instanceof Error ? err.message : 'Erro ao salvar');
+    } finally {
+      setSalvando(false);
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg p-8 border border-text-dark/10 max-w-xl flex flex-col gap-5">
+    <form onSubmit={enviar} className="max-w-xl flex flex-col gap-5">
+      <AvisoSaida sujo={sujo && !salvando} />
       <div className="grid grid-cols-3 gap-4">
-        <label>
-          <span className="font-display text-sm text-text-dark">número</span>
-          <input type="number" value={number} onChange={(e) => setNumber(e.target.value)} required className={inputClass} />
-        </label>
-        <label>
-          <span className="font-display text-sm text-text-dark">volume</span>
-          <input type="number" value={volume} onChange={(e) => setVolume(e.target.value)} required className={inputClass} />
-        </label>
-        <label>
-          <span className="font-display text-sm text-text-dark">ano</span>
-          <input type="number" value={year} onChange={(e) => setYear(e.target.value)} required className={inputClass} />
-        </label>
+        <Campo rotulo="número" type="number" min={1} value={v.number} onChange={alterar('number')} required />
+        <Campo rotulo="volume" type="number" min={1} value={v.volume} onChange={alterar('volume')} required />
+        <Campo rotulo="ano" type="number" min={1890} max={2100} value={v.year} onChange={alterar('year')} required />
       </div>
-
-      <label>
-        <span className="font-display text-sm text-text-dark">mês (ex.: março)</span>
-        <input value={month} onChange={(e) => setMonth(e.target.value)} required className={inputClass} />
-      </label>
-
-      <label>
-        <span className="font-display text-sm text-text-dark">editorial (opcional)</span>
-        <textarea value={editorial} onChange={(e) => setEditorial(e.target.value)} rows={5} className={inputClass} />
-      </label>
-
-      <ImageUploadField label="capa da edição" value={coverImage} onChange={setCoverImage} />
-
-      {error && <p className="font-sans text-sm text-pink">{error}</p>}
-
-      <button
-        type="submit"
-        disabled={saving}
-        className="self-start bg-pink text-white font-display font-bold px-6 py-2 rounded hover:opacity-90 disabled:opacity-50 transition-opacity"
-      >
-        {saving ? 'salvando…' : 'salvar'}
-      </button>
+      <Campo rotulo="mês" dica="ex.: março" value={v.month} onChange={alterar('month')} required />
+      <AreaTexto rotulo="editorial" value={v.editorial} onChange={alterar('editorial')} rows={5} />
+      <ImageUploadField label="capa da edição" value={v.coverImage} onChange={(url) => setV((x) => ({ ...x, coverImage: url }))} />
+      {erro && <Alerta>{erro}</Alerta>}
+      <BarraSalvar salvando={salvando} sujo={initial ? sujo : undefined} rotulo={initial ? 'salvar' : 'criar revista'} />
     </form>
   );
 }

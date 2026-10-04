@@ -1,59 +1,93 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { adminApi } from '@/lib/adminApi';
-import type { Magazine } from '@/lib/types';
+import { useCarregar } from '@/components/admin/hooks';
+import { BotaoLink, CabecalhoPagina, EstadoCarregando, EstadoErro, EstadoVazio, Secao } from '@/components/admin/ui';
+import type { ResumoPainel } from '@/lib/types';
 
-export default function AdminDashboard() {
-  const [magazines, setMagazines] = useState<Magazine[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+const quando = (iso?: string) =>
+  iso ? new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
 
-  useEffect(() => {
-    adminApi.revistas
-      .list()
-      .then(setMagazines)
-      .catch((err) => setError(err instanceof Error ? err.message : 'Erro ao carregar'))
-      .finally(() => setLoading(false));
-  }, []);
+function ListaTextos({ textos, vazio }: { textos: ResumoPainel['rascunhos']; vazio: string }) {
+  if (textos.length === 0) return <EstadoVazio>{vazio}</EstadoVazio>;
+  return (
+    <ul className="border-t border-text-dark/20">
+      {textos.map((t) => (
+        <li key={t._id} className="py-3 border-b border-text-dark/20 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+          <Link href={`/admin/artigos/${t._id}`} className="font-display font-bold text-text-dark hover:text-olive-escuro hover:underline">
+            {t.title}
+          </Link>
+          <span className="font-sans text-sm text-text-suave">{t.onde}</span>
+          {t.published === false && <span className="font-sans text-xs font-bold text-gold-escuro uppercase tracking-wider">rascunho</span>}
+          <span className="font-sans text-xs text-text-suave ml-auto">{quando(t.updatedAt)}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Início do painel: números, rascunhos pendentes, últimas edições e atalhos */
+export default function PainelInicio() {
+  const { dados, erro, recarregar } = useCarregar(() => adminApi.resumo(), []);
+
+  const numeros = dados
+    ? [
+        { rotulo: 'revistas', valor: dados.contagens.revistas, href: '/admin/revistas' },
+        { rotulo: 'catálogos', valor: dados.contagens.catalogos, href: '/admin/catalogos' },
+        { rotulo: 'exibições', valor: dados.contagens.ciclos, href: '/admin/ciclos' },
+        { rotulo: 'páginas de filme', valor: dados.contagens.filmes, href: '/admin/ciclos' },
+        { rotulo: 'textos publicados', valor: dados.contagens.textosPublicados },
+        { rotulo: 'rascunhos', valor: dados.contagens.rascunhos },
+      ]
+    : [];
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="font-display font-black text-text-dark text-3xl">revistas</h1>
-        <Link
-          href="/admin/revistas/nova"
-          className="bg-pink text-white font-display font-bold px-5 py-2 rounded hover:opacity-90 transition-opacity"
-        >
-          + nova revista
-        </Link>
-      </div>
+    <div className="flex flex-col gap-12">
+      <CabecalhoPagina
+        sobretitulo="painel do editor"
+        titulo="início"
+        acoes={
+          <>
+            <BotaoLink href="/admin/revistas/nova">+ nova revista</BotaoLink>
+            <BotaoLink href="/admin/ciclos/novo" variante="secundario">
+              + nova exibição
+            </BotaoLink>
+          </>
+        }
+      />
 
-      {loading && <p className="font-sans text-text-dark/60">carregando…</p>}
-      {error && <p className="font-sans text-pink">{error}</p>}
+      {erro && <EstadoErro mensagem={`Não foi possível carregar o resumo: ${erro}`} tentarDeNovo={recarregar} />}
+      {!dados && !erro && <EstadoCarregando />}
 
-      {!loading && !error && magazines.length === 0 && (
-        <p className="font-serif text-text-dark/70 text-lg">
-          Nenhuma revista ainda. Crie a primeira edição para começar a publicar.
-        </p>
+      {dados && (
+        <>
+          <dl className="grid grid-cols-2 sm:grid-cols-3 border-l border-t border-text-dark/30">
+            {numeros.map((n) => (
+              <div key={n.rotulo} className="border-r border-b border-text-dark/30 px-5 py-4">
+                <dt className="font-sans text-sm text-text-suave">{n.rotulo}</dt>
+                <dd className="font-display font-black text-4xl text-text-dark">
+                  {n.href ? (
+                    <Link href={n.href} className="hover:text-olive-escuro hover:underline">
+                      {n.valor}
+                    </Link>
+                  ) : (
+                    n.valor
+                  )}
+                </dd>
+              </div>
+            ))}
+          </dl>
+
+          <Secao titulo="rascunhos esperando revisão" descricao="Textos que não aparecem no site até serem publicados.">
+            <ListaTextos textos={dados.rascunhos} vazio="Nenhum rascunho pendente." />
+          </Secao>
+
+          <Secao titulo="editados por último">
+            <ListaTextos textos={dados.ultimosEditados} vazio="Nada editado ainda. Comece criando uma revista." />
+          </Secao>
+        </>
       )}
-
-      <div className="grid gap-4">
-        {magazines.map((mag) => (
-          <Link
-            key={mag._id}
-            href={`/admin/revistas/${mag._id}`}
-            className="bg-white rounded-lg px-6 py-5 flex items-baseline gap-4 border border-text-dark/10 hover:border-olive transition-colors"
-          >
-            <span className="font-display font-black text-pink text-2xl">n°{mag.number}</span>
-            <span className="font-serif text-text-dark text-lg">
-              v.{mag.volume}, {mag.month}, {mag.year}
-            </span>
-            <span className="ml-auto font-display text-sm text-blue-link">gerenciar →</span>
-          </Link>
-        ))}
-      </div>
     </div>
   );
 }

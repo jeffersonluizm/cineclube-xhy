@@ -1,11 +1,12 @@
 'use client';
 
-import { useRef, useState } from 'react';
-import { adminApi, imageUrl } from '@/lib/adminApi';
+import { useCallback, useId, useRef, useState } from 'react';
+import { imageUrl } from '@/lib/adminApi';
 import type { Block } from '@/lib/types';
+import { useUploadImagem } from './hooks';
+import { Botao, MoverItem } from './ui';
 
-const inputClass =
-  'mt-1 w-full border border-text-dark/30 rounded px-3 py-2 bg-white font-sans text-text-dark focus:outline-none focus:border-pink';
+const campo = 'w-full border border-text-dark/60 bg-papel px-3 py-2 font-sans text-text-dark';
 
 const blockLabels: Record<Block['type'], string> = {
   paragraph: 'parágrafo',
@@ -21,6 +22,10 @@ interface BlocksEditorProps {
   description?: string;
 }
 
+/**
+ * Editor de texto em blocos (parágrafo, subtítulo, citação, imagem). Reordena arrastando
+ * pela alça (⠿) ou, pelo teclado, com as setas de cada bloco.
+ */
 export default function BlocksEditor({
   blocks,
   onChange,
@@ -29,6 +34,7 @@ export default function BlocksEditor({
 }: BlocksEditorProps) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
+  const idTitulo = useId();
 
   function moveBlockTo(from: number, to: number) {
     if (from === to) return;
@@ -38,9 +44,7 @@ export default function BlocksEditor({
     onChange(next);
   }
 
-  function updateBlock(index: number, patch: Partial<Block>) {
-    onChange(blocks.map((b, i) => (i === index ? { ...b, ...patch } : b)));
-  }
+  const updateBlock = (index: number, patch: Partial<Block>) => onChange(blocks.map((b, i) => (i === index ? { ...b, ...patch } : b)));
 
   function addBlock(index: number, type: Block['type']) {
     const block: Block = type === 'image' ? { type, src: '', align: 'full', width: 'large' } : { type, text: '' };
@@ -49,76 +53,110 @@ export default function BlocksEditor({
     onChange(next);
   }
 
-  function removeBlock(index: number) {
-    onChange(blocks.filter((_, i) => i !== index));
-  }
-
-  function moveBlock(index: number, dir: -1 | 1) {
-    const target = index + dir;
-    if (target < 0 || target >= blocks.length) return;
-    const next = [...blocks];
-    [next[index], next[target]] = [next[target], next[index]];
-    onChange(next);
-  }
-
   return (
-    <div>
-      {(title || description) && (
-        <div className="mb-4">
-          {title && <h2 className="font-display font-bold text-text-dark text-xl mb-1">{title}</h2>}
-          {description && <p className="font-sans text-sm text-text-dark/60">{description}</p>}
-        </div>
-      )}
+    <section aria-labelledby={idTitulo}>
+      <div className="mb-4">
+        <h2 id={idTitulo} className="font-display font-black text-text-dark text-xl mb-1">
+          {title}
+        </h2>
+        {description && <p className="font-sans text-sm text-text-suave">{description}</p>}
+      </div>
 
-      <AddBlockBar onAdd={(type) => addBlock(0, type)} />
+      <AddBlockBar onAdd={(type) => addBlock(0, type)} posicao="no início" />
 
-      {blocks.map((block, i) => (
-        <div
-          key={i}
-          onDragOver={(e) => {
-            if (dragIndex === null) return;
-            e.preventDefault();
-            setOverIndex(i);
-          }}
-          onDrop={(e) => {
-            if (dragIndex === null) return;
-            e.preventDefault();
-            moveBlockTo(dragIndex, i);
-            setDragIndex(null);
-            setOverIndex(null);
-          }}
-        >
-          <BlockCard
-            block={block}
-            index={i}
-            total={blocks.length}
-            isDragOver={overIndex === i && dragIndex !== null && dragIndex !== i}
-            onDragStart={() => setDragIndex(i)}
-            onDragEnd={() => {
+      <ol>
+        {blocks.map((block, i) => (
+          <li
+            key={i}
+            onDragOver={(e) => {
+              if (dragIndex === null) return;
+              e.preventDefault();
+              setOverIndex(i);
+            }}
+            onDrop={(e) => {
+              if (dragIndex === null) return;
+              e.preventDefault();
+              moveBlockTo(dragIndex, i);
               setDragIndex(null);
               setOverIndex(null);
             }}
-            onChange={(patch) => updateBlock(i, patch)}
-            onMove={(dir) => moveBlock(i, dir)}
-            onRemove={() => removeBlock(i)}
-          />
-          <AddBlockBar onAdd={(type) => addBlock(i + 1, type)} />
-        </div>
-      ))}
-    </div>
+          >
+            <div className={`bg-papel border p-4 flex gap-3 transition-colors ${overIndex === i && dragIndex !== null && dragIndex !== i ? 'border-olive-escuro border-2' : 'border-text-dark/30'}`}>
+              <div className="flex flex-col items-center gap-1 shrink-0">
+                <div
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.effectAllowed = 'move';
+                    setDragIndex(i);
+                  }}
+                  onDragEnd={() => {
+                    setDragIndex(null);
+                    setOverIndex(null);
+                  }}
+                  title="arraste para mover o bloco"
+                  aria-hidden="true"
+                  className="cursor-grab active:cursor-grabbing text-text-suave hover:text-pink-escuro select-none leading-none text-lg px-1"
+                >
+                  ⠿
+                </div>
+                <MoverItem
+                  indice={i}
+                  total={blocks.length}
+                  rotulo={`bloco ${i + 1} (${blockLabels[block.type]})`}
+                  aoMover={(dir) => {
+                    const alvo = i + dir;
+                    if (alvo >= 0 && alvo < blocks.length) moveBlockTo(i, alvo);
+                  }}
+                />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center mb-2">
+                  <span className="font-display text-xs uppercase tracking-wider text-gold-escuro font-bold">
+                    {i + 1}. {blockLabels[block.type]}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => onChange(blocks.filter((_, j) => j !== i))}
+                    aria-label={`remover bloco ${i + 1} (${blockLabels[block.type]})`}
+                    className="ml-auto text-pink-escuro hover:text-text-dark px-1"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {block.type === 'image' ? (
+                  <ImageBlockFields block={block} indice={i} onChange={(patch) => updateBlock(i, patch)} />
+                ) : (
+                  <textarea
+                    aria-label={`texto do bloco ${i + 1} (${blockLabels[block.type]})`}
+                    value={block.text ?? ''}
+                    onChange={(e) => updateBlock(i, { text: e.target.value })}
+                    rows={block.type === 'subtitle' ? 1 : 4}
+                    placeholder={block.type === 'subtitle' ? 'Texto do subtítulo…' : block.type === 'quote' ? 'Texto da citação…' : 'Escreva o parágrafo…'}
+                    className={`${campo} ${block.type === 'subtitle' ? 'font-display font-bold text-lg' : 'font-serif'} ${block.type === 'quote' ? 'italic' : ''}`}
+                  />
+                )}
+              </div>
+            </div>
+            <AddBlockBar onAdd={(type) => addBlock(i + 1, type)} posicao={`depois do bloco ${i + 1}`} />
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
 
-function AddBlockBar({ onAdd }: { onAdd: (type: Block['type']) => void }) {
+function AddBlockBar({ onAdd, posicao }: { onAdd: (type: Block['type']) => void; posicao: string }) {
   return (
-    <div className="flex items-center gap-2 py-1.5 opacity-40 hover:opacity-100 transition-opacity">
-      <span className="font-sans text-xs text-text-dark/60">inserir:</span>
+    <div className="flex flex-wrap items-center gap-2 py-2 opacity-70 hover:opacity-100 focus-within:opacity-100 transition-opacity">
+      <span className="font-sans text-xs text-text-suave">inserir {posicao}:</span>
       {(Object.keys(blockLabels) as Block['type'][]).map((type) => (
         <button
           key={type}
           type="button"
           onClick={() => onAdd(type)}
-          className="font-display text-xs text-blue-link border border-blue-link/40 rounded-full px-3 py-0.5 hover:bg-blue-link hover:text-white transition-colors"
+          className="font-display text-xs text-azul-escuro border border-azul-escuro px-3 py-0.5 hover:bg-azul-escuro hover:text-white transition-colors"
         >
           + {blockLabels[type]}
         </button>
@@ -127,150 +165,43 @@ function AddBlockBar({ onAdd }: { onAdd: (type: Block['type']) => void }) {
   );
 }
 
-interface BlockCardProps {
-  block: Block;
-  index: number;
-  total: number;
-  isDragOver: boolean;
-  onDragStart: () => void;
-  onDragEnd: () => void;
-  onChange: (patch: Partial<Block>) => void;
-  onMove: (dir: -1 | 1) => void;
-  onRemove: () => void;
-}
-
-function BlockCard({ block, index, total, isDragOver, onDragStart, onDragEnd, onChange, onMove, onRemove }: BlockCardProps) {
-  return (
-    <div
-      className={`bg-white rounded-lg border p-4 flex gap-3 transition-colors ${
-        isDragOver ? 'border-olive border-2' : 'border-text-dark/10'
-      }`}
-    >
-      <div className="flex flex-col items-center gap-1 shrink-0">
-        <div
-          draggable
-          onDragStart={(e) => {
-            e.dataTransfer.effectAllowed = 'move';
-            onDragStart();
-          }}
-          onDragEnd={onDragEnd}
-          title="arraste para mover o bloco"
-          className="cursor-grab active:cursor-grabbing text-text-dark/40 hover:text-pink select-none leading-none text-lg px-1"
-        >
-          ⠿
-        </div>
-        <button
-          type="button"
-          onClick={() => onMove(-1)}
-          disabled={index === 0}
-          aria-label="mover bloco para cima"
-          className="text-text-dark/50 hover:text-pink disabled:opacity-20 leading-none"
-        >
-          ▲
-        </button>
-        <button
-          type="button"
-          onClick={() => onMove(1)}
-          disabled={index === total - 1}
-          aria-label="mover bloco para baixo"
-          className="text-text-dark/50 hover:text-pink disabled:opacity-20 leading-none"
-        >
-          ▼
-        </button>
-      </div>
-
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center mb-2">
-          <span className="font-display text-xs uppercase tracking-wide text-gold">{blockLabels[block.type]}</span>
-          <button type="button" onClick={onRemove} aria-label="remover bloco" className="ml-auto text-pink hover:opacity-70">
-            ✕
-          </button>
-        </div>
-
-        {block.type === 'image' ? (
-          <ImageBlockFields block={block} onChange={onChange} />
-        ) : (
-          <textarea
-            value={block.text ?? ''}
-            onChange={(e) => onChange({ text: e.target.value })}
-            rows={block.type === 'subtitle' ? 1 : 4}
-            placeholder={
-              block.type === 'subtitle'
-                ? 'Texto do subtítulo…'
-                : block.type === 'quote'
-                  ? 'Texto da citação…'
-                  : 'Escreva o parágrafo…'
-            }
-            className={
-              inputClass +
-              ' mt-0' +
-              (block.type === 'subtitle' ? ' font-display font-bold text-lg' : '') +
-              (block.type === 'quote' ? ' italic font-serif' : ' font-serif')
-            }
-          />
-        )}
-      </div>
-    </div>
-  );
-}
-
-function ImageBlockFields({ block, onChange }: { block: Block; onChange: (patch: Partial<Block>) => void }) {
+function ImageBlockFields({ block, indice, onChange }: { block: Block; indice: number; onChange: (patch: Partial<Block>) => void }) {
   const fileRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState('');
-
-  async function handleFile(file: File) {
-    setUploadError('');
-    setUploading(true);
-    try {
-      const { url } = await adminApi.upload(file);
-      onChange({ src: url });
-    } catch (err) {
-      setUploadError(err instanceof Error ? err.message : 'Erro no upload');
-    } finally {
-      setUploading(false);
-    }
-  }
+  const aoEnviar = useCallback((url: string) => onChange({ src: url }), [onChange]);
+  const { enviar, enviando, erro } = useUploadImagem(aoEnviar);
+  const id = useId();
 
   return (
     <div className="flex flex-col gap-3">
       {block.src ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={imageUrl(block.src)} alt={block.caption || 'imagem'} className="max-h-64 rounded object-contain self-start" />
+        <img src={imageUrl(block.src)} alt={block.caption || `imagem do bloco ${indice + 1}`} className="max-h-64 object-contain self-start border border-text-dark/20" />
       ) : (
-        <div className="border-2 border-dashed border-text-dark/20 rounded p-6 text-center">
-          <p className="font-sans text-sm text-text-dark/50 mb-2">Nenhuma imagem selecionada</p>
+        <div className="border-2 border-dashed border-text-dark/40 p-6 text-center">
+          <p className="font-sans text-sm text-text-suave">Nenhuma imagem enviada</p>
         </div>
       )}
 
-      <div className="flex items-center gap-3 flex-wrap">
+      <div className="flex items-end gap-3 flex-wrap">
         <input
           ref={fileRef}
           type="file"
-          accept="image/*"
-          className="hidden"
+          accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+          className="sr-only"
+          tabIndex={-1}
           onChange={(e) => {
             const file = e.target.files?.[0];
-            if (file) handleFile(file);
+            if (file) enviar(file);
             e.target.value = '';
           }}
         />
-        <button
-          type="button"
-          onClick={() => fileRef.current?.click()}
-          disabled={uploading}
-          className="font-display text-sm bg-blue-link text-white px-4 py-1.5 rounded hover:opacity-90 disabled:opacity-50"
-        >
-          {uploading ? 'enviando…' : block.src ? 'trocar imagem' : 'enviar imagem'}
-        </button>
+        <Botao variante="secundario" onClick={() => fileRef.current?.click()} disabled={enviando} className="text-sm px-4 py-1.5">
+          {enviando ? 'enviando…' : block.src ? 'trocar imagem' : 'enviar imagem'}
+        </Botao>
 
-        <label className="font-sans text-xs text-text-dark/70">
-          posição{' '}
-          <select
-            value={block.align ?? 'full'}
-            onChange={(e) => onChange({ align: e.target.value as Block['align'] })}
-            className="border border-text-dark/30 rounded px-2 py-1 bg-white"
-          >
+        <label className="font-sans text-xs text-text-dark flex flex-col">
+          posição
+          <select value={block.align ?? 'full'} onChange={(e) => onChange({ align: e.target.value as Block['align'] })} className="border border-text-dark/60 px-2 py-1 bg-papel">
             <option value="full">largura total</option>
             <option value="center">centralizada</option>
             <option value="left">à esquerda (texto contorna)</option>
@@ -278,13 +209,9 @@ function ImageBlockFields({ block, onChange }: { block: Block; onChange: (patch:
           </select>
         </label>
 
-        <label className="font-sans text-xs text-text-dark/70">
-          tamanho{' '}
-          <select
-            value={block.width ?? 'large'}
-            onChange={(e) => onChange({ width: e.target.value as Block['width'] })}
-            className="border border-text-dark/30 rounded px-2 py-1 bg-white"
-          >
+        <label className="font-sans text-xs text-text-dark flex flex-col">
+          tamanho
+          <select value={block.width ?? 'large'} onChange={(e) => onChange({ width: e.target.value as Block['width'] })} className="border border-text-dark/60 px-2 py-1 bg-papel">
             <option value="small">pequeno</option>
             <option value="medium">médio</option>
             <option value="large">grande</option>
@@ -292,14 +219,18 @@ function ImageBlockFields({ block, onChange }: { block: Block; onChange: (patch:
         </label>
       </div>
 
+      <label htmlFor={`${id}-legenda`} className="sr-only">
+        legenda da imagem do bloco {indice + 1}
+      </label>
       <input
+        id={`${id}-legenda`}
         value={block.caption ?? ''}
         onChange={(e) => onChange({ caption: e.target.value })}
-        placeholder="Legenda da imagem (opcional)"
-        className={inputClass + ' mt-0'}
+        placeholder="Legenda da imagem (também serve de texto alternativo)"
+        className={campo}
       />
 
-      {uploadError && <p className="font-sans text-sm text-pink">{uploadError}</p>}
+      <div aria-live="polite">{erro && <p className="font-sans text-sm text-pink-escuro">{erro}</p>}</div>
     </div>
   );
 }

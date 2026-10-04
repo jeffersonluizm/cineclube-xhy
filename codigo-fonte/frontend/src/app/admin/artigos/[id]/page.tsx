@@ -1,43 +1,42 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import ArticleEditor from '@/components/admin/ArticleEditor';
+import { useCarregar } from '@/components/admin/hooks';
+import { useToast } from '@/components/admin/Toasts';
+import { CabecalhoPagina, EstadoCarregando, EstadoErro } from '@/components/admin/ui';
 import { adminApi, ArticleInput } from '@/lib/adminApi';
-import type { Article } from '@/lib/types';
 
-export default function EditarArtigoPage() {
+const SECAO = { revista: 'revistas', catalogo: 'catalogos', ciclo: 'ciclos' } as const;
+
+export default function EditarTextoPage() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
-  const [article, setArticle] = useState<Article | null>(null);
-  const [error, setError] = useState('');
+  const avisar = useToast();
+  const { dados: article, setDados, erro, recarregar } = useCarregar(() => adminApi.artigos.get(id), [id]);
 
-  useEffect(() => {
-    adminApi.artigos
-      .get(id)
-      .then(setArticle)
-      .catch((err) => setError(err instanceof Error ? err.message : 'Erro ao carregar'));
-  }, [id]);
+  if (erro) return <EstadoErro mensagem={erro} tentarDeNovo={recarregar} />;
+  if (!article) return <EstadoCarregando />;
 
-  async function handleSave(data: ArticleInput) {
-    await adminApi.artigos.update(id, data);
-    if (!article) return;
-    const section = article.parentType === 'catalogo' ? 'catalogos' : article.parentType === 'ciclo' ? 'ciclos' : 'revistas';
-    router.replace(`/admin/${section}/${article.parentId}`);
+  // Salvar fica na página (sem redirecionar): o editor continua onde estava
+  async function salvar(data: ArticleInput) {
+    const atualizado = await adminApi.artigos.update(id, data);
+    setDados(atualizado);
+    avisar(atualizado.published === false ? 'Rascunho salvo. Ele não aparece no site.' : 'Texto salvo e publicado.');
   }
-
-  if (error) return <p className="font-sans text-pink">{error}</p>;
-  if (!article) return <p className="font-sans text-text-dark/60">carregando…</p>;
 
   return (
     <div>
-      <h1 className="font-display font-black text-text-dark text-3xl mb-8">editar artigo</h1>
-      <ArticleEditor
-        parentId={article.parentId}
-        parentType={article.parentType}
-        initial={article}
-        onSave={handleSave}
+      <CabecalhoPagina
+        sobretitulo="editar texto"
+        titulo={article.title}
+        acoes={
+          <Link href={`/admin/${SECAO[article.parentType]}/${article.parentId}`} className="font-display text-azul-escuro hover:underline">
+            ← voltar para a lista
+          </Link>
+        }
       />
+      <ArticleEditor key={article._id} parentId={article.parentId} parentType={article.parentType} initial={article} onSave={salvar} />
     </div>
   );
 }

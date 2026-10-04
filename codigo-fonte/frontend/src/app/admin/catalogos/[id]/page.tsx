@@ -1,79 +1,90 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
+import { useCallback, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import CatalogForm from '@/components/admin/CatalogForm';
-import ArticleList from '@/components/admin/ArticleList';
+import ListaReordenavel from '@/components/admin/ListaReordenavel';
+import { DialogoExclusao } from '@/components/admin/Dialogo';
+import { useCarregar } from '@/components/admin/hooks';
+import { useToast } from '@/components/admin/Toasts';
+import { Botao, BotaoLink, CabecalhoPagina, EstadoCarregando, EstadoErro, Secao } from '@/components/admin/ui';
 import { adminApi, CatalogInput } from '@/lib/adminApi';
-import type { Article, Catalog } from '@/lib/types';
+import type { Article } from '@/lib/types';
 
 export default function CatalogoAdminPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const [catalog, setCatalog] = useState<Catalog | null>(null);
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [error, setError] = useState('');
-  const [saved, setSaved] = useState(false);
-
-  const load = useCallback(async () => {
-    try {
-      const [cats, arts] = await Promise.all([adminApi.catalogos.list(), adminApi.artigos.list(id)]);
-      const cat = cats.find((c) => c._id === id);
-      if (!cat) throw new Error('Catálogo não encontrado');
-      setCatalog(cat);
-      setArticles(arts);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao carregar');
-    }
+  const avisar = useToast();
+  const [excluindo, setExcluindo] = useState(false);
+  const { dados, setDados, erro, recarregar } = useCarregar(async () => {
+    const [catalog, articles] = await Promise.all([adminApi.catalogos.get(id), adminApi.artigos.list(id)]);
+    return { catalog, articles };
   }, [id]);
+  const impacto = useCallback(() => adminApi.catalogos.impacto(id), [id]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  if (erro) return <EstadoErro mensagem={erro} tentarDeNovo={recarregar} />;
+  if (!dados) return <EstadoCarregando />;
+  const { catalog, articles } = dados;
 
-  async function handleSaveCatalog(data: CatalogInput) {
-    await adminApi.catalogos.update(id, data);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+  async function salvar(data: CatalogInput) {
+    const atualizado = await adminApi.catalogos.update(id, data);
+    setDados((d) => (d ? { ...d, catalog: atualizado } : d));
+    avisar('Dados do catálogo salvos.');
   }
-
-  async function removeCatalog() {
-    if (!catalog) return;
-    if (!window.confirm(`Excluir o catálogo "${catalog.title}" e TODOS os seus textos?`)) return;
-    await adminApi.catalogos.remove(id);
-    router.replace('/admin/catalogos');
-  }
-
-  if (error) return <p className="font-sans text-pink">{error}</p>;
-  if (!catalog) return <p className="font-sans text-text-dark/60">carregando…</p>;
 
   return (
     <div className="flex flex-col gap-12">
-      <div>
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="font-display font-black text-text-dark text-3xl">{catalog.title}</h1>
-          <Link href={`/catalogos/${catalog.slug}`} target="_blank" className="font-display text-blue-link hover:underline">
+      <CabecalhoPagina
+        sobretitulo="catálogo"
+        titulo={catalog.title}
+        acoes={
+          <a href={`/catalogos/${catalog.slug}`} target="_blank" rel="noopener" className="font-display text-azul-escuro hover:underline">
             ver no site ↗
-          </Link>
-        </div>
+          </a>
+        }
+      />
 
-        <ArticleList
-          articles={articles}
-          onChange={setArticles}
-          newHref={`/admin/catalogos/${id}/textos/novo`}
-          emptyText="Nenhum texto neste catálogo ainda."
+      <Secao titulo="textos" descricao="Agrupados por seção na página do catálogo, nesta ordem." acoes={<BotaoLink href={`/admin/catalogos/${id}/textos/novo`}>+ novo texto</BotaoLink>}>
+        <ListaReordenavel<Article>
+          itens={articles}
+          aoMudar={(novos) => setDados((d) => (d ? { ...d, articles: novos } : d))}
+          titulo={(a) => a.title}
+          detalhe={(a) => (
+            <>
+              {a.column} · por {a.author}
+              {a.published === false && <span className="text-gold-escuro font-bold"> · rascunho</span>}
+            </>
+          )}
+          hrefEditar={(a) => `/admin/artigos/${a._id}`}
+          reordenar={adminApi.artigos.reorder}
+          excluir={(a) => adminApi.artigos.remove(a._id)}
+          artigo="o texto"
+          vazio="Nenhum texto neste catálogo ainda."
         />
-      </div>
+      </Secao>
 
-      <div>
-        <h2 className="font-display font-bold text-text-dark text-xl mb-4">dados do catálogo</h2>
-        {saved && <p className="font-sans text-sm text-olive mb-2">salvo ✓</p>}
-        <CatalogForm initial={catalog} onSave={handleSaveCatalog} />
-        <button onClick={removeCatalog} className="mt-6 font-display text-pink hover:underline">
+      <Secao titulo="dados do catálogo">
+        <CatalogForm key={catalog._id} initial={catalog} onSave={salvar} />
+      </Secao>
+
+      <Secao titulo="zona de perigo">
+        <Botao variante="perigo" onClick={() => setExcluindo(true)}>
           excluir este catálogo
-        </button>
-      </div>
+        </Botao>
+      </Secao>
+
+      <DialogoExclusao
+        aberto={excluindo}
+        oQue={`o catálogo "${catalog.title}"`}
+        confirmacao={catalog.title}
+        carregarImpacto={impacto}
+        aoFechar={() => setExcluindo(false)}
+        aoConfirmar={async () => {
+          await adminApi.catalogos.remove(id);
+          avisar(`Catálogo "${catalog.title}" excluído.`);
+          router.replace('/admin/catalogos');
+        }}
+      />
     </div>
   );
 }
