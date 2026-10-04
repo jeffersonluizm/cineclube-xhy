@@ -44,3 +44,10 @@ export const textosPublicados = (parentType: 'revista' | 'catalogo' | 'ciclo', p
   parentType,
   published: { $ne: false },
 });
+
+/** Trecho curto de um texto, cortado na última palavra inteira */
+export function trecho(texto: string | undefined, max = 220): string {
+  const limpo = (texto ?? '').replace(/\s+/g, ' ').trim();
+  if (limpo.length <= max) return limpo;
+  return limpo.slice(0, max).replace(/\s\S*$/, '') + '…';
+}

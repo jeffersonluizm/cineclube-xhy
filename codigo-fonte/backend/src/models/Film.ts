@@ -41,4 +41,9 @@ const FilmSchema = new Schema<IFilm>(
   { timestamps: true }
 );
 
+FilmSchema.index(
+  { title: 'text', director: 'text', synopsis: 'text' },
+  { name: 'busca_filmes', default_language: 'portuguese', weights: { title: 5, director: 3, synopsis: 1 } }
+);
+
 export default mongoose.model<IFilm>('Film', FilmSchema);

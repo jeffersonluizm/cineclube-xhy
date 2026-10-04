@@ -11,6 +11,7 @@ import homeRouter from './routes/home';
 import authRouter from './routes/auth';
 import uploadRouter from './routes/upload';
 import adminRouter from './routes/admin/index';
+import descobertaRouter from './routes/descoberta';
 import { ErroHttp, rotaInexistente, tratadorDeErros } from './middleware/erros';
 import { criarLimitadorGeral } from './middleware/limitadores';
 import { pastaUploads } from './lib/uploads';
@@ -69,6 +70,7 @@ app.use('/api/sobre', sobreRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api', descobertaRouter);
 
 app.get('/api/health', (_req, res) =>
   res.json({ status: 'ok', db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' })

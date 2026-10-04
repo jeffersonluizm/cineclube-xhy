@@ -42,4 +42,10 @@ const ArticleSchema = new Schema<IArticle>(
   { timestamps: true }
 );
 
+// Busca do site: título pesa mais que autor, que pesa mais que o corpo; sem acentos (índice de texto v3)
+ArticleSchema.index(
+  { title: 'text', author: 'text', content: 'text' },
+  { name: 'busca_textos', default_language: 'portuguese', weights: { title: 5, author: 3, content: 1 } }
+);
+
 export default mongoose.model<IArticle>('Article', ArticleSchema);
