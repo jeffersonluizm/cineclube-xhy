@@ -1,0 +1,2 @@
+# Scripts do Windows precisam de CRLF (goto e rotulos falham com LF)
+*.bat text eol=crlf

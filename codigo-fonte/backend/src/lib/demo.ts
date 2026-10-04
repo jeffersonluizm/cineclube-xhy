@@ -18,7 +18,13 @@ export function demoLigado(env: NodeJS.ProcessEnv = process.env): boolean {
   return ['true', '1', 'sim'].includes(String(env.DEMO_ENABLED ?? '').toLowerCase());
 }
 
-export const intervaloResetMinutos = (env: NodeJS.ProcessEnv = process.env) => Math.max(15, Number(env.DEMO_RESET_MINUTOS) || 360);
+/** Minutos entre os resets (padrão 360, mínimo 15); 0 desliga o reset periódico */
+export function intervaloResetMinutos(env: NodeJS.ProcessEnv = process.env): number {
+  if (env.DEMO_RESET_MINUTOS === undefined || env.DEMO_RESET_MINUTOS === '') return 360;
+  const minutos = Number(env.DEMO_RESET_MINUTOS);
+  if (minutos === 0) return 0;
+  return Math.max(15, minutos || 360);
+}
 
 const COLECOES = [Magazine, Article, Catalog, Cycle, Film, About];
 
@@ -35,6 +41,7 @@ export async function restaurarDemonstracao({ soSeVazio, log = console.log }: { 
 /** Agenda o reset periódico da demonstração; devolve a função que para o agendamento */
 export function agendarResetDemonstracao(log: (m: string) => void = console.log) {
   const minutos = intervaloResetMinutos();
+  if (minutos === 0) return () => {};
   const t = setInterval(
     () => {
       restaurarDemonstracao({ soSeVazio: false, log: () => {} })

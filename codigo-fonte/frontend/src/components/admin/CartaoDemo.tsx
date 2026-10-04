@@ -68,7 +68,9 @@ export default function CartaoDemo({ aoEntrar }: { aoEntrar: () => void }) {
         {entrando ? 'entrando…' : papel.rotulo}
       </button>
       <p className="font-sans text-xs text-text-suave">
-        Os dados de exemplo voltam ao original a cada {Math.round(info.resetMinutos / 60) || 1} h. Pode editar e excluir à vontade.
+        {info.resetMinutos > 0
+          ? `Pode editar e excluir à vontade: os dados de exemplo voltam ao original a cada ${Math.max(1, Math.round(info.resetMinutos / 60))} h.`
+          : 'Pode editar e excluir à vontade.'}
       </p>
       <div aria-live="assertive">{erro && <p className="font-sans text-sm text-pink-escuro">{erro}</p>}</div>
     </section>
