@@ -90,7 +90,7 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000   # endereço público do site (metat
 - **`/admin/login`** — entrada do editor
 - **`/admin`** — edições da revista (`/admin/revistas/nova`, `/admin/revistas/[id]`)
 - **`/admin/catalogos`** — catálogos: capa, descrição e textos de cada catálogo
-- **`/admin/ciclos`** — ciclos & mostras: dados, programação (sessões) e páginas de filmes
+- **`/admin/ciclos`** — ciclos & mostras: dados, programação (sessões), páginas de filmes e textos do ciclo
 - **Editor de artigos/textos** — o texto é montado em blocos (parágrafo, subtítulo,
   citação e imagem). Imagens podem ser inseridas em qualquer ponto do texto,
   com legenda, tamanho e posição (largura total, centralizada ou flutuando à
@@ -233,6 +233,7 @@ visual do cineclube em vez de uma página em branco.
 
 ### [Não lançado]
 #### Adicionado
+- Textos de ciclo no painel (`/admin/ciclos/[id]`: listar, criar, editar, rascunho, excluir)
 - Textos de ciclo no site público: listados na página do ciclo e abertos em
   `/ciclos-mostras/[slug]/texto/[textSlug]` (API: `GET /api/ciclos/:slug/texto/:textSlug`)
 - `iniciar.bat` na raiz para subir API e site no Windows
