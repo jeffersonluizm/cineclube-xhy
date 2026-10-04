@@ -159,3 +159,21 @@ test('mapa do site lista páginas de edições, textos, filmes e autores', async
   assert.ok(!hrefs.includes('/revista/3/artigo/rascunho'));
   assert.ok(res.body.every((p: { atualizado: string }) => !Number.isNaN(Date.parse(p.atualizado))));
 });
+
+test('grafias diferentes do mesmo autor viram uma entrada só na lista', async () => {
+  const r = await Magazine.findOne();
+  await Article.create({
+    title: 'Outro texto',
+    slug: 'outro-texto',
+    author: 'lúcia prado',
+    column: 'crítica',
+    content: 'x',
+    parentType: 'revista',
+    parentId: r!._id,
+    order: 5,
+  });
+  const res = await request(app).get('/api/autores');
+  const lucia = res.body.filter((a: { slug: string }) => a.slug === 'lucia-prado');
+  assert.equal(lucia.length, 1);
+  assert.equal(lucia[0].textos, 3);
+});

@@ -13,9 +13,12 @@ export async function slugUnico(model: Model<any>, base: string): Promise<string
     .find({ slug: new RegExp(`^${raiz}(-[0-9]+)?$`) })
     .select('slug')
     .lean<{ slug: string }[]>();
-  if (!usados.some((u) => u.slug === raiz)) return raiz;
-  const maior = Math.max(1, ...usados.map((u) => Number(u.slug.slice(raiz.length + 1)) || 1));
-  return `${raiz}-${maior + 1}`;
+  // Primeiro número livre a partir de 2: "mostra-2025" de outro título não vira contador
+  const ocupados = new Set(usados.map((u) => u.slug));
+  if (!ocupados.has(raiz)) return raiz;
+  let n = 2;
+  while (ocupados.has(`${raiz}-${n}`)) n++;
+  return `${raiz}-${n}`;
 }
 
 /**

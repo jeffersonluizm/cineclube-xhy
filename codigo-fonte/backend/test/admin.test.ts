@@ -197,3 +197,11 @@ test('sobre: devolve vazio sem dados, exige blocos e salva a equipe', async () =
   assert.equal(ok.body.content, 'Somos um cineclube.');
   assert.equal(ok.body.team[0].links[0].label, 'Instagram');
 });
+
+test('slug repetido usa o primeiro número livre, sem confundir com o ano de outro título', async () => {
+  await post('/api/admin/catalogos', { title: 'Mostra 2025', year: 2025 });
+  const primeira = await post('/api/admin/catalogos', { title: 'Mostra', year: 2026 });
+  const segunda = await post('/api/admin/catalogos', { title: 'Mostra', year: 2026 });
+  assert.equal(primeira.body.slug, 'mostra');
+  assert.equal(segunda.body.slug, 'mostra-2');
+});

@@ -68,9 +68,26 @@ async function autores() {
     { $match: PUBLICADO },
     { $group: { _id: '$author', textos: { $sum: 1 }, atualizado: { $max: '$updatedAt' } } },
   ]);
-  return grupos
-    .map((g) => ({ nome: g._id, slug: slugify(g._id), textos: g.textos, atualizado: g.atualizado }))
-    .filter((a) => a.slug)
+  // Mesma regra da página do autor: grafias com o mesmo slug ("Lúcia Prado", "lúcia prado") viram uma entrada,
+  // com o nome mais usado e a soma dos textos
+  const porSlug = new Map<string, { nome: string; slug: string; textos: number; atualizado: Date; maior: number }>();
+  for (const g of grupos) {
+    const slug = slugify(g._id ?? '');
+    if (!slug) continue;
+    const atual = porSlug.get(slug);
+    if (!atual) {
+      porSlug.set(slug, { nome: g._id, slug, textos: g.textos, atualizado: g.atualizado, maior: g.textos });
+      continue;
+    }
+    atual.textos += g.textos;
+    if (g.atualizado > atual.atualizado) atual.atualizado = g.atualizado;
+    if (g.textos > atual.maior) {
+      atual.nome = g._id;
+      atual.maior = g.textos;
+    }
+  }
+  return [...porSlug.values()]
+    .map(({ nome, slug, textos, atualizado }) => ({ nome, slug, textos, atualizado }))
     .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 }
 
