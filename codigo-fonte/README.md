@@ -80,8 +80,17 @@ ADMIN_PASSWORD=senha-do-editor      # senha de acesso ao painel /admin
 JWT_SECRET=um-segredo-aleatorio     # assina os tokens de sessão do editor (obrigatório com banco remoto)
 FRONTEND_URL=http://localhost:3000  # origens permitidas (CORS), separadas por vírgula
 # CLOUDINARY_URL=cloudinary://...   # opcional local; obrigatório na hospedagem (ver abaixo)
+# SERVIDOR_SEGREDO=...              # 32+ caracteres; o mesmo no site: identifica o servidor do site (fora do limite por IP)
+# DEMO_ENABLED=true                 # modo demonstração (desligado por padrão; só no ambiente da demo)
+# DEMO_RESET_MINUTOS=360            # reset dos dados de exemplo na demo (0 desliga)
 # RATE_LIMIT_GERAL=300              # requisições por minuto por IP (0 desliga; a carga desliga)
+# LOGIN_ERRADOS_POR_HORA=100        # teto global de logins errados (todos os IPs somados)
+# MONGODB_TIMEOUT_MS=8000           # prazo para achar o banco na partida
 # UPLOADS_DIR=...                   # pasta das imagens sem Cloudinary (padrão backend/uploads)
+
+O `iniciar.bat` cria esse arquivo na primeira vez com segredos aleatórios fortes. Em
+produção a API recusa subir com variável obrigatória faltando, `ADMIN_PASSWORD` com menos
+de 12 caracteres ou `JWT_SECRET`/`SERVIDOR_SEGREDO` com menos de 32.
 ```
 
 ---
@@ -99,6 +108,8 @@ npm test       # testes das regras do front (tokens/contraste, sessão, login, R
 ```
 NEXT_PUBLIC_API_URL=http://localhost:3001    # endereço da API
 NEXT_PUBLIC_SITE_URL=http://localhost:3000   # endereço público do site (metatags de compartilhamento)
+SERVIDOR_SEGREDO=...                          # só de servidor (nunca NEXT_PUBLIC_): o mesmo valor da API
+# CLOUDINARY_CLOUD_NAME=...                   # opcional: next/image aceita só essa conta
 ```
 
 ---
@@ -146,6 +157,12 @@ imagem é conferido pelos primeiros bytes do arquivo, não pelo que o navegador 
 - Senha comparada por hash SHA-256 em tempo constante (nem o tamanho vaza).
 - Token JWT HS256 de 8 horas. O segredo de desenvolvimento só é aceito fora de produção
   **e** com banco local; com banco remoto sem `JWT_SECRET`, a API não emite tokens.
+- O servidor do site se identifica com `X-Servidor-Site` (segredo só de servidor) e fica
+  fora do limite por IP; o abuso de visitantes é contido no `middleware.ts` do site
+  (busca 20/min, revalidação 10/min, páginas 300/min por IP do visitante).
+- O token carrega a versão da senha: trocar `ADMIN_PASSWORD` derruba todas as sessões.
+- Teto global de 100 logins errados por hora (força bruta distribuída).
+- Query string simples (sem objetos aninhados) e filtros com `z.strictObject`.
 - Toda entrada do painel passa por esquemas `zod` (tipos, tamanhos, enums, ids, URLs) e
   as atualizações rodam os validadores do Mongoose; filtros de consulta não aceitam
   operadores (`?parentId[$ne]=` é recusado com 400).
@@ -173,6 +190,8 @@ Públicas (sem autenticação):
 | `GET /api/autores`, `GET /api/autores/:slug` | Autores com contagem e textos de um autor |
 | `GET /api/recentes` | 30 textos mais recentes com endereço (alimenta o RSS) |
 | `GET /api/mapa` | Todas as páginas públicas com data de atualização (alimenta o sitemap) |
+| `GET /api/demo` | Modo demonstração: papel disponível (404 com `DEMO_ENABLED` desligado) |
+| `POST /api/demo/entrar` | `{ papel: 'editor' }` → token de editor com um clique (só com a demonstração ligada) |
 
 Autenticação e painel (todas as rotas `/api/admin/*` e `/api/upload` exigem `Authorization: Bearer <token>`):
 
@@ -225,85 +244,11 @@ hora e o visitante não espera a API a cada página. Se a API não estiver no ar
 
 ---
 
-## Hospedagem gratuita com domínio próprio
+## Hospedagem
 
-Arquitetura recomendada (custo zero além do domínio):
-
-| Peça | Serviço | Endereço |
-|------|---------|----------|
-| Site (Next.js) | [Vercel](https://vercel.com) · plano Hobby | `seudominio.com.br` e `www.` |
-| API (Express) | [Render](https://render.com) · plano Free | `api.seudominio.com.br` |
-| Banco | [MongoDB Atlas](https://cloud.mongodb.com) · cluster M0 | · |
-| Imagens | [Cloudinary](https://cloudinary.com) · plano Free | `res.cloudinary.com/...` |
-
-### 1. Preparação
-
-1. Faça commit e push do código para o GitHub (as pastas `backend/` e `frontend/`
-   precisam estar no repositório; `.env`, `uploads/` e `data/` já são ignorados).
-2. No Atlas: **Network Access → Add IP → Allow access from anywhere** (`0.0.0.0/0`),
-   pois o Render Free não tem IP fixo. Copie a string de conexão.
-3. No Cloudinary: crie a conta gratuita e copie a **API Environment variable**
-   (`cloudinary://API_KEY:API_SECRET@CLOUD_NAME`) do painel.
-4. Gere um segredo para o JWT:
-   ```bash
-   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-   ```
-
-### 2. API no Render
-
-1. **New → Blueprint**, selecione o repositório: o arquivo `render.yaml` na raiz
-   já descreve o serviço (`rootDir: codigo-fonte/backend`, build e health check).
-2. Preencha as variáveis pedidas: `MONGODB_URI`, `ADMIN_PASSWORD`, `FRONTEND_URL`
-   (`https://seudominio.com.br,https://www.seudominio.com.br`) e `CLOUDINARY_URL`.
-   `JWT_SECRET` é gerado pelo Render.
-3. Em **Settings → Custom Domains**, adicione `api.seudominio.com.br`. O Render
-   mostra o CNAME a criar no seu registrador.
-4. Teste: `https://api.seudominio.com.br/api/health` deve responder `{"status":"ok","db":"connected"}`.
-
-> Sem o Blueprint, crie um **Web Service** manual com Root Directory
-> `codigo-fonte/backend`, Build `npm ci --include=dev && npm run build`,
-> Start `npm start` e as mesmas variáveis (mais `NODE_ENV=production`).
-
-### 3. Site na Vercel
-
-1. **Add New → Project**, importe o repositório e defina
-   **Root Directory = `codigo-fonte/frontend`** (framework Next.js é detectado).
-2. Environment Variables:
-   ```
-   NEXT_PUBLIC_API_URL=https://api.seudominio.com.br
-   NEXT_PUBLIC_SITE_URL=https://seudominio.com.br
-   ```
-3. Deploy. Depois, em **Settings → Domains**, adicione `seudominio.com.br` e
-   `www.seudominio.com.br` (marque um deles para redirecionar ao outro).
-
-### 4. DNS no registrador do domínio
-
-```
-@      A      76.76.21.21              (Vercel · confirme o IP mostrado no painel)
-www    CNAME  cname.vercel-dns.com
-api    CNAME  <nome-do-servico>.onrender.com
-```
-
-O certificado HTTPS é emitido automaticamente nos dois serviços após a propagação.
-
-### 5. Manter a API acordada
-
-O Render Free hiberna após 15 min sem tráfego; o primeiro acesso demora até 60 s.
-Duas formas gratuitas de evitar isso (use uma ou ambas):
-
-- **GitHub Actions**: o workflow `.github/workflows/keep-alive.yml` faz um ping a cada
-  10 min. Basta criar, em *Settings → Secrets and variables → Actions → Variables*,
-  a variável `API_HEALTH_URL = https://api.seudominio.com.br/api/health`.
-- **cron-job.org**: crie um job gratuito chamando a mesma URL a cada 10 min.
-
-Enquanto a API responde, o site mostra uma tela de carregamento com a identidade
-visual do cineclube em vez de uma página em branco.
-
-### Alternativas
-
-- **Koyeb** (Free) no lugar do Render: mesma configuração, também hiberna.
-- **Oracle Cloud Always Free** (VM ARM): sem hibernação e com disco persistente
-  (dispensa o Cloudinary), mas exige administrar Linux, Docker e certificados.
+Desenho gratuito: site na Vercel, API no Render (`render.yaml` na raiz), MongoDB Atlas M0
+com um banco só de demonstração e Cloudinary opcional. Passo a passo, variáveis e
+checklist de conferência em [`docs/deploy.md`](../docs/deploy.md).
 
 ---
 
@@ -322,6 +267,9 @@ visual do cineclube em vez de uma página em branco.
 - `iniciar.bat` na raiz para subir API e site no Windows
 - Testes de rotas públicas, do CRUD do painel, de validação, de segurança e de descoberta (API) e das regras do front
 - Harness de carga isolado (`carga/`) e resultados em `docs/carga/`
+- Modo demonstração (`DEMO_ENABLED`, `GET /api/demo`, entrar como editor com um clique, reset periódico)
+- Roteiro de hospedagem (`docs/deploy.md`), ADRs (`docs/adr/`), ESLint, Prettier e CI (`.github/workflows/ci.yml`)
+- `iniciar.bat` idempotente: confere o Node, cria `.env` com segredos fortes, espera a API e abre o navegador
 #### Alterado
 - Identidade em tokens (`src/lib/tokens.ts`) com variantes de cor AA para texto e escala de títulos; logo em SVG
 - Painel na estética do impresso (papel, fios, sem cartões arredondados)
@@ -334,6 +282,9 @@ visual do cineclube em vez de uma página em branco.
 - helmet, CORS 403, limitador geral, upload validado pelos bytes, links só `https:`/`mailto:`
 - Senha comparada por hash, token de 8 h, segredo de desenvolvimento só com banco local
 - CSP e cabeçalhos de segurança no site; painel com `noindex`
+- Segredo servidor-a-servidor e contenção por IP no site; teto global de logins errados
+- Configuração de produção validada na partida; token invalidado ao trocar a senha
+- Next 14.2.35, otimizador de imagens desligado; `npm audit fix` na API
 - Upload deixa de aceitar SVG (só jpg, png, webp, gif e avif)
 #### Corrigido
 - Criação simultânea de textos com o mesmo título gerava erro 500 (slug duplicado)

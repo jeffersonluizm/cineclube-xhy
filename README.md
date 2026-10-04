@@ -17,6 +17,24 @@
 
 ![Página inicial: a prateleira de edições](docs/img/01-home.jpg)
 
+## Demonstração
+
+| | Endereço |
+|---|---|
+| Site | `https://cineclube-xhy.vercel.app` *(a publicar: ver [docs/deploy.md](docs/deploy.md))* |
+| Painel do editor | `https://cineclube-xhy.vercel.app/admin/login` |
+| API | `https://cineclube-xhy-api.onrender.com/api/health` |
+
+**Conta de demonstração:** no login do painel, o botão **"Entrar no painel como editor de
+demonstração"** entra com um clique, sem senha. Pode criar, editar e excluir à vontade: os
+dados de exemplo voltam ao original a cada 6 horas. A primeira visita pode levar até um
+minuto (o servidor gratuito acorda) e o site avisa enquanto isso.
+
+Roteiro sugerido: página inicial → uma edição da revista → um texto → busca → `como foi feito`
+→ painel: início → abrir a revista → editar um texto (o rascunho fica guardado no navegador)
+→ ver no site → excluir uma exibição (diálogo com contagem) → sair.
+
+
 ## Em 30 segundos
 
 - **O problema:** o cineclube produzia revista, catálogos e programação, mas tudo ficava
@@ -69,26 +87,6 @@ flowchart LR
 | Leitor | Navega pela revista, catálogos e exibições, busca textos e autores, assina o RSS. Sem conta, por desenho. |
 | Editor (equipe do cineclube) | Entra no `/admin` com a senha da equipe, publica e organiza o conteúdo, guarda rascunhos. |
 
-## Rodar em poucos minutos
-
-Pré-requisito: Node.js 22 ou superior.
-
-No Windows, dê dois cliques em **`iniciar.bat`**: ele instala as dependências na primeira
-vez e abre uma janela para a API (http://localhost:3001) e outra para o site
-(http://localhost:3000, painel em `/admin`).
-
-Ou, manualmente:
-
-```bash
-cd codigo-fonte/backend && npm install && npm run dev      # API, com banco embutido se não houver MongoDB
-cd codigo-fonte/backend && npm run seed                    # dados de exemplo (pede confirmação)
-cd codigo-fonte/frontend && npm install && npm run dev     # site
-```
-
-A senha do painel é a `ADMIN_PASSWORD` do `backend/.env` (copie de `.env.example`).
-Configuração completa, variáveis, tabela da API e guia de hospedagem gratuita em
-[`codigo-fonte/README.md`](codigo-fonte/README.md).
-
 ## Testes
 
 ```bash
@@ -112,6 +110,10 @@ gráficos e conclusões em [`docs/carga/2026-10-04-resultados.md`](docs/carga/20
 
 ## Decisões
 
+Registradas em [`docs/adr/`](docs/adr/): senha única de editor, JWT no localStorage, banco
+embutido em desenvolvimento, modo demonstração, cache com revalidação e a permanência no
+Next 14.2 com a superfície dos advisories fechada.
+
 - **Cache com revalidação sob demanda** em vez de `no-store`: o visitante não espera a API
   (que dorme no plano gratuito) e o editor vê a mudança na hora.
 - **Erro honesto:** API fora do ar mostra "serviço indisponível" com status 500; 404 é 404.
@@ -132,6 +134,8 @@ gráficos e conclusões em [`docs/carga/2026-10-04-resultados.md`](docs/carga/20
 - Token no navegador: um XSS bem-sucedido o levaria (a CSP reduz, não elimina).
 - Datas da programação em texto livre: ainda não há "próximas sessões".
 - Plano gratuito: a API dorme; o cache esconde isso do leitor, não do editor.
+- Next 14.2.35 ainda tem advisories corrigidos só no 15.5+; os vetores que se aplicam estão
+  fechados por configuração (otimizador de imagens desligado, sem Server Actions): [ADR 0006](docs/adr/0006-next-14-e-advisories.md).
 - O teste de carga roda gerador e servidores na mesma máquina: vale para comparar versões.
 
 ## Próximos passos
@@ -140,6 +144,30 @@ gráficos e conclusões em [`docs/carga/2026-10-04-resultados.md`](docs/carga/20
 - Datas estruturadas nas sessões e agenda "próximas sessões" com calendário (.ics).
 - Prévia de rascunho no próprio site (`draftMode`) e imagem de compartilhamento gerada (`next/og`).
 - Cookie `httpOnly` com proxy no mesmo domínio para o token do painel.
+- Migrar para Next 15.5+ / React 19 (fecha os advisories que hoje são contornados por configuração).
+
+## Rodar localmente
+
+Pré-requisito: Node.js 22 ou superior.
+
+No Windows, dê dois cliques em **`iniciar.bat`**. Ele confere o Node, instala o que
+faltar, cria os arquivos `.env` com segredos aleatórios (sem sobrescrever os existentes),
+sobe a API (http://localhost:3001) e o site (http://localhost:3000), espera a API ficar
+pronta e abre o navegador. Localmente o modo demonstração vem ligado: o login do painel
+tem o botão de entrar como editor, e os dados de exemplo são criados se o banco estiver vazio.
+Sem MongoDB instalado, a API usa um banco embutido (baixado na primeira vez).
+
+Ou, manualmente:
+
+```bash
+cd codigo-fonte/backend && npm install && npm run dev      # API, com banco embutido se não houver MongoDB
+cd codigo-fonte/backend && npm run seed                    # dados de exemplo (pede confirmação)
+cd codigo-fonte/frontend && npm install && npm run dev     # site
+```
+
+A senha do painel é a `ADMIN_PASSWORD` gerada em `codigo-fonte/backend/.env`.
+Configuração completa, variáveis, tabela da API e guia de hospedagem gratuita em
+[`codigo-fonte/README.md`](codigo-fonte/README.md).
 
 ## Documentação
 
