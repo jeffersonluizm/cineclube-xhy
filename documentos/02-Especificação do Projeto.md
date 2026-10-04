@@ -47,7 +47,7 @@ e não funcionais e as restrições do projeto.
 | **RF-007** | O painel do editor deve exigir autenticação por senha e emitir uma sessão com validade limitada. | ALTA |
 | **RF-008** | O painel deve permitir criar, editar e excluir revistas, catálogos, ciclos, filmes e textos. | ALTA |
 | **RF-009** | O editor de textos deve trabalhar em blocos, permitir inserir imagens em qualquer ponto com legenda, largura (pequena, média, grande) e alinhamento (total, centro, esquerda, direita), e reordenar blocos por arrastar ou setas. | ALTA |
-| **RF-010** | O painel deve permitir upload de imagens (jpg, png, webp, gif, avif, svg) de até 10 MB e devolver a URL para uso no conteúdo. | ALTA |
+| **RF-010** | O painel deve permitir upload de imagens (jpg, png, webp, gif, avif) de até 10 MB e devolver a URL para uso no conteúdo. | ALTA |
 | **RF-011** | Textos devem poder ficar em rascunho; apenas textos publicados aparecem nas páginas públicas. | ALTA |
 | **RF-012** | O painel deve permitir reordenar textos de uma edição e filmes de um ciclo. | MÉDIA |
 | **RF-013** | Cada página pública deve fornecer título, descrição e imagem para prévia de compartilhamento (Open Graph) e URL canônica. | MÉDIA |

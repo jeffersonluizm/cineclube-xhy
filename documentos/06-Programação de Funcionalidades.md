@@ -189,7 +189,7 @@ arrastar (`PUT /api/admin/artigos/reorder`) e exclui. Excluir uma edição remov
 **Funcionamento:** o texto é composto por blocos de parágrafo, subtítulo, citação e
 imagem, reordenáveis por arrastar (punho ⠿) ou setas. Blocos de imagem aceitam legenda,
 largura (pequena, média, grande) e alinhamento (total, centro, esquerda, direita). O upload
-aceita jpg, png, webp, gif, avif e svg até 10 MB; com `CLOUDINARY_URL` configurada a
+aceita jpg, png, webp, gif e avif (SVG é recusado) até 10 MB; com `CLOUDINARY_URL` configurada a
 imagem vai para o Cloudinary e a URL devolvida é absoluta; sem ela, fica em
 `backend/uploads/`. Ao salvar, a API gera `content` (texto puro) a partir dos blocos para
 trechos e buscas.
