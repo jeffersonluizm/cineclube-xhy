@@ -242,6 +242,8 @@ async function principal() {
     CINECLUBE_PROIBIR_BANCO_DEV: '1',
     // limitador geral desligado para medir vazão (o H6 mede os limitadores separadamente)
     RATE_LIMIT_GERAL: '0',
+    // máquina compartilhada: prazo folgado para achar o banco (ignorado pelo código antigo)
+    MONGODB_TIMEOUT_MS: '60000',
   };
   const api = iniciar('api', process.execPath, [path.join(BACKEND, 'dist/index.js')], { cwd: cwdApi, env: envApi });
   await esperarHttp(`${API}/api/health`, async (r) => r.ok && (await r.json()).db === 'connected');
