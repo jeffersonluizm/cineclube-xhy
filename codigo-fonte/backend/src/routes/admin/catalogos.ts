@@ -2,7 +2,7 @@ import { Router } from 'express';
 import Catalog from '../../models/Catalog';
 import Article from '../../models/Article';
 import { assincrono, naoEncontrado } from '../../middleware/erros';
-import { slugUnico } from '../../lib/slugUnico';
+import { criarComSlugUnico } from '../../lib/slugUnico';
 import { soDefinidos } from '../../lib/conteudo';
 import { catalogoEdicao, catalogoNovo, objectId } from '../../validacao/esquemas';
 import { ATUALIZAR, rotaBuscarPorId } from './comum';
@@ -30,7 +30,7 @@ router.post(
   '/',
   assincrono(async (req, res) => {
     const dados = catalogoNovo.parse(req.body ?? {});
-    const catalog = await Catalog.create({ ...dados, slug: await slugUnico(Catalog, dados.title) });
+    const catalog = await criarComSlugUnico(Catalog, dados.title, dados);
     res.status(201).json(catalog);
   })
 );

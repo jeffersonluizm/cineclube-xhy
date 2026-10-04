@@ -93,6 +93,15 @@ test('artigos: cria com slug único, ordem crescente e texto corrido sem imagens
   assert.equal(incompleto.status, 400);
 });
 
+test('criações simultâneas com o mesmo título recebem slugs distintos, sem erro', async () => {
+  const r = (await novaRevista()).body;
+  const respostas = await Promise.all(Array.from({ length: 12 }, () => novoTexto(r._id)));
+  assert.deepEqual(respostas.map((x) => x.status), Array(12).fill(201));
+  const slugs = new Set(respostas.map((x) => x.body.slug));
+  assert.equal(slugs.size, 12);
+  assert.ok(slugs.has('um-texto'));
+});
+
 test('artigos: edita recalculando o texto corrido, lista por revista e reordena', async () => {
   const r = (await novaRevista()).body;
   const a1 = (await novoTexto(r._id)).body;

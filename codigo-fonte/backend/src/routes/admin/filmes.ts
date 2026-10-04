@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import Film from '../../models/Film';
 import { assincrono, naoEncontrado } from '../../middleware/erros';
-import { slugUnico } from '../../lib/slugUnico';
+import { criarComSlugUnico } from '../../lib/slugUnico';
 import { soDefinidos } from '../../lib/conteudo';
 import { filmeEdicao, filmeNovo, filtroFilmes, objectId } from '../../validacao/esquemas';
 import { ATUALIZAR, proximaOrdem, rotaBuscarPorId, rotaReordenar } from './comum';
@@ -23,10 +23,9 @@ router.post(
   '/',
   assincrono(async (req, res) => {
     const dados = filmeNovo.parse(req.body ?? {});
-    const film = await Film.create({
+    const film = await criarComSlugUnico(Film, dados.title, {
       ...dados,
       footnotes: dados.footnotes ?? [],
-      slug: await slugUnico(Film, dados.title),
       order: await proximaOrdem(Film, { cycleId: dados.cycleId }),
     });
     res.status(201).json(film);

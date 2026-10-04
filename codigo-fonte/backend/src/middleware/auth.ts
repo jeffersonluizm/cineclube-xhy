@@ -25,7 +25,7 @@ export function segredoJwt(env: NodeJS.ProcessEnv = process.env): string {
 }
 
 export interface AuthRequest extends Request {
-  editor?: { role: string };
+  editor?: { role: string; exp?: number };
 }
 
 export function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
@@ -35,7 +35,7 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
   }
 
   try {
-    const payload = jwt.verify(header.slice(7), segredoJwt(), { algorithms: ['HS256'] }) as { role: string };
+    const payload = jwt.verify(header.slice(7), segredoJwt(), { algorithms: ['HS256'] }) as { role: string; exp?: number };
     if (payload.role !== 'editor') throw new Error('papel inválido');
     req.editor = payload;
     next();

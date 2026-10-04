@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { signToken, VALIDADE_TOKEN_S } from '../middleware/auth';
+import { AuthRequest, requireAuth, signToken, VALIDADE_TOKEN_S } from '../middleware/auth';
 import { limitadorLogin } from '../middleware/limitadores';
 import { senhaConfere } from '../lib/senha';
 
@@ -18,6 +18,11 @@ router.post('/login', limitadorLogin, (req: Request, res: Response) => {
   }
 
   res.json({ token: signToken(), expiraEm: VALIDADE_TOKEN_S });
+});
+
+/** O painel confere a sessão ao abrir e sabe quando avisar que ela vai expirar */
+router.get('/sessao', requireAuth, (req: AuthRequest, res: Response) => {
+  res.json({ ok: true, expiraEm: req.editor?.exp });
 });
 
 export default router;

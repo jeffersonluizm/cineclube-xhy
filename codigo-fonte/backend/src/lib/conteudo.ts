@@ -51,3 +51,10 @@ export function trecho(texto: string | undefined, max = 220): string {
   if (limpo.length <= max) return limpo;
   return limpo.slice(0, max).replace(/\s\S*$/, '') + '…';
 }
+
+/** Campos de um texto nas listas públicas (sumário, seções): sem o corpo, com trecho */
+export const CAMPOS_SUMARIO = 'title slug author column order content parentId';
+
+export function paraSumario<T extends { content?: string }>({ content, ...resto }: T) {
+  return { ...resto, trecho: trecho(content) };
+}

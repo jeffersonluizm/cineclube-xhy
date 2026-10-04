@@ -48,6 +48,8 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
       callback(new ErroHttp(403, `Origem não permitida pelo CORS: ${origin}`));
     },
+    // O login mostra quanto falta para tentar de novo depois do limite (429)
+    exposedHeaders: ['RateLimit', 'RateLimit-Policy', 'Retry-After'],
   })
 );
 app.use('/api', criarLimitadorGeral(Number(process.env.RATE_LIMIT_GERAL ?? 300)));

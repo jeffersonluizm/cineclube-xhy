@@ -95,3 +95,18 @@ test('links da equipe só aceitam https e mailto', () => {
   assert.equal(linkSeguro('data:text/html,oi'), false);
   assert.equal(linkSeguro('não é url'), false);
 });
+
+test('sessão: token válido responde quando expira; sem token responde 401', async () => {
+  const ok = await request(app).get('/api/auth/sessao').set('Authorization', `Bearer ${signToken()}`);
+  assert.equal(ok.status, 200);
+  assert.ok(ok.body.expiraEm > Date.now() / 1000);
+  assert.equal((await request(app).get('/api/auth/sessao')).status, 401);
+});
+
+test('o navegador do painel consegue ler os cabeçalhos do limite de login', async () => {
+  const res = await request(app).options('/api/auth/login').set('Origin', 'http://localhost:3000').set('Access-Control-Request-Method', 'POST');
+  const comum = await request(app).post('/api/auth/login').set('Origin', 'http://localhost:3000').send({ password: 'x' });
+  void res;
+  assert.match(String(comum.headers['access-control-expose-headers']), /RateLimit/);
+  assert.match(String(comum.headers['access-control-expose-headers']), /Retry-After/);
+});

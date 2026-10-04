@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import Article from '../../models/Article';
 import { assincrono, naoEncontrado } from '../../middleware/erros';
-import { slugUnico } from '../../lib/slugUnico';
+import { criarComSlugUnico } from '../../lib/slugUnico';
 import { soDefinidos, textoCorrido } from '../../lib/conteudo';
 import { artigoEdicao, artigoNovo, filtroArtigos, objectId } from '../../validacao/esquemas';
 import { ATUALIZAR, proximaOrdem, rotaBuscarPorId, rotaReordenar } from './comum';
@@ -28,9 +28,8 @@ router.post(
   '/',
   assincrono(async (req, res) => {
     const dados = artigoNovo.parse(req.body ?? {});
-    const article = await Article.create({
+    const article = await criarComSlugUnico(Article, dados.title, {
       ...dados,
-      slug: await slugUnico(Article, dados.title),
       blocks: dados.blocks ?? [],
       content: textoCorrido(dados.blocks),
       footnotes: dados.footnotes ?? [],

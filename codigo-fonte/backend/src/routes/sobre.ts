@@ -7,7 +7,7 @@ const router = Router();
 router.get(
   '/',
   assincrono(async (_req, res) => {
-    const about = await About.findOne();
+    const about = await About.findOne().lean();
     if (!about) throw naoEncontrado('Dados não encontrados');
     res.json(about);
   })

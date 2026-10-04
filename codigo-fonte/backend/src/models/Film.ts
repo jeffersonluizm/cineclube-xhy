@@ -41,6 +41,8 @@ const FilmSchema = new Schema<IFilm>(
   { timestamps: true }
 );
 
+FilmSchema.index({ cycleId: 1, order: 1 });
+
 FilmSchema.index(
   { title: 'text', director: 'text', synopsis: 'text' },
   { name: 'busca_filmes', default_language: 'portuguese', weights: { title: 5, director: 3, synopsis: 1 } }

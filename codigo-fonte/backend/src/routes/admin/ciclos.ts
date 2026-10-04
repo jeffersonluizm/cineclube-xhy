@@ -3,7 +3,7 @@ import Cycle from '../../models/Cycle';
 import Film from '../../models/Film';
 import Article from '../../models/Article';
 import { assincrono, naoEncontrado } from '../../middleware/erros';
-import { slugUnico } from '../../lib/slugUnico';
+import { criarComSlugUnico } from '../../lib/slugUnico';
 import { soDefinidos } from '../../lib/conteudo';
 import { cicloEdicao, cicloNovo, objectId } from '../../validacao/esquemas';
 import { ATUALIZAR, rotaBuscarPorId } from './comum';
@@ -35,11 +35,10 @@ router.post(
   '/',
   assincrono(async (req, res) => {
     const dados = cicloNovo.parse(req.body ?? {});
-    const cycle = await Cycle.create({
+    const cycle = await criarComSlugUnico(Cycle, dados.title, {
       ...dados,
       footnotes: dados.footnotes ?? [],
       screenings: dados.screenings ?? [],
-      slug: await slugUnico(Cycle, dados.title),
     });
     res.status(201).json(cycle);
   })

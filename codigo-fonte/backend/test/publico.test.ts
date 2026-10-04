@@ -97,7 +97,31 @@ test('sumário agrupa textos publicados por coluna, em ordem, sem rascunhos', as
   const primeiro = res.body.columns['crítica'][0];
   assert.equal(primeiro.slug, 'primeiro');
   assert.equal(primeiro.author, 'Ana Prado');
-  assert.ok(primeiro.content, 'o sumário mostra um trecho do texto');
+  assert.equal(primeiro.trecho, 'primeira linha segunda linha', 'o sumário mostra um trecho do texto');
+  assert.equal(primeiro.blocks, undefined, 'o sumário não carrega o corpo do texto');
+  assert.equal(primeiro.content, undefined);
+});
+
+test('home faz um número fixo de consultas, qualquer que seja o número de edições', async () => {
+  for (let n = 10; n < 40; n++) await Magazine.create({ number: n, volume: 1, month: 'maio', year: 2026, slug: `revista-${n}` });
+  await criarRevistas();
+  const mongoose = (await import('mongoose')).default;
+  let consultas = 0;
+  mongoose.set('debug', () => consultas++);
+  try {
+    const res = await request(app).get('/api/home');
+    assert.equal(res.status, 200);
+    assert.equal(res.body.editions.length, 32);
+  } finally {
+    mongoose.set('debug', false);
+  }
+  assert.ok(consultas <= 6, `home fez ${consultas} consultas`);
+});
+
+test('vizinhos do artigo não trazem o corpo dos outros textos', async () => {
+  await criarRevistas();
+  const res = await request(app).get('/api/revista/2/artigo/segundo');
+  assert.deepEqual(Object.keys(res.body.prev).sort(), ['author', 'slug', 'title']);
 });
 
 test('revista inexistente responde 404', async () => {
@@ -141,6 +165,8 @@ test('catálogos: lista por ano, detalhe por seção e texto com vizinhos', asyn
   const det = await request(app).get('/api/catalogos/salome');
   assert.equal(det.status, 200);
   assert.deepEqual(Object.keys(det.body.sections), ['abertura', 'textos']);
+  assert.equal(det.body.sections.textos[0].trecho, 'primeira linha segunda linha');
+  assert.equal(det.body.sections.textos[0].blocks, undefined);
 
   const t = await request(app).get('/api/catalogos/salome/texto/ensaio');
   assert.equal(t.status, 200);

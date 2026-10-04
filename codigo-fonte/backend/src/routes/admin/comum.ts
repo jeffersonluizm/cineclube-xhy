@@ -15,7 +15,10 @@ export function rotaReordenar(router: Router, model: Model<any>) {
     '/reorder',
     assincrono(async (req, res) => {
       const { ids } = reordenacao.parse(req.body ?? {});
-      await Promise.all(ids.map((id, i) => model.findByIdAndUpdate(id, { order: i })));
+      // Uma ida ao banco para a lista inteira (antes: um findByIdAndUpdate por id)
+      if (ids.length) {
+        await model.bulkWrite(ids.map((id, i) => ({ updateOne: { filter: { _id: id }, update: { $set: { order: i } } } })), { ordered: false });
+      }
       res.json({ ok: true });
     })
   );
@@ -37,7 +40,7 @@ export function rotaBuscarPorId(router: Router, model: Model<any>, mensagem404: 
 /** Próxima posição dentro do pai (texto numa revista, filme num ciclo) */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function proximaOrdem(model: Model<any>, filtro: object): Promise<number> {
-  const ultimo = await model.findOne(filtro).sort({ order: -1 });
+  const ultimo = await model.findOne(filtro).sort({ order: -1 }).select('order').lean<{ order: number }>();
   return ultimo ? ultimo.order + 1 : 0;
 }
 
