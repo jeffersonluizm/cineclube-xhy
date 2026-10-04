@@ -73,7 +73,7 @@ export const artigoEdicao = artigoNovo
   .omit({ parentType: true, parentId: true })
   .partial()
   .extend({ order: z.number().int().min(0).optional() });
-export const filtroArtigos = z.object({ parentId: objectId.optional(), parentType: tipoPai.optional() });
+export const filtroArtigos = z.strictObject({ parentId: objectId.optional(), parentType: tipoPai.optional() });
 
 // ---------- catálogos ----------
 export const catalogoNovo = z.object({
@@ -130,7 +130,7 @@ export const filmeNovo = z.object({
   cycleId: objectId,
 });
 export const filmeEdicao = filmeNovo.omit({ cycleId: true }).partial();
-export const filtroFilmes = z.object({ cycleId: objectId.optional() });
+export const filtroFilmes = z.strictObject({ cycleId: objectId.optional() });
 
 // ---------- sobre ----------
 const link = z.object({

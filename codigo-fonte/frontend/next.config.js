@@ -53,7 +53,9 @@ const cabecalhosDeSeguranca = [
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  images: { remotePatterns },
+  // Otimizador de imagens desligado: o site não depende dele e ele concentra advisories
+  // ainda sem correção na linha 14 do Next (ver docs/adr/0006). O middleware responde 404 em /_next/image.
+  images: { unoptimized: true, remotePatterns },
   async headers() {
     return [{ source: '/:path*', headers: cabecalhosDeSeguranca }];
   },

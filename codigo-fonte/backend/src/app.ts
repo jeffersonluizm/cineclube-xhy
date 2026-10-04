@@ -23,6 +23,9 @@ const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 const app = express();
 app.disable('x-powered-by');
+// Query string simples (node:querystring): a API não aceita objetos aninhados na URL, e isso
+// também tira do caminho o parser qs (advisories de DoS ainda sem correção no Express 4)
+app.set('query parser', 'simple');
 
 // Atrás de proxy (Render, Vercel, etc.) para o IP real chegar ao rate limit
 if (IS_PRODUCTION) app.set('trust proxy', 1);

@@ -7,11 +7,13 @@ import { demoLigado, intervaloResetMinutos } from '../lib/demo';
 /** Fonte única do modo demonstração para o site (404 com a flag desligada) */
 const router = Router();
 
-const PAPEIS = [
+const papeis = () => [
   {
     papel: 'editor',
     rotulo: 'Entrar no painel como editor de demonstração',
-    descricao: 'Publica e organiza revistas, catálogos, exibições e textos. Os dados de exemplo voltam ao original periodicamente.',
+    descricao:
+      'Publica e organiza revistas, catálogos, exibições e textos.' +
+      (intervaloResetMinutos() > 0 ? ' Os dados de exemplo voltam ao original periodicamente.' : ''),
   },
 ];
 
@@ -21,7 +23,7 @@ const exigirDemo = assincrono(async (_req, _res, next) => {
 });
 
 router.get('/', exigirDemo, (_req, res) => {
-  res.json({ ativo: true, papeis: PAPEIS, resetMinutos: intervaloResetMinutos() });
+  res.json({ ativo: true, papeis: papeis(), resetMinutos: intervaloResetMinutos() });
 });
 
 const pedido = z.object({ papel: z.enum(['editor'], { error: 'Papel de demonstração desconhecido' }) });

@@ -18,6 +18,8 @@ function ipDoVisitante(req: NextRequest): string {
 
 export function middleware(req: NextRequest) {
   const caminho = req.nextUrl.pathname;
+  // Otimizador de imagens fechado (images.unoptimized): nenhum pedido chega a ele
+  if (caminho.startsWith('/_next/image')) return new NextResponse(null, { status: 404 });
   const ip = ipDoVisitante(req);
   const permitido = caminho.startsWith('/api/revalidar') ? revalidar(ip) : caminho.startsWith('/busca') ? busca(ip) : paginas(ip);
   if (permitido) return NextResponse.next();
@@ -30,5 +32,5 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   // arquivos estáticos e imagens ficam de fora
-  matcher: ['/((?!_next/static|_next/image|icon.png|apple-icon.png|logo/|icons/|robots.txt).*)'],
+  matcher: ['/((?!_next/static|icon.png|apple-icon.png|logo/|icons/|robots.txt).*)'],
 };

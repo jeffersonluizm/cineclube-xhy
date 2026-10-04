@@ -1,5 +1,3 @@
-import Image from 'next/image';
-
 import { REDES, WHATSAPP } from '@/lib/navegacao';
 
 const socials = REDES;
@@ -24,7 +22,7 @@ export default function SocialIcons({ size = 24, className = '' }: SocialIconsPr
             className="inline-flex items-center justify-center rounded-[28%] bg-black opacity-80 hover:opacity-100 transition-opacity"
             style={{ width: size, height: size, padding: size * 0.16 }}
           >
-            <Image src={social.icon} alt="" width={size} height={size} loading="eager" className="w-full h-full object-contain" />
+            <img src={social.icon} alt="" width={size} height={size} className="w-full h-full object-contain" />
           </a>
         ) : (
           <a
@@ -35,15 +33,7 @@ export default function SocialIcons({ size = 24, className = '' }: SocialIconsPr
             aria-label={`${social.label} do Cineclube XHY (abre em nova aba)`}
             className="opacity-80 hover:opacity-100 transition-opacity"
           >
-            <Image
-              src={social.icon}
-              alt=""
-              width={size}
-              height={size}
-              loading="eager"
-              className="object-contain"
-              style={{ height: size, width: 'auto' }}
-            />
+            <img src={social.icon} alt="" height={size} className="object-contain" style={{ height: size, width: 'auto' }} />
           </a>
         )
       )}
