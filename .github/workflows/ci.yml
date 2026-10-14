@@ -25,8 +25,8 @@ jobs:
       - run: npm run build
       # Testes com MongoDB em memória (mongodb-memory-server baixa o binário na primeira vez)
       - run: npm test
-      # Testes do harness de carga (trava compartilhada)
-      - run: node --test "carga/*.test.mjs"
+      # Testes do harness de carga (trava compartilhada) e do preparo local (iniciar.bat)
+      - run: node --test "carga/*.test.mjs" "ferramentas/*.test.mjs"
         working-directory: .
 
   frontend:
