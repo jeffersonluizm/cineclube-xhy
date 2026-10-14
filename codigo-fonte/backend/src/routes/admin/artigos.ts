@@ -1,5 +1,8 @@
 import { Router } from 'express';
 import Article from '../../models/Article';
+import Magazine from '../../models/Magazine';
+import Catalog from '../../models/Catalog';
+import Cycle from '../../models/Cycle';
 import { assincrono, naoEncontrado } from '../../middleware/erros';
 import { criarComSlugUnico } from '../../lib/slugUnico';
 import { soDefinidos, textoCorrido } from '../../lib/conteudo';
@@ -7,6 +10,13 @@ import { artigoEdicao, artigoNovo, filtroArtigos, objectId } from '../../validac
 import { ATUALIZAR, proximaOrdem, rotaBuscarPorId, rotaReordenar } from './comum';
 
 const router = Router();
+
+/** Destino do texto precisa existir: sem isso, o texto fica órfão e não aparece em lugar nenhum */
+const DESTINOS = {
+  revista: { modelo: Magazine, nome: 'Revista não encontrada' },
+  catalogo: { modelo: Catalog, nome: 'Catálogo não encontrado' },
+  ciclo: { modelo: Cycle, nome: 'Exibição não encontrada' },
+} as const;
 
 router.get(
   '/',
@@ -28,6 +38,9 @@ router.post(
   '/',
   assincrono(async (req, res) => {
     const dados = artigoNovo.parse(req.body ?? {});
+    const destino = DESTINOS[dados.parentType];
+    // Model<any> na união dos três modelos: só usamos exists
+    if (!(await (destino.modelo as typeof Magazine).exists({ _id: dados.parentId }))) throw naoEncontrado(destino.nome);
     const article = await criarComSlugUnico(Article, dados.title, {
       ...dados,
       blocks: dados.blocks ?? [],

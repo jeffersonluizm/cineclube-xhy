@@ -34,7 +34,7 @@ const resumoTexto = ({ content, ...t }: TextoLean & { href: string }) => ({ ...t
 
 const termo = z.object({
   q: z
-    .string({ error: 'Digite o que procura' })
+    .string({ error: (issue) => (issue.input === undefined ? 'Digite o que procura' : 'Envie um só termo de busca') })
     .trim()
     .min(2, { error: 'Digite ao menos 2 letras' })
     .max(100, { error: 'Busca muito longa (máximo de 100 caracteres)' }),
