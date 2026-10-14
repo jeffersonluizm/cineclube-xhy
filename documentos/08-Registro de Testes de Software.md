@@ -92,3 +92,31 @@ Atlas e o site em `http://localhost:3000` rodando o build de produção (`next b
 | 1 | Links dos textos de catálogo apontavam para `/catalogos/<slug>/texto/<texto>`, rota inexistente (404). | Links e navegação anterior/seguinte passaram a usar `/catalogos/<slug>/<texto>`. |
 | 2 | Páginas de conteúdo inexistente respondiam 200 (CT-03). | Grupo de rotas `(listas)` isolando o `loading.tsx`. |
 | 3 | Menu da página inicial empilhava em coluna ao lado do logo no celular. | `TopNav` com o menu em linha própria abaixo de 640 px. |
+
+## Registro da versão 1.3.0 (outubro/2026)
+
+Execução por **Jefferson Luiz Mendonça da Silva**, com testes automatizados (os mesmos que
+o CI roda) e verificação no navegador.
+
+| Caso | Título | Resultado |
+|---|---|---|
+| CT-14 | Suíte da API (rotas e regras) | ✅ Aprovado: 112 testes passando (`npm test` no backend, 13/10/2026) |
+| CT-15 | Segurança da API | ✅ Aprovado (incluído nos 112) |
+| CT-16 | Modo demonstração | ✅ Aprovado (incluído nos 112) |
+| CT-17 | Regras do front | ✅ Aprovado: 19 testes passando (`npm test` no frontend) |
+| CT-18 | Lint, formatação e build | ✅ Aprovado: ESLint sem avisos nos dois projetos, Prettier sem diferenças, `next build` concluído sem a API no ar |
+| CT-19 | Status HTTP honestos | ✅ Aprovado: `/revista/999` e `/revista/1/artigo/nada` respondem 404; com a API fora, páginas em cache continuam com conteúdo (H11) |
+| CT-20 | Fluxo do editor | ✅ Aprovado: senha errada anunciada; sessão invalidada no meio de uma edição abriu o re-login por cima da página com o campo editado preservado; depois de entrar, salvar funcionou e mostrou o aviso de sucesso; diálogo de exclusão mostrou "3 textos" e exigiu digitar o nome |
+| CT-21 | Carga antes/depois | ✅ Executado: H1 a H9 e H11 confirmadas, H5 refutada para melhor, H10 parcial (detalhes em `docs/carga/2026-10-04-resultados.md`) |
+
+### Defeitos encontrados e corrigidos na 1.3.0
+
+| # | Defeito | Correção |
+|---|---|---|
+| 4 | API fora do ar aparecia como lista vazia nas listagens e como 404 nas páginas de detalhe. | `ErroApi` separado de `ErroNaoEncontrado`; "serviço indisponível" no `error.tsx`; cache de 60 s. |
+| 5 | Sessão expirada mandava para o login e perdia o que estava sendo editado. | Re-login por cima da página e rascunho local. |
+| 6 | Criação simultânea com o mesmo título gerava 500 (E11000). | Slug calculado numa consulta e nova tentativa em colisão. |
+| 7 | Nota do autor e notas do ciclo nunca apareciam no site. | Componente `Notas` com âncoras. |
+| 8 | Reordenar ou excluir no painel falhava em silêncio. | Tratamento de erro, volta da ordem e avisos. |
+| 9 | `loading.tsx` nas páginas de detalhe voltaria a responder 200 para conteúdo inexistente. | `loading.tsx` só onde não há 404 (busca e autores). |
+| 10 | Falha ao gravar uma imagem em disco derrubava o processo da API. | `try/catch` e resposta 500. |

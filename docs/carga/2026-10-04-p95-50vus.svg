@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 798" role="img" aria-labelledby="t d" font-family="Inter, system-ui, sans-serif">
+<title id="t">Latência p95 com 50 usuários simultâneos</title><desc id="d">milissegundos (menor é melhor); cada linha na própria escala</desc>
+<rect width="100%" height="100%" fill="#F2EDD6"/>
+<text x="16" y="28" font-size="17" font-weight="700" fill="#2B2040">Latência p95 com 50 usuários simultâneos</text>
+<text x="16" y="48" font-size="12" fill="#5A5070">milissegundos (menor é melhor); cada linha na própria escala</text>
+<rect x="530" y="58" width="12" height="12" rx="2" fill="#5860AF"/><text x="547" y="68" font-size="12" fill="#2B2040">antes</text>
+<rect x="600" y="58" width="12" height="12" rx="2" fill="#C7176C"/><text x="617" y="68" font-size="12" fill="#2B2040">depois</text>
+<text x="16" y="100" font-size="12" fill="#2B2040">H1 health (sem banco)</text>
+<line x1="210" x2="210" y1="80" y2="116" stroke="#D9D2B8"/>
+<rect x="210" y="84" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 16,7 ms</title></rect>
+<text x="646" y="95" font-size="11" fill="#2B2040">16,7 ms</text>
+<rect x="210" y="100" width="283.5367698498592" height="13" rx="3" fill="#C7176C"><title>depois: 11 ms</title></rect>
+<text x="499.5367698498592" y="111" font-size="11" fill="#2B2040">11 ms</text>
+<text x="744" y="100" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">1,5× melhor</text>
+<text x="16" y="146" font-size="12" fill="#2B2040">H2 home, 1 revista</text>
+<line x1="210" x2="210" y1="126" y2="162" stroke="#D9D2B8"/>
+<rect x="210" y="130" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 380,2 ms</title></rect>
+<text x="646" y="141" font-size="11" fill="#2B2040">380,2 ms</text>
+<rect x="210" y="146" width="111.02359719566564" height="13" rx="3" fill="#C7176C"><title>depois: 98,2 ms</title></rect>
+<text x="327.0235971956656" y="157" font-size="11" fill="#2B2040">98,2 ms</text>
+<text x="744" y="146" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">3,9× melhor</text>
+<text x="16" y="192" font-size="12" fill="#2B2040">H2 home, 10 revistas</text>
+<line x1="210" x2="210" y1="172" y2="208" stroke="#D9D2B8"/>
+<rect x="210" y="176" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 797,9 ms</title></rect>
+<text x="646" y="187" font-size="11" fill="#2B2040">797,9 ms</text>
+<rect x="210" y="192" width="125.46477313756408" height="13" rx="3" fill="#C7176C"><title>depois: 232,8 ms</title></rect>
+<text x="341.46477313756407" y="203" font-size="11" fill="#2B2040">232,8 ms</text>
+<text x="744" y="192" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">3,4× melhor</text>
+<text x="16" y="238" font-size="12" fill="#2B2040">H2 home, 30 revistas</text>
+<line x1="210" x2="210" y1="218" y2="254" stroke="#D9D2B8"/>
+<rect x="210" y="222" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 1.317,9 ms</title></rect>
+<text x="646" y="233" font-size="11" fill="#2B2040">1.317,9 ms</text>
+<rect x="210" y="238" width="263.77376261626074" height="13" rx="3" fill="#C7176C"><title>depois: 808,5 ms</title></rect>
+<text x="479.77376261626074" y="249" font-size="11" fill="#2B2040">808,5 ms</text>
+<text x="744" y="238" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">1,6× melhor</text>
+<text x="16" y="284" font-size="12" fill="#2B2040">H3 sumário da revista</text>
+<line x1="210" x2="210" y1="264" y2="300" stroke="#D9D2B8"/>
+<rect x="210" y="268" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 495,9 ms</title></rect>
+<text x="646" y="279" font-size="11" fill="#2B2040">495,9 ms</text>
+<rect x="210" y="284" width="181.09562659524326" height="13" rx="3" fill="#C7176C"><title>depois: 208,8 ms</title></rect>
+<text x="397.0956265952433" y="295" font-size="11" fill="#2B2040">208,8 ms</text>
+<text x="744" y="284" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">2,4× melhor</text>
+<text x="16" y="330" font-size="12" fill="#2B2040">H4 artigo (vizinhos)</text>
+<line x1="210" x2="210" y1="310" y2="346" stroke="#D9D2B8"/>
+<rect x="210" y="314" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 477,3 ms</title></rect>
+<text x="646" y="325" font-size="11" fill="#2B2040">477,3 ms</text>
+<rect x="210" y="330" width="73.96557952410038" height="13" rx="3" fill="#C7176C"><title>depois: 82,1 ms</title></rect>
+<text x="289.96557952410035" y="341" font-size="11" fill="#2B2040">82,1 ms</text>
+<text x="744" y="330" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">5,8× melhor</text>
+<text x="16" y="376" font-size="12" fill="#2B2040">H4 texto do ciclo</text>
+<line x1="210" x2="210" y1="356" y2="392" stroke="#D9D2B8"/>
+<rect x="210" y="360" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 376 ms</title></rect>
+<text x="646" y="371" font-size="11" fill="#2B2040">376 ms</text>
+<rect x="210" y="376" width="91.15904010581647" height="13" rx="3" fill="#C7176C"><title>depois: 79,7 ms</title></rect>
+<text x="307.1590401058165" y="387" font-size="11" fill="#2B2040">79,7 ms</text>
+<text x="744" y="376" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">4,7× melhor</text>
+<text x="16" y="422" font-size="12" fill="#2B2040">H5 ciclo</text>
+<line x1="210" x2="210" y1="402" y2="438" stroke="#D9D2B8"/>
+<rect x="210" y="406" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 485,1 ms</title></rect>
+<text x="646" y="417" font-size="11" fill="#2B2040">485,1 ms</text>
+<rect x="210" y="422" width="127.14972093979814" height="13" rx="3" fill="#C7176C"><title>depois: 143,4 ms</title></rect>
+<text x="343.14972093979816" y="433" font-size="11" fill="#2B2040">143,4 ms</text>
+<text x="744" y="422" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">3,4× melhor</text>
+<text x="16" y="468" font-size="12" fill="#2B2040">H5 filme</text>
+<line x1="210" x2="210" y1="448" y2="484" stroke="#D9D2B8"/>
+<rect x="210" y="452" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 218,4 ms</title></rect>
+<text x="646" y="463" font-size="11" fill="#2B2040">218,4 ms</text>
+<rect x="210" y="468" width="166.85401242112698" height="13" rx="3" fill="#C7176C"><title>depois: 84,7 ms</title></rect>
+<text x="382.854012421127" y="479" font-size="11" fill="#2B2040">84,7 ms</text>
+<text x="744" y="468" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">2,6× melhor</text>
+<text x="16" y="514" font-size="12" fill="#2B2040">H8 reordenar 50 textos</text>
+<line x1="210" x2="210" y1="494" y2="530" stroke="#D9D2B8"/>
+<rect x="210" y="498" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 3.049,7 ms</title></rect>
+<text x="646" y="509" font-size="11" fill="#2B2040">3.049,7 ms</text>
+<rect x="210" y="514" width="20.64341360790348" height="13" rx="3" fill="#C7176C"><title>depois: 146,4 ms</title></rect>
+<text x="236.64341360790348" y="525" font-size="11" fill="#2B2040">146,4 ms</text>
+<text x="744" y="514" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">20,8× melhor</text>
+<text x="16" y="560" font-size="12" fill="#2B2040">H9/H10 site: home</text>
+<line x1="210" x2="210" y1="540" y2="576" stroke="#D9D2B8"/>
+<rect x="210" y="544" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 1.443,6 ms</title></rect>
+<text x="646" y="555" font-size="11" fill="#2B2040">1.443,6 ms</text>
+<rect x="210" y="560" width="203.12428434296135" height="13" rx="3" fill="#C7176C"><title>depois: 681,9 ms</title></rect>
+<text x="419.12428434296135" y="571" font-size="11" fill="#2B2040">681,9 ms</text>
+<text x="744" y="560" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">2,1× melhor</text>
+<text x="16" y="606" font-size="12" fill="#2B2040">H9/H10 site: /revista</text>
+<line x1="210" x2="210" y1="586" y2="622" stroke="#D9D2B8"/>
+<rect x="210" y="590" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 891 ms</title></rect>
+<text x="646" y="601" font-size="11" fill="#2B2040">891 ms</text>
+<rect x="210" y="606" width="105.92785697220211" height="13" rx="3" fill="#C7176C"><title>depois: 219,5 ms</title></rect>
+<text x="321.9278569722021" y="617" font-size="11" fill="#2B2040">219,5 ms</text>
+<text x="744" y="606" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">4,1× melhor</text>
+<text x="16" y="652" font-size="12" fill="#2B2040">H9/H10 site: sumário</text>
+<line x1="210" x2="210" y1="632" y2="668" stroke="#D9D2B8"/>
+<rect x="210" y="636" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 1.030,2 ms</title></rect>
+<text x="646" y="647" font-size="11" fill="#2B2040">1.030,2 ms</text>
+<rect x="210" y="652" width="250.62953453296657" height="13" rx="3" fill="#C7176C"><title>depois: 600,5 ms</title></rect>
+<text x="466.62953453296655" y="663" font-size="11" fill="#2B2040">600,5 ms</text>
+<text x="744" y="652" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">1,7× melhor</text>
+<text x="16" y="698" font-size="12" fill="#2B2040">H9/H10 site: artigo</text>
+<line x1="210" x2="210" y1="678" y2="714" stroke="#D9D2B8"/>
+<rect x="210" y="682" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 733,2 ms</title></rect>
+<text x="646" y="693" font-size="11" fill="#2B2040">733,2 ms</text>
+<rect x="210" y="698" width="289.85584044700437" height="13" rx="3" fill="#C7176C"><title>depois: 494,3 ms</title></rect>
+<text x="505.85584044700437" y="709" font-size="11" fill="#2B2040">494,3 ms</text>
+<text x="744" y="698" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">1,5× melhor</text>
+<text x="16" y="744" font-size="12" fill="#2B2040">H9/H10 site: ciclo</text>
+<line x1="210" x2="210" y1="724" y2="760" stroke="#D9D2B8"/>
+<rect x="210" y="728" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 835 ms</title></rect>
+<text x="646" y="739" font-size="11" fill="#2B2040">835 ms</text>
+<rect x="210" y="744" width="277.8815796739273" height="13" rx="3" fill="#C7176C"><title>depois: 539,6 ms</title></rect>
+<text x="493.8815796739273" y="755" font-size="11" fill="#2B2040">539,6 ms</text>
+<text x="744" y="744" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">1,5× melhor</text>
+</svg>

@@ -102,11 +102,26 @@ criação concorrente com o mesmo título e a proteção do banco de desenvolvim
 
 ## Teste de carga
 
-Harness em [`carga/`](carga/) (k6 + MongoDB em memória na porta 27200, API compilada com o
-diretório de trabalho fora do repositório para não ler `.env` real, site com `next build`
-apontando para a API de teste). Hipóteses registradas antes de medir em
-[`docs/carga/2026-10-04-hipoteses.md`](docs/carga/2026-10-04-hipoteses.md); resultados,
-gráficos e conclusões em [`docs/carga/2026-10-04-resultados.md`](docs/carga/2026-10-04-resultados.md).
+Harness em [`carga/`](carga/): k6 e MongoDB em memória na porta 27200. A API compilada roda
+com o diretório de trabalho fora do repositório, para não ler `.env` real, e o site faz
+`next build` apontando para a API de teste. As hipóteses foram escritas antes de medir, e
+a medição foi feita antes e depois das correções, na mesma máquina que gerava a carga.
+
+| Cenário (50 usuários simultâneos) | Antes | Depois | Hipótese |
+|---|---|---|---|
+| Home na API, 30 edições | 34 consultas · 43 req/s | 4 consultas · 87 req/s | H2 confirmada |
+| Sumário de uma edição | 384 kB · 105 req/s | 7 kB · 257 req/s | H3 confirmada |
+| Texto com anterior/próximo | 118 req/s · p95 477 ms | 692 req/s · p95 82 ms | H4 confirmada |
+| Reordenar 50 textos | 33 req/s · p95 3,0 s | 474 req/s · p95 146 ms | H8 confirmada |
+| 10 criações simultâneas, mesmo título | 61% com erro 500 | 0 erros | H7 confirmada |
+| Consultas ao banco por página do site | 65 na home | 0 (cache) | H10 parcial |
+| Vazão do site (cache) | 40 a 97 req/s | 94 a 333 req/s | H10 refutada (meta era 10×) |
+| Site com a API fora do ar | 404 falso e listas vazias | conteúdo do cache | H11 confirmada |
+
+![Vazão antes e depois](docs/carga/2026-10-04-vazao-50vus.svg)
+
+Relatório completo, com veredito de cada hipótese e limitações:
+[`docs/carga/2026-10-04-resultados.md`](docs/carga/2026-10-04-resultados.md).
 
 ## Decisões
 
