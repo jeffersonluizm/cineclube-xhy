@@ -159,7 +159,11 @@ imagem é conferido pelos primeiros bytes do arquivo, não pelo que o navegador 
   **e** com banco local; com banco remoto sem `JWT_SECRET`, a API não emite tokens.
 - O servidor do site se identifica com `X-Servidor-Site` (segredo só de servidor) e fica
   fora do limite por IP; o abuso de visitantes é contido no `middleware.ts` do site
-  (busca 20/min, revalidação 10/min, páginas 300/min por IP do visitante).
+  (busca com termo 20/min, revalidação 30/min e páginas 420/min por IP do visitante; 420
+  cobre 60 visitas por minuto, porque cada visita passa umas 7 vezes pelo middleware entre o
+  documento e os pré-carregamentos dos links). Nenhum cabeçalho isenta da contagem: o Next 14
+  remove os de prefetch antes do middleware e o `Purpose: prefetch` vem do cliente. O 429 de
+  página volta em HTML na identidade do site.
 - O token carrega a versão da senha: trocar `ADMIN_PASSWORD` derruba todas as sessões.
 - Teto global de 100 logins errados por hora (força bruta distribuída).
 - Query string simples (sem objetos aninhados) e filtros com `z.strictObject`.

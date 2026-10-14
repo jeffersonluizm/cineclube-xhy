@@ -85,7 +85,9 @@ servidor da Vercel, então todos os visitantes chegariam à API com o mesmo IP e
 visitante abusivo derrubaria o site para todos. O servidor do site manda o cabeçalho
 `X-Servidor-Site` com `SERVIDOR_SEGREDO`; a API o reconhece (comparação em tempo
 constante) e não o limita. O abuso é contido no próprio site pelo `middleware.ts`, que
-limita por IP do visitante (busca: 20/min; revalidação: 10/min; páginas: 300/min).
+limita por IP do visitante (busca com termo: 20/min; revalidação: 30/min; páginas: 420/min,
+o equivalente a 60 visitas, já que cada visita passa umas 7 vezes pelo middleware). Nenhum
+cabeçalho de prefetch isenta da contagem, porque o cliente pode forjá-lo.
 
 ## 5. Manter acordado (opcional)
 

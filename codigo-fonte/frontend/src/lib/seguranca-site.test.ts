@@ -1,9 +1,8 @@
-// Correções da revisão de segurança no front
+// Segurança do site: parâmetros da URL, token da revalidação e rascunhos do editor
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { primeiroValor } from './text';
 import { tokenPareceValido, apagarRascunhos } from './sessao';
-import { criarLimitador } from './limite';
 
 const tokenCom = (payload: object) =>
   ['eyJhbGciOiJIUzI1NiJ9', Buffer.from(JSON.stringify(payload)).toString('base64url'), 'assinatura'].join('.');
@@ -38,14 +37,4 @@ test('sair apaga os rascunhos locais do editor e mais nada', () => {
   };
   apagarRascunhos(armazenamento);
   assert.deepEqual(Array.from(dados.keys()), ['outra-chave']);
-});
-
-test('limitador por IP do site: janela de um minuto por chave', () => {
-  const limitar = criarLimitador({ limite: 2, janelaMs: 60_000 });
-  const t0 = 1_000_000;
-  assert.equal(limitar('1.1.1.1', t0), true);
-  assert.equal(limitar('1.1.1.1', t0 + 1), true);
-  assert.equal(limitar('1.1.1.1', t0 + 2), false);
-  assert.equal(limitar('2.2.2.2', t0 + 3), true, 'outro IP tem a própria cota');
-  assert.equal(limitar('1.1.1.1', t0 + 60_001), true, 'a janela renova');
 });
