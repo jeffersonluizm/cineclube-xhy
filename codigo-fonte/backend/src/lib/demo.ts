@@ -4,26 +4,54 @@ import Catalog from '../models/Catalog';
 import Cycle from '../models/Cycle';
 import Film from '../models/Film';
 import About from '../models/About';
+import fs from 'fs';
+import path from 'path';
 import { executarSeed } from '../scripts/seed';
+import { pastaUploads } from './uploads';
 
 /**
  * Modo demonstração: só para o ambiente hospedado da demonstração (banco SÓ de exemplo).
  * Desligado por padrão; liga com DEMO_ENABLED=true. Com ele:
  *  - GET /api/demo descreve o papel de demonstração (sem senha nenhuma);
  *  - POST /api/demo/entrar emite um token de editor com um clique;
- *  - os dados voltam ao exemplo periodicamente (DEMO_RESET_MINUTOS, padrão 360).
+ *  - os dados voltam ao exemplo periodicamente (DEMO_RESET_MINUTOS, padrão 60), e as imagens
+ *    enviadas (pasta uploads/demo, até 2 MB, poucas por hora) são apagadas junto;
+ *  - a API só parte se o banco tiver "demo" no nome (bancoAceitaDemonstracao).
  * Nunca ligue num banco com conteúdo real: o reset apaga tudo.
  */
 export function demoLigado(env: NodeJS.ProcessEnv = process.env): boolean {
   return ['true', '1', 'sim'].includes(String(env.DEMO_ENABLED ?? '').toLowerCase());
 }
 
-/** Minutos entre os resets (padrão 360, mínimo 15); 0 desliga o reset periódico */
+/** Minutos entre os resets (padrão 60, mínimo 15); 0 desliga o reset periódico */
 export function intervaloResetMinutos(env: NodeJS.ProcessEnv = process.env): number {
-  if (env.DEMO_RESET_MINUTOS === undefined || env.DEMO_RESET_MINUTOS === '') return 360;
+  if (env.DEMO_RESET_MINUTOS === undefined || env.DEMO_RESET_MINUTOS === '') return 60;
   const minutos = Number(env.DEMO_RESET_MINUTOS);
   if (minutos === 0) return 0;
-  return Math.max(15, minutos || 360);
+  return Math.max(15, minutos || 60);
+}
+
+/**
+ * A demonstração apaga e recria o conteúdo, então só aceita um banco com "demo" no nome.
+ * Única exceção: o banco local de desenvolvimento (iniciar.bat), fora de produção e com o
+ * reset desligado (DEMO_RESET_MINUTOS=0), quando a demonstração só popula banco vazio.
+ * Devolve o problema (para a API não partir) ou null.
+ */
+export function bancoAceitaDemonstracao(nomeBanco: string, env: NodeJS.ProcessEnv = process.env): string | null {
+  if (/demo/i.test(nomeBanco)) return null;
+  if (env.NODE_ENV !== 'production' && intervaloResetMinutos(env) === 0) return null;
+  return (
+    `DEMO_ENABLED=true com o banco "${nomeBanco}": o modo demonstração apaga e recria o conteúdo, ` +
+    'então o nome do banco precisa conter "demo" (ex.: .../cineclube_demo em MONGODB_URI).'
+  );
+}
+
+/** Pasta das imagens enviadas na demonstração (fica dentro da pasta de uploads) */
+export const pastaUploadsDemonstracao = (pasta = pastaUploads()) => path.join(pasta, 'demo');
+
+/** Apaga as imagens enviadas na demonstração (e só elas) */
+export function limparUploadsDemonstracao(pasta = pastaUploads()) {
+  fs.rmSync(pastaUploadsDemonstracao(pasta), { recursive: true, force: true });
 }
 
 const COLECOES = [Magazine, Article, Catalog, Cycle, Film, About];
@@ -35,6 +63,7 @@ export async function restaurarDemonstracao({ soSeVazio, log = console.log }: { 
     if (total > 0) return 'mantido' as const;
   }
   await executarSeed({ banco: 'demonstração', force: true, confirmar: async () => true, log });
+  if (!soSeVazio) limparUploadsDemonstracao();
   return 'restaurado' as const;
 }
 

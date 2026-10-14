@@ -6,7 +6,8 @@ dotenv.config();
 import app from './app';
 import { conectarBanco } from './lib/banco';
 import { problemasDeConfiguracao } from './lib/configuracao';
-import { agendarResetDemonstracao, demoLigado, restaurarDemonstracao } from './lib/demo';
+import mongoose from 'mongoose';
+import { agendarResetDemonstracao, bancoAceitaDemonstracao, demoLigado, restaurarDemonstracao } from './lib/demo';
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 const PORT = process.env.PORT || 3001;
@@ -25,6 +26,12 @@ if (IS_PRODUCTION && !process.env.CLOUDINARY_URL) {
 conectarBanco({ timeoutMs: Number(process.env.MONGODB_TIMEOUT_MS) || undefined })
   .then(async () => {
     if (demoLigado()) {
+      // O reset apaga tudo: a demonstração só parte num banco que é de demonstração
+      const recusa = bancoAceitaDemonstracao(mongoose.connection.name);
+      if (recusa) {
+        console.error(recusa);
+        process.exit(1);
+      }
       // Demonstração: popula o banco vazio na primeira partida e restaura os exemplos periodicamente
       const r = await restaurarDemonstracao({ soSeVazio: true, log: () => {} });
       console.log(`Modo demonstração LIGADO (dados de exemplo ${r === 'restaurado' ? 'criados' : 'mantidos'}).`);

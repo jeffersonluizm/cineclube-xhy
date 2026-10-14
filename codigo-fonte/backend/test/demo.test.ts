@@ -68,7 +68,7 @@ test('restaurar a demonstração repõe os dados de exemplo e só popula banco v
 
 test('DEMO_RESET_MINUTOS=0 desliga o reset periódico (uso local com dados próprios)', async () => {
   const { intervaloResetMinutos } = await import('../src/lib/demo');
-  assert.equal(intervaloResetMinutos({}), 360);
+  assert.equal(intervaloResetMinutos({}), 60);
   assert.equal(intervaloResetMinutos({ DEMO_RESET_MINUTOS: '0' }), 0);
   assert.equal(intervaloResetMinutos({ DEMO_RESET_MINUTOS: '5' }), 15, 'mínimo de 15 min');
 });
