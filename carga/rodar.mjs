@@ -9,7 +9,9 @@
 //   - API compilada (dist/) rodando com o diretório de trabalho FORA do repositório, para o
 //     dotenv não ler backend/.env; todas as variáveis vêm daqui;
 //   - site com `next build` apontando para a API de teste e `next start` na 3200.
-// Só uma carga por vez na máquina: a trava .carga-lock da oficina é criada aqui e apagada no fim.
+// Só uma carga por vez na máquina: a trava .carga-lock da oficina (carga/trava.mjs) é criada só
+// na hora de medir, depois dos builds, e apagada assim que a medição termina. Se outra carga
+// estiver com ela, a medição espera (CARGA_ESPERA_MIN, padrão 120 min).
 // Depois da última rodada, refaça o build normal do site (npm run build em codigo-fonte/frontend).
 import { spawn, execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
@@ -19,12 +21,13 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { popular } from './popular.mjs';
+import { caminhoDaTrava, adquirirTrava, liberarTrava } from './trava.mjs';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BACKEND = path.join(RAIZ, 'codigo-fonte/backend');
 const FRONTEND = path.join(RAIZ, 'codigo-fonte/frontend');
 // Trava compartilhada da oficina (caminho absoluto: vale também quando a carga roda de um worktree)
-const TRAVA = process.env.CARGA_TRAVA || 'E:\Faculdade\Projeto - Faculdade\Projetos do portfólio\martorelli-oficina\.carga-lock';
+const TRAVA = caminhoDaTrava();
 const K6 = process.env.K6_BIN || 'C:\\Program Files\\k6\\k6.exe';
 const PORTA_MONGO = 27200;
 const PORTA_API = 3201;
@@ -273,6 +276,8 @@ const envSite = { ...envBase, NEXT_PUBLIC_API_URL: API, NEXT_PUBLIC_SITE_URL: SI
     site: descendentes(site.pid),
     mongod: [mongod.instanceInfo.instance.mongodProcess.pid],
   };
+  // Builds prontos: daqui em diante é medição, então só com a trava da oficina
+  await esperarTrava(meta);
   const amostra = amostrador(grupos);
   await esperar(2500);
 
@@ -460,11 +465,30 @@ const envSite = { ...envBase, NEXT_PUBLIC_API_URL: API, NEXT_PUBLIC_SITE_URL: SI
 
   amostra.parar();
   await admin.close();
+  meta.medicaoFim = new Date().toISOString();
+  salvar();
+  liberarTrava(TRAVA);
+  travaCriada = false;
+  log('trava liberada', TRAVA);
   log(`fim; resultados em ${path.relative(RAIZ, SAIDA)}`);
 }
 
 // ---------- trava e limpeza ----------
 let travaCriada = false;
+async function esperarTrava(meta) {
+  const limite = Date.now() + Number(process.env.CARGA_ESPERA_MIN || 120) * 60_000;
+  let avisou = false;
+  while (!adquirirTrava(TRAVA)) {
+    if (Date.now() > limite) throw new Error(`Outra carga ficou com ${TRAVA} por tempo demais.`);
+    if (!avisou) log(`outra carga em andamento (${TRAVA} existe); esperando a vez...`);
+    avisou = true;
+    await esperar(15_000);
+  }
+  travaCriada = true;
+  meta.trava = TRAVA;
+  meta.medicaoInicio = new Date().toISOString();
+  log('trava adquirida', TRAVA);
+}
 async function limpar() {
   for (const f of filhos.reverse()) {
     try {
@@ -474,20 +498,13 @@ async function limpar() {
       /* segue */
     }
   }
-  if (travaCriada) fs.rmSync(TRAVA, { recursive: true, force: true });
+  if (travaCriada) liberarTrava(TRAVA);
 }
 process.on('SIGINT', async () => {
   await limpar();
   process.exit(130);
 });
 
-try {
-  fs.mkdirSync(TRAVA);
-  travaCriada = true;
-} catch {
-  console.error(`Outra carga em andamento (${TRAVA} existe). Tente depois.`);
-  process.exit(3);
-}
 try {
   await principal();
   await limpar();

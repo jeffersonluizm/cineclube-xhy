@@ -25,6 +25,9 @@ jobs:
       - run: npm run build
       # Testes com MongoDB em memória (mongodb-memory-server baixa o binário na primeira vez)
       - run: npm test
+      # Testes do harness de carga (trava compartilhada)
+      - run: node --test "carga/*.test.mjs"
+        working-directory: .
 
   frontend:
     runs-on: ubuntu-latest
