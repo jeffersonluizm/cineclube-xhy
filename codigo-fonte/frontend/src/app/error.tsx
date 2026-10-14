@@ -2,12 +2,14 @@
 
 import Link from 'next/link';
 import PageShell from '@/components/PageShell';
+import { useTentarDeNovo } from '@/lib/useTentarDeNovo';
 
 /**
  * Falha ao montar a página (quase sempre a API fora do ar ou "acordando"). Não é um 404:
  * o conteúdo existe, só não deu para buscá-lo agora.
  */
 export default function Error({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  const { tentar, tentando } = useTentarDeNovo(reset);
   return (
     <PageShell tone="dark">
       <div role="alert">
@@ -20,8 +22,14 @@ export default function Error({ reset }: { error: Error & { digest?: string }; r
           Em hospedagem gratuita o servidor dorme quando ninguém visita e leva até um minuto para acordar. Tente de novo em instantes.
         </p>
         <div className="flex flex-wrap gap-x-8 gap-y-3">
-          <button type="button" onClick={reset} className="font-display font-bold text-olive hover:underline">
-            tentar novamente
+          <button
+            type="button"
+            onClick={tentar}
+            disabled={tentando}
+            aria-busy={tentando}
+            className="font-display font-bold text-olive hover:underline disabled:opacity-70"
+          >
+            {tentando ? 'tentando...' : 'tentar novamente'}
           </button>
           <Link href="/" className="font-display font-bold text-olive hover:underline">
             ← página inicial
