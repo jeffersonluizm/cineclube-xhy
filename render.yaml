@@ -30,10 +30,10 @@ services:
       - key: DEMO_ENABLED
         value: "true"         # demonstração: "Entrar como editor" com um clique e reset periódico
       - key: DEMO_RESET_MINUTOS
-        value: "360"
+        value: "60"            # a demonstração volta aos dados de exemplo a cada hora (e apaga as imagens enviadas)
       - key: MONGODB_TIMEOUT_MS
         value: "30000"        # Atlas gratuito pode demorar a responder na primeira conexão
       - key: CLOUDINARY_URL
-        sync: false           # opcional: sem ele, imagens enviadas somem a cada deploy (disco efêmero)
+        sync: false           # deixe vazio na demonstração (ignorado com DEMO_ENABLED); use no site oficial
       - key: CLOUDINARY_FOLDER
         value: cineclube-xhy-demo

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Cormorant_Garamond, Inter, Nunito } from 'next/font/google';
 import { cores } from '@/lib/tokens';
+import { robotsDaRaiz } from '@/lib/indexacao';
 import './globals.css';
 
 // Fontes self-hosted pelo Next: sem requisição externa ao Google e sem "piscar" de fonte
@@ -53,7 +54,8 @@ export const metadata: Metadata = {
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
   },
-  robots: { index: true, follow: true },
+  // NEXT_PUBLIC_DEMO=1 (site da demonstração): noindex em tudo
+  robots: robotsDaRaiz(),
 };
 
 export const viewport: Viewport = {

@@ -1,11 +1,14 @@
 # Publicar a demonstração (Vercel + Render + Atlas)
 
 Desenho gratuito: **site na Vercel**, **API no Render**, **MongoDB Atlas M0 com um banco só
-de demonstração** e, opcionalmente, **Cloudinary** para as imagens enviadas. O código já
+de demonstração**. O Cloudinary fica para o site oficial: na demonstração as imagens enviadas
+ficam no disco da API e somem a cada reset. O código já
 está pronto; este roteiro é o que falta fazer nos painéis (cerca de 30 minutos).
 
-> O modo demonstração **apaga e recria os dados a cada 6 horas**. Use um banco exclusivo
-> para a demonstração, nunca o banco com o conteúdo real do cineclube.
+> O modo demonstração **apaga e recria os dados a cada hora** (`DEMO_RESET_MINUTOS=60`).
+> Use um banco exclusivo para a demonstração, nunca o banco com o conteúdo real do
+> cineclube: com `DEMO_ENABLED=true` a API **se recusa a subir** se o nome do banco não
+> tiver `demo` (ex.: `cineclube_demo`).
 
 ## 0. Gerar os segredos
 
@@ -49,10 +52,12 @@ própria API ao subir.
 | `ADMIN_PASSWORD` | a senha gerada (12+ caracteres, senão a API não sobe) |
 | `SERVIDOR_SEGREDO` | o segredo gerado (32+ caracteres); o mesmo valor vai na Vercel |
 | `FRONTEND_URL` | `https://<seu-site>.vercel.app` (some o domínio próprio, separado por vírgula) |
-| `CLOUDINARY_URL` | opcional: `cloudinary://API_KEY:API_SECRET@CLOUD_NAME` |
+| `CLOUDINARY_URL` | deixe vazio na demonstração (é ignorado com `DEMO_ENABLED`); use no site oficial |
 
-3. Já vêm preenchidas: `NODE_ENV=production`, `DEMO_ENABLED=true`, `DEMO_RESET_MINUTOS=360`,
+3. Já vêm preenchidas: `NODE_ENV=production`, `DEMO_ENABLED=true`, `DEMO_RESET_MINUTOS=60`,
    `MONGODB_TIMEOUT_MS=30000`, `JWT_SECRET` (gerado).
+   Na demonstração o upload fica contido: até 2 MB por imagem, 10 envios por hora por
+   visitante, gravados em `uploads/demo` e apagados a cada reset.
 4. **Proxy:** a API usa `app.set('trust proxy', 1)` em produção, que é o correto no Render
    (um proxy na frente). Assim o limite de requisições e o de logins enxergam o IP real
    do visitante e não o do balanceador. Se colocar outro proxy na frente (Cloudflare),
@@ -71,12 +76,18 @@ própria API ao subir.
 | `NEXT_PUBLIC_API_URL` | `https://<api>.onrender.com` | pública (vai para o navegador) |
 | `NEXT_PUBLIC_SITE_URL` | `https://<seu-site>.vercel.app` | metatags, RSS e sitemap |
 | `SERVIDOR_SEGREDO` | o mesmo segredo do Render | **só de servidor**: nunca prefixe com `NEXT_PUBLIC_` |
-| `CLOUDINARY_CLOUD_NAME` | o nome da conta | opcional, libera o `next/image` só para essa conta |
+| `NEXT_PUBLIC_DEMO` | `1` | tira o site da demonstração dos buscadores (`noindex` e `robots.txt` bloqueando tudo) |
+| `CLOUDINARY_CLOUD_NAME` | o nome da conta | só no site oficial: libera o `next/image` para essa conta |
 
 3. Deploy. Se a API estiver dormindo durante o build, as páginas passam a ser
    renderizadas por pedido em vez de quebrar o build; um novo deploy com a API acordada
    volta a gerar as páginas estáticas.
 4. Atualize `FRONTEND_URL` no Render com a URL final da Vercel (e o domínio próprio, se houver).
+5. **Prévias da Vercel:** cada branch ganha uma URL própria (`<projeto>-git-<branch>.vercel.app`).
+   O site público dessas prévias funciona, porque os dados saem do servidor da Vercel. Já o
+   painel chama a API pelo navegador, e a API responde **403** a uma origem que não está em
+   `FRONTEND_URL`. Isso é proposital (CORS fechado). Para testar o painel numa prévia,
+   acrescente a URL dela em `FRONTEND_URL`, separada por vírgula, e remova depois.
 
 ### Por que o segredo servidor-a-servidor
 

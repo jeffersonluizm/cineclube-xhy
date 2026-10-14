@@ -81,8 +81,10 @@ JWT_SECRET=um-segredo-aleatorio     # assina os tokens de sessão do editor (obr
 FRONTEND_URL=http://localhost:3000  # origens permitidas (CORS), separadas por vírgula
 # CLOUDINARY_URL=cloudinary://...   # opcional local; obrigatório na hospedagem (ver abaixo)
 # SERVIDOR_SEGREDO=...              # 32+ caracteres; o mesmo no site: identifica o servidor do site (fora do limite por IP)
-# DEMO_ENABLED=true                 # modo demonstração (desligado por padrão; só no ambiente da demo)
-# DEMO_RESET_MINUTOS=360            # reset dos dados de exemplo na demo (0 desliga)
+# DEMO_ENABLED=true                 # modo demonstração (desligado por padrão; só no ambiente da demo).
+#                                   # A API recusa partir se o nome do banco não tiver "demo", exceto
+#                                   # o banco local com DEMO_RESET_MINUTOS=0 fora de produção.
+# DEMO_RESET_MINUTOS=60             # reset dos dados de exemplo na demo (0 desliga; padrão 60)
 # RATE_LIMIT_GERAL=300              # requisições por minuto por IP (0 desliga; a carga desliga)
 # LOGIN_ERRADOS_POR_HORA=100        # teto global de logins errados (todos os IPs somados)
 # MONGODB_TIMEOUT_MS=8000           # prazo para achar o banco na partida
@@ -110,6 +112,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3001    # endereço da API
 NEXT_PUBLIC_SITE_URL=http://localhost:3000   # endereço público do site (metatags de compartilhamento)
 SERVIDOR_SEGREDO=...                          # só de servidor (nunca NEXT_PUBLIC_): o mesmo valor da API
 # CLOUDINARY_CLOUD_NAME=...                   # opcional: next/image aceita só essa conta
+# NEXT_PUBLIC_DEMO=1                          # site da demonstração: noindex e robots.txt bloqueando tudo
 ```
 
 ---
@@ -165,6 +168,13 @@ imagem é conferido pelos primeiros bytes do arquivo, não pelo que o navegador 
   remove os de prefetch antes do middleware e o `Purpose: prefetch` vem do cliente. O 429 de
   página volta em HTML na identidade do site.
 - O token carrega a versão da senha: trocar `ADMIN_PASSWORD` derruba todas as sessões.
+- Em produção a API usa `trust proxy` = 1 (um proxy na frente, como no Render), para os
+  limites enxergarem o IP do visitante. Com outro proxy na frente (Cloudflare), aumente o
+  número em `src/app.ts`.
+- CORS fechado em `FRONTEND_URL`: as prévias da Vercel (outra URL por branch) recebem 403
+  no painel até a URL delas entrar na lista.
+- Demonstração (`DEMO_ENABLED`): upload de até 2 MB, 10 por hora por IP, em `uploads/demo`,
+  apagado a cada reset (60 min); banco precisa ter `demo` no nome.
 - Teto global de 100 logins errados por hora (força bruta distribuída).
 - Query string simples (sem objetos aninhados) e filtros com `z.strictObject`.
 - Toda entrada do painel passa por esquemas `zod` (tipos, tamanhos, enums, ids, URLs) e
