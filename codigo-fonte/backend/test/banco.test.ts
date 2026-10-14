@@ -28,6 +28,29 @@ function portaLivre(): Promise<number> {
   });
 }
 
+/**
+ * Log que avisa quando chega uma linha: os testes esperam o EVENTO (com prazo folgado),
+ * não um tempo fixo, então não dependem de a máquina estar livre.
+ */
+function logObservavel() {
+  const linhas: string[] = [];
+  const esperas: { padrao: RegExp; resolver: () => void }[] = [];
+  const log = (l: string) => {
+    linhas.push(l);
+    for (const e of esperas) if (e.padrao.test(l)) e.resolver();
+  };
+  const quando = (padrao: RegExp, prazoMs = 30_000) =>
+    linhas.some((l) => padrao.test(l))
+      ? Promise.resolve()
+      : Promise.race([
+          new Promise<void>((resolver) => esperas.push({ padrao, resolver })),
+          new Promise<never>((_, rejeitar) =>
+            setTimeout(() => rejeitar(new Error(`sem linha ${padrao} em ${prazoMs} ms:\n${linhas.join('\n')}`)), prazoMs).unref()
+          ),
+        ]);
+  return { linhas, log, quando };
+}
+
 // No Windows o mongod pode segurar os arquivos por alguns instantes depois de parar
 async function removerComPaciencia(dir: string) {
   for (let tentativa = 1; ; tentativa++) {
@@ -176,7 +199,7 @@ test('porta do embutido ocupada por algo que não é MongoDB: erro diz isso clar
 test('embutido iniciado por este processo continua no ar enquanto outro cliente (a API) estiver conectado', async () => {
   const porta = await portaLivre();
   const dbPath = fs.mkdtempSync(path.join(os.tmpdir(), 'cineclube-embutido-'));
-  const linhas: string[] = [];
+  const { log, quando } = logObservavel();
   const conexao = await conectarBanco({
     uri: URI_FORA_DO_AR,
     producao: false,
@@ -184,7 +207,7 @@ test('embutido iniciado por este processo continua no ar enquanto outro cliente 
     portaEmbutida: porta,
     dbPath,
     intervaloEsperaMs: 100,
-    log: (l) => linhas.push(l),
+    log,
   });
   // A "API": outro cliente, com sua própria instância do mongoose
   const api = new mongoose.Mongoose();
@@ -196,14 +219,11 @@ test('embutido iniciado por este processo continua no ar enquanto outro cliente 
     const desligando = conexao.desconectar().then(() => {
       terminou = true;
     });
-    await new Promise((r) => setTimeout(r, 1000));
+    // espera o aviso de que há outro cliente (o evento), não um tempo fixo
+    await quando(/outros clientes/i);
 
     assert.equal(terminou, false, 'não pode derrubar o banco com a API conectada');
     await api.connection.db!.collection('marcas').insertOne({ depois: true });
-    assert.ok(
-      linhas.some((l) => /outros clientes/i.test(l)),
-      'avisa no log'
-    );
 
     await api.disconnect();
     await desligando;
@@ -252,7 +272,7 @@ test('se a checagem antes de parar falhar, o embutido iniciado aqui é parado me
 test('aviso de espera pela API diz que Ctrl+C encerra o banco', async () => {
   const porta = await portaLivre();
   const dbPath = fs.mkdtempSync(path.join(os.tmpdir(), 'cineclube-embutido-'));
-  const linhas: string[] = [];
+  const { linhas, log, quando } = logObservavel();
   const api = new mongoose.Mongoose();
   try {
     const conexao = await conectarBanco({
@@ -262,11 +282,12 @@ test('aviso de espera pela API diz que Ctrl+C encerra o banco', async () => {
       portaEmbutida: porta,
       dbPath,
       intervaloEsperaMs: 100,
-      log: (l) => linhas.push(l),
+      log,
     });
     await api.connect(`mongodb://127.0.0.1:${porta}/cineclube_xhy`);
     const desligando = conexao.desconectar();
-    await new Promise((r) => setTimeout(r, 500));
+    // o aviso precisa citar o Ctrl+C: o teste espera por ele em vez de dormir
+    await quando(/outros clientes/i);
     await api.disconnect();
     await desligando;
 

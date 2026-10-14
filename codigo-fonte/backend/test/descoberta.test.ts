@@ -15,7 +15,7 @@ before(async () => {
   banco = await abrirBancoEmMemoria();
 });
 after(async () => {
-  await banco.fechar();
+  await banco?.fechar();
 });
 beforeEach(async () => {
   await banco.limpar();

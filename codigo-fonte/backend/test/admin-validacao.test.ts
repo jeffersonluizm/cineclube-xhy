@@ -13,7 +13,7 @@ before(async () => {
   auth = `Bearer ${signToken()}`;
 });
 after(async () => {
-  await banco.fechar();
+  await banco?.fechar();
 });
 beforeEach(async () => {
   await banco.limpar();
