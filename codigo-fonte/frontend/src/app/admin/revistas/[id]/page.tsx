@@ -7,7 +7,7 @@ import ListaReordenavel from '@/components/admin/ListaReordenavel';
 import { DialogoExclusao } from '@/components/admin/Dialogo';
 import { useCarregar } from '@/components/admin/hooks';
 import { useToast } from '@/components/admin/Toasts';
-import { Botao, BotaoLink, CabecalhoPagina, EstadoCarregando, EstadoErro, Secao } from '@/components/admin/ui';
+import { Botao, BotaoLink, CabecalhoPagina, EstadoCarregando, EstadoErro, ItemNaoEncontrado, Secao } from '@/components/admin/ui';
 import { adminApi, MagazineInput } from '@/lib/adminApi';
 import type { Article } from '@/lib/types';
 
@@ -16,12 +16,13 @@ export default function RevistaAdminPage() {
   const router = useRouter();
   const avisar = useToast();
   const [excluindo, setExcluindo] = useState(false);
-  const { dados, setDados, erro, recarregar } = useCarregar(async () => {
+  const { dados, setDados, erro, naoEncontrado, recarregar } = useCarregar(async () => {
     const [magazine, articles] = await Promise.all([adminApi.revistas.get(id), adminApi.artigos.list(id)]);
     return { magazine, articles };
   }, [id]);
   const impacto = useCallback(() => adminApi.revistas.impacto(id), [id]);
 
+  if (naoEncontrado) return <ItemNaoEncontrado oQue="Esta revista" lista="/admin/revistas" rotuloLista="revistas" />;
   if (erro) return <EstadoErro mensagem={erro} tentarDeNovo={recarregar} />;
   if (!dados) return <EstadoCarregando />;
   const { magazine, articles } = dados;

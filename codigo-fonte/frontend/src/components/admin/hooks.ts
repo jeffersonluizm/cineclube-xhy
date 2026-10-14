@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { adminApi, ErroSessaoExpirada } from '@/lib/adminApi';
+import { adminApi, ehNaoEncontrado, ErroSessaoExpirada } from '@/lib/adminApi';
 import { EVENTO_SESSAO_RENOVADA } from '@/lib/sessao';
 
 const PREFIXO = 'xhy_rascunho:';
@@ -94,16 +94,20 @@ export function useSujo<T>(atual: T) {
 export function useCarregar<T>(carregar: () => Promise<T>, deps: unknown[]) {
   const [dados, setDados] = useState<T | null>(null);
   const [erro, setErro] = useState('');
+  const [naoEncontrado, setNaoEncontrado] = useState(false);
   const [versao, setVersao] = useState(0);
 
   useEffect(() => {
     let ativo = true;
     setErro('');
+    setNaoEncontrado(false);
     carregar()
       .then((d) => ativo && setDados(d))
       .catch((e) => {
         // sessão expirada é tratada pelo re-login; aqui só os outros erros
-        if (ativo && !(e instanceof ErroSessaoExpirada)) setErro(e instanceof Error ? e.message : 'Erro ao carregar');
+        if (!ativo || e instanceof ErroSessaoExpirada) return;
+        setNaoEncontrado(ehNaoEncontrado(e));
+        setErro(e instanceof Error ? e.message : 'Erro ao carregar');
       });
     return () => {
       ativo = false;
@@ -118,5 +122,5 @@ export function useCarregar<T>(carregar: () => Promise<T>, deps: unknown[]) {
     return () => window.removeEventListener(EVENTO_SESSAO_RENOVADA, aoRenovar);
   }, []);
 
-  return { dados, setDados, erro, recarregar: () => setVersao((v) => v + 1) };
+  return { dados, setDados, erro, naoEncontrado, recarregar: () => setVersao((v) => v + 1) };
 }

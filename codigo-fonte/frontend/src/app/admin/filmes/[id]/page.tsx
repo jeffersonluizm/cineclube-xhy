@@ -5,14 +5,15 @@ import { useParams } from 'next/navigation';
 import FilmForm from '@/components/admin/FilmForm';
 import { useCarregar } from '@/components/admin/hooks';
 import { useToast } from '@/components/admin/Toasts';
-import { CabecalhoPagina, EstadoCarregando, EstadoErro } from '@/components/admin/ui';
+import { CabecalhoPagina, EstadoCarregando, EstadoErro, ItemNaoEncontrado } from '@/components/admin/ui';
 import { adminApi, FilmInput } from '@/lib/adminApi';
 
 export default function EditarFilmePage() {
   const { id } = useParams<{ id: string }>();
   const avisar = useToast();
-  const { dados: film, setDados, erro, recarregar } = useCarregar(() => adminApi.filmes.get(id), [id]);
+  const { dados: film, setDados, erro, naoEncontrado, recarregar } = useCarregar(() => adminApi.filmes.get(id), [id]);
 
+  if (naoEncontrado) return <ItemNaoEncontrado oQue="Este filme" lista="/admin/ciclos" rotuloLista="exibições" />;
   if (erro) return <EstadoErro mensagem={erro} tentarDeNovo={recarregar} />;
   if (!film) return <EstadoCarregando />;
 

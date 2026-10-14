@@ -204,6 +204,18 @@ export function EstadoErro({ mensagem, tentarDeNovo }: { mensagem: string; tenta
   );
 }
 
+/** Item do painel que não existe mais: título da página e o caminho de volta para a lista */
+export function ItemNaoEncontrado({ oQue, lista, rotuloLista }: { oQue: string; lista: string; rotuloLista: string }) {
+  return (
+    <div className="max-w-xl">
+      <p className="font-serif italic text-pink-escuro text-sm mb-2">não encontrado</p>
+      <h1 className="font-display font-black text-text-dark text-3xl mb-4">{oQue} não existe mais</h1>
+      <p className="font-sans text-text-dark mb-6">Pode ter sido excluído por outra pessoa da equipe, ou o endereço está incompleto.</p>
+      <BotaoLink href={lista}>voltar para a lista de {rotuloLista}</BotaoLink>
+    </div>
+  );
+}
+
 export function EstadoVazio({ children }: { children: React.ReactNode }) {
   return <p className="font-serif italic text-text-dark text-lg border border-dashed border-text-dark/40 px-5 py-6">{children}</p>;
 }

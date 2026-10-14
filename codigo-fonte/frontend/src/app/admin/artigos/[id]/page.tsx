@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import ArticleEditor from '@/components/admin/ArticleEditor';
 import { useCarregar } from '@/components/admin/hooks';
 import { useToast } from '@/components/admin/Toasts';
-import { CabecalhoPagina, EstadoCarregando, EstadoErro } from '@/components/admin/ui';
+import { CabecalhoPagina, EstadoCarregando, EstadoErro, ItemNaoEncontrado } from '@/components/admin/ui';
 import { adminApi, ArticleInput } from '@/lib/adminApi';
 
 const SECAO = { revista: 'revistas', catalogo: 'catalogos', ciclo: 'ciclos' } as const;
@@ -13,8 +13,9 @@ const SECAO = { revista: 'revistas', catalogo: 'catalogos', ciclo: 'ciclos' } as
 export default function EditarTextoPage() {
   const { id } = useParams<{ id: string }>();
   const avisar = useToast();
-  const { dados: article, setDados, erro, recarregar } = useCarregar(() => adminApi.artigos.get(id), [id]);
+  const { dados: article, setDados, erro, naoEncontrado, recarregar } = useCarregar(() => adminApi.artigos.get(id), [id]);
 
+  if (naoEncontrado) return <ItemNaoEncontrado oQue="Este texto" lista="/admin" rotuloLista="conteúdos no início do painel" />;
   if (erro) return <EstadoErro mensagem={erro} tentarDeNovo={recarregar} />;
   if (!article) return <EstadoCarregando />;
 

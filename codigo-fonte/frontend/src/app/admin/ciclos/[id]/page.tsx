@@ -7,7 +7,7 @@ import ListaReordenavel from '@/components/admin/ListaReordenavel';
 import { DialogoExclusao } from '@/components/admin/Dialogo';
 import { useCarregar } from '@/components/admin/hooks';
 import { useToast } from '@/components/admin/Toasts';
-import { Botao, BotaoLink, CabecalhoPagina, EstadoCarregando, EstadoErro, Secao } from '@/components/admin/ui';
+import { Botao, BotaoLink, CabecalhoPagina, EstadoCarregando, EstadoErro, ItemNaoEncontrado, Secao } from '@/components/admin/ui';
 import { adminApi, CycleInput } from '@/lib/adminApi';
 import type { Article, Film } from '@/lib/types';
 
@@ -16,12 +16,13 @@ export default function CicloAdminPage() {
   const router = useRouter();
   const avisar = useToast();
   const [excluindo, setExcluindo] = useState(false);
-  const { dados, setDados, erro, recarregar } = useCarregar(async () => {
+  const { dados, setDados, erro, naoEncontrado, recarregar } = useCarregar(async () => {
     const [cycle, films, articles] = await Promise.all([adminApi.ciclos.get(id), adminApi.filmes.list(id), adminApi.artigos.list(id)]);
     return { cycle, films, articles };
   }, [id]);
   const impacto = useCallback(() => adminApi.ciclos.impacto(id), [id]);
 
+  if (naoEncontrado) return <ItemNaoEncontrado oQue="Esta exibição" lista="/admin/ciclos" rotuloLista="exibições" />;
   if (erro) return <EstadoErro mensagem={erro} tentarDeNovo={recarregar} />;
   if (!dados) return <EstadoCarregando />;
   const { cycle, films, articles } = dados;

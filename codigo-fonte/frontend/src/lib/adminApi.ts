@@ -22,6 +22,9 @@ export class ErroDaApi extends Error {
   }
 }
 
+/** Item que não existe (apagado) ou endereço malformado: a tela é de "não encontrado", não de falha */
+export const ehNaoEncontrado = (e: unknown) => e instanceof ErroDaApi && (e.status === 404 || e.status === 400);
+
 /** Muitas tentativas de login: quanto falta para tentar de novo */
 export class ErroLimiteLogin extends Error {
   constructor(
