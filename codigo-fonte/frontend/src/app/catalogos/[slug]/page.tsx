@@ -35,7 +35,13 @@ export default async function CatalogoDetailPage({ params }: Props) {
       <Breadcrumb crumbs={[{ label: 'catálogos', href: '/catalogos' }, { label: catalog.title }]} />
 
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
-        <Capa src={catalog.coverImage} alt={`Capa do catálogo ${catalog.title}`} largura="max-w-[490px]" prioridade />
+        <Capa
+          src={catalog.coverImage}
+          alt={`Capa do catálogo ${catalog.title}`}
+          titulo={catalog.title}
+          largura="max-w-[490px]"
+          prioridade
+        />
 
         <div className="flex-1 min-w-0">
           <h1 className="font-display font-black text-text-dark text-titulo-lista mb-2">{catalog.title}</h1>

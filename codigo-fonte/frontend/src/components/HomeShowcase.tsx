@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import CapaPadrao from './CapaPadrao';
 import Link from 'next/link';
 import { imageUrl } from '@/lib/media';
 import type { Article, Catalog, Magazine } from '@/lib/types';
@@ -286,7 +287,7 @@ function SlideContent({ slide, hideInfo, eager }: { slide: ShowcaseSlide; hideIn
             className="w-full aspect-[3/4] object-cover shadow-[0_18px_40px_rgba(38,24,64,0.35)] group-hover:opacity-95 transition-opacity"
           />
         ) : (
-          <div className="w-full aspect-[3/4] bg-dark-purple shadow-[0_18px_40px_rgba(38,24,64,0.35)]" />
+          <CapaPadrao titulo={nomeDoSlide(slide)} className="shadow-[0_18px_40px_rgba(38,24,64,0.35)]" />
         )}
       </Link>
 

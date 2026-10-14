@@ -71,3 +71,12 @@ test('slug do autor é o mesmo que a API usa na página de autor', async () => {
   assert.equal(slugAutor('  Agnès  Varda! '), 'agnes-varda');
   assert.equal(slugAutor('José de Alencar Jr.'), 'jose-de-alencar-jr');
 });
+
+test('exibição sem programação, filmes nem textos é reconhecida como vazia (para explicar ao visitante)', async () => {
+  const { exibicaoVazia } = await import('./conteudo');
+  assert.equal(exibicaoVazia({ screenings: [] }, [], {}), true);
+  assert.equal(exibicaoVazia({}, [], {}), true);
+  assert.equal(exibicaoVazia({ screenings: [{ filmTitle: 'x' }] }, [], {}), false);
+  assert.equal(exibicaoVazia({}, [{ _id: '1' }], {}), false);
+  assert.equal(exibicaoVazia({}, [], { textos: [{ _id: 't' }] }), false);
+});

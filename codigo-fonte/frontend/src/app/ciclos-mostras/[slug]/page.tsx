@@ -7,7 +7,7 @@ import SumarioSecoes from '@/components/SumarioSecoes';
 import Notas, { ChamadaNota } from '@/components/Notas';
 import { api, ouNulo } from '@/lib/api';
 import { imageUrl } from '@/lib/media';
-import { filmeDaSessao } from '@/lib/conteudo';
+import { exibicaoVazia, filmeDaSessao } from '@/lib/conteudo';
 import { pageMetadata } from '@/lib/seo';
 
 interface Props {
@@ -66,6 +66,19 @@ export default async function CicloDetailPage({ params }: Props) {
               por {cycle.author}
               {cycle.authorFootnote && <ChamadaNota n={1} />}
             </p>
+          )}
+
+          {exibicaoVazia(cycle, films, sections) && (
+            <div role="status" className="border-l-4 border-gold pl-5 py-2 mb-8 max-w-prose">
+              <p className="font-display font-bold text-text-dark text-base mb-1">Programação em preparação</p>
+              <p className="font-serif text-text-dark text-base leading-relaxed">
+                Esta exibição já foi anunciada, mas as sessões, os filmes e os textos ainda não foram publicados. Volte em breve ou{' '}
+                <Link href="/ciclos-mostras" className="text-azul-escuro underline underline-offset-4">
+                  veja as outras exibições
+                </Link>
+                .
+              </p>
+            </div>
           )}
 
           {(cycle.screenings ?? []).length > 0 && (

@@ -26,3 +26,13 @@ export function filmeDaSessao<F extends { _id: string; slug: string }>(
 /** Âncora de uma nota de rodapé e da sua chamada no texto */
 export const idNota = (n: number) => `nota-${n}`;
 export const idChamada = (n: number) => `chamada-${n}`;
+
+/** Exibição ainda sem programação, filmes nem textos: a página explica em vez de ficar em branco */
+export function exibicaoVazia(
+  ciclo: { screenings?: unknown[] },
+  filmes: unknown[],
+  secoes: Record<string, unknown[]> | undefined
+): boolean {
+  const textos = Object.values(secoes ?? {}).reduce((total, lista) => total + lista.length, 0);
+  return (ciclo.screenings ?? []).length === 0 && filmes.length === 0 && textos === 0;
+}

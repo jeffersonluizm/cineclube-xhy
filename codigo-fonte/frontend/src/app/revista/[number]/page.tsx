@@ -37,7 +37,13 @@ export default async function RevistaNumberPage({ params }: Props) {
       <Breadcrumb crumbs={[{ label: 'revista', href: '/revista' }, { label: `n°${magazine.number}` }]} />
 
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
-        <Capa src={magazine.coverImage} alt={`Capa da Revista XHY n°${magazine.number}`} largura="max-w-[430px]" prioridade />
+        <Capa
+          src={magazine.coverImage}
+          alt={`Capa da Revista XHY n°${magazine.number}`}
+          titulo={`Revista XHY n°${magazine.number}`}
+          largura="max-w-[430px]"
+          prioridade
+        />
 
         {/* Sumário central */}
         <div className="flex-1 min-w-0">
