@@ -57,12 +57,13 @@ test('com a flag, entrar como editor de demonstração devolve um token que abre
 
 test('restaurar a demonstração repõe os dados de exemplo e só popula banco vazio quando pedido', async () => {
   await restaurarDemonstracao({ soSeVazio: true, log: () => {} });
-  assert.equal(await Magazine.countDocuments(), 1);
+  const exemplo = await Magazine.countDocuments();
+  assert.ok(exemplo >= 1);
   await Magazine.create({ number: 50, volume: 1, month: 'maio', year: 2026, slug: 'revista-50' });
   await restaurarDemonstracao({ soSeVazio: true, log: () => {} });
-  assert.equal(await Magazine.countDocuments(), 2, 'com dados, soSeVazio não mexe');
+  assert.equal(await Magazine.countDocuments(), exemplo + 1, 'com dados, soSeVazio não mexe');
   await restaurarDemonstracao({ soSeVazio: false, log: () => {} });
-  assert.equal(await Magazine.countDocuments(), 1, 'o reset periódico volta ao estado de exemplo');
+  assert.equal(await Magazine.countDocuments(), exemplo, 'o reset periódico volta ao estado de exemplo');
 });
 
 test('DEMO_RESET_MINUTOS=0 desliga o reset periódico (uso local com dados próprios)', async () => {
@@ -70,4 +71,9 @@ test('DEMO_RESET_MINUTOS=0 desliga o reset periódico (uso local com dados próp
   assert.equal(intervaloResetMinutos({}), 360);
   assert.equal(intervaloResetMinutos({ DEMO_RESET_MINUTOS: '0' }), 0);
   assert.equal(intervaloResetMinutos({ DEMO_RESET_MINUTOS: '5' }), 15, 'mínimo de 15 min');
+});
+
+test('/demo serve só as capas PNG: o script que as gera não fica público', async () => {
+  assert.equal((await request(app).get('/demo/capa-revista-1.png')).status, 200);
+  assert.equal((await request(app).get('/demo/gerar-capas.mjs')).status, 404);
 });

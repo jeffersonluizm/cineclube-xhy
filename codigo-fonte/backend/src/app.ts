@@ -69,8 +69,14 @@ app.use(
   })
 );
 
-// Capas dos dados de demonstração (geradas por demo-imagens/gerar-capas.mjs, sem material de terceiros)
-app.use('/demo', express.static(path.resolve(__dirname, '../demo-imagens'), { maxAge: IS_PRODUCTION ? '7d' : 0 }));
+// Capas dos dados de demonstração (geradas por ferramentas/gerar-capas.mjs, sem material de terceiros).
+// Só PNG: qualquer outro arquivo que apareça na pasta não vira público.
+const capasDemo = express.Router();
+capasDemo.get(
+  /^\/[\w-]+\.png$/i,
+  express.static(path.resolve(__dirname, '../demo-imagens'), { maxAge: IS_PRODUCTION ? '7d' : 0, index: false })
+);
+app.use('/demo', capasDemo);
 
 app.use('/api/home', homeRouter);
 app.use('/api/revista', revistaRouter);

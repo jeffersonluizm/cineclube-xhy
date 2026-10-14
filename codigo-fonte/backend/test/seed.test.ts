@@ -57,10 +57,7 @@ test('com dados existentes e confirmação, substitui pelos dados de exemplo', a
 
   assert.equal(resultado, 'aplicado');
   const revistas = await Magazine.find();
-  assert.deepEqual(
-    revistas.map((r) => r.number),
-    [1]
-  );
+  assert.deepEqual(revistas.map((r) => r.number).sort(), [1, 2]);
 });
 
 test('com --force, substitui sem perguntar', async () => {
@@ -76,7 +73,7 @@ test('banco vazio é populado sem perguntar', async () => {
   const resultado = await executarSeed({ banco: BANCO, force: false, confirmar: naoDeviaPerguntar, log: silencioso });
 
   assert.equal(resultado, 'aplicado');
-  assert.equal(await Magazine.countDocuments(), 1);
+  assert.equal(await Magazine.countDocuments(), 2);
 });
 
 test('equipe do Sobre usa nomes e contatos fictícios', async () => {
@@ -139,4 +136,40 @@ test('sem terminal interativo, a mensagem orienta como confirmar (Git Bash, winp
   assert.match(MENSAGEM_SEM_TERMINAL, /PowerShell/);
   assert.match(MENSAGEM_SEM_TERMINAL, /winpty npm run seed/);
   assert.match(MENSAGEM_SEM_TERMINAL, /npm run seed -- --force/);
+});
+
+test('dados de exemplo não têm cascas vazias: toda revista, catálogo e exibição tem conteúdo coerente', async () => {
+  const { default: Catalog } = await import('../src/models/Catalog');
+  const { default: Cycle } = await import('../src/models/Cycle');
+  const { default: Film } = await import('../src/models/Film');
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  await executarSeed({ banco: BANCO, force: true, confirmar: naoDeviaPerguntar, log: silencioso });
+
+  const revistas = await Magazine.find().lean();
+  assert.ok(revistas.length >= 2, 'mais de uma edição da revista');
+  for (const r of revistas) {
+    assert.ok((await Article.countDocuments({ parentType: 'revista', parentId: r._id })) >= 2, `revista n°${r.number} com textos`);
+  }
+  for (const c of await Catalog.find().lean()) {
+    assert.ok((await Article.countDocuments({ parentType: 'catalogo', parentId: c._id })) >= 1, `catálogo ${c.slug} com texto`);
+    assert.ok(c.description, `catálogo ${c.slug} com descrição`);
+  }
+  const ciclos = await Cycle.find().lean();
+  assert.ok(ciclos.length >= 2);
+  for (const c of ciclos) {
+    const filmes = await Film.find({ cycleId: c._id }).lean();
+    assert.ok(filmes.length >= 1, `exibição ${c.slug} com filmes`);
+    assert.ok((c.screenings ?? []).length >= 1, `exibição ${c.slug} com programação`);
+    assert.ok(c.description, `exibição ${c.slug} com descrição`);
+    const slugs = new Set(filmes.map((f) => f.slug));
+    for (const s of c.screenings ?? []) {
+      if (s.filmSlug) assert.ok(slugs.has(s.filmSlug), `sessão ${s.filmTitle} aponta para um filme da própria exibição`);
+    }
+  }
+  const capas = [...revistas, ...(await Catalog.find().lean()), ...ciclos].map((d) => d.coverImage).filter(Boolean) as string[];
+  for (const capa of capas) {
+    assert.match(capa, /^\/demo\/[\w-]+\.png$/);
+    assert.ok(fs.existsSync(path.resolve(__dirname, '../demo-imagens', path.basename(capa))), `${capa} existe`);
+  }
 });

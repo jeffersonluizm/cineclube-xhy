@@ -151,6 +151,79 @@ export async function executarSeed({ banco, force, confirmar, log = console.log 
     parentId: magazine._id,
   });
 
+  // Revista n°2
+  const revista2 = await Magazine.create({
+    number: 2,
+    volume: 1,
+    month: 'julho',
+    year: 2026,
+    slug: 'n2',
+    coverImage: '/demo/capa-revista-2.png',
+    editorial:
+      'A segunda edição sai da tela e olha para a sala: quem vem, quem fica para a conversa, o que se ouve no escuro. ' +
+      'Um ensaio sobre o cineclube como lugar público, uma crítica sobre o som e o relato de uma sessão ao ar livre.',
+  });
+
+  const sala = [
+    p(
+      'Uma sala escura com cadeiras enfileiradas parece o contrário de uma praça. Ninguém conversa, todos olham na mesma direção. Ainda assim, é ali que muita gente da vizinhança se encontra toda semana.'
+    ),
+    { type: 'quote' as const, text: 'O filme termina na tela; a sessão termina na calçada.' },
+    p(
+      'O cineclube vive desse intervalo entre o fim do filme e a volta para casa. É nele que um desconhecido vira alguém com quem se discorda com gosto.'
+    ),
+  ];
+  await Article.create({
+    title: 'A sala escura como praça pública',
+    slug: 'a-sala-escura-como-praca-publica',
+    author: 'Lucas Régis',
+    column: 'ensaio',
+    epigraph: 'Ver junto é diferente de ver ao mesmo tempo.',
+    blocks: sala,
+    content: corrido(sala),
+    order: 1,
+    parentType: 'revista',
+    parentId: revista2._id,
+  });
+
+  const som = [
+    p(
+      'Fechar os olhos no meio de uma sessão é um bom exercício: o filme continua. A chuva, os passos no corredor, uma porta que range explicam a cena quase tanto quanto a imagem.'
+    ),
+    p(
+      'Os filmes que mais nos marcaram neste semestre foram os que confiaram no fora de campo sonoro, deixando o espectador imaginar o que não se vê.'
+    ),
+  ];
+  await Article.create({
+    title: 'Ouvir um filme de olhos fechados',
+    slug: 'ouvir-um-filme-de-olhos-fechados',
+    author: 'Brenda Valois',
+    column: 'crítica',
+    blocks: som,
+    content: corrido(som),
+    order: 2,
+    parentType: 'revista',
+    parentId: revista2._id,
+  });
+
+  const arLivre = [
+    p(
+      'Projetamos numa parede da escola do bairro, com um lençol esticado e caixas de som emprestadas. O vento mexia a imagem e ninguém reclamou.'
+    ),
+    p('Este relato registra o que deu certo, o que deu errado e o que vamos repetir na próxima sessão ao ar livre.'),
+  ];
+  await Article.create({
+    title: 'Diário de uma sessão ao ar livre',
+    slug: 'diario-de-uma-sessao-ao-ar-livre',
+    author: 'Davi Bastos',
+    column: 'relato',
+    blocks: arLivre,
+    content: corrido(arLivre),
+    order: 3,
+    parentType: 'revista',
+    parentId: revista2._id,
+  });
+
   // Catálogos
   const cat2026 = await Catalog.create({
     title: 'Júlio Bressane',
@@ -197,10 +270,48 @@ export async function executarSeed({ banco, force, confirmar, log = console.log 
     parentId: cat2026._id,
   });
 
-  await Catalog.create({ title: 'Atrizes, Atrizes', slug: 'atrizes-atrizes', year: 2025 });
-  await Catalog.create({ title: 'David Lynch e seus precursores', slug: 'david-lynch-e-seus-precursores', year: 2025 });
-  await Catalog.create({ title: 'Salomé', slug: 'salome', year: 2024 });
-  await Catalog.create({ title: 'Sirk & Fassbinder', slug: 'sirk-fassbinder', year: 2024, coverImage: '/demo/capa-catalogo-sirk.png' });
+  const catSirk = await Catalog.create({
+    title: 'Sirk & Fassbinder',
+    slug: 'sirk-fassbinder',
+    year: 2024,
+    coverImage: '/demo/capa-catalogo-sirk.png',
+    description: 'Catálogo da mostra que pôs lado a lado dois mestres do melodrama, com ensaios da equipe e um glossário de cores.',
+  });
+
+  const molduras = [
+    p(
+      'Espelhos, janelas e portas entreabertas: nos filmes desta mostra, os personagens quase sempre aparecem emoldurados, presos dentro do quadro antes de estarem presos na história.'
+    ),
+    p('Este ensaio percorre essas molduras e pergunta o que elas dizem sobre o desejo de sair de casa.'),
+  ];
+  await Article.create({
+    title: 'Molduras dentro do quadro',
+    slug: 'cat-molduras-dentro-do-quadro',
+    author: 'Brenda Valois',
+    column: 'textos',
+    blocks: molduras,
+    content: corrido(molduras),
+    order: 1,
+    parentType: 'catalogo',
+    parentId: catSirk._id,
+  });
+
+  const glossario = [
+    p(
+      'Um glossário curto das cores que mais aparecem na mostra: o vermelho das festas, o azul das noites sozinhas, o amarelo das cozinhas.'
+    ),
+  ];
+  await Article.create({
+    title: 'Pequeno glossário de cores',
+    slug: 'cat-pequeno-glossario-de-cores',
+    author: 'Lucas Régis',
+    column: 'glossário',
+    blocks: glossario,
+    content: corrido(glossario),
+    order: 2,
+    parentType: 'catalogo',
+    parentId: catSirk._id,
+  });
 
   // Ciclos & Mostras
   const cycle2026 = await Cycle.create({
@@ -291,10 +402,115 @@ export async function executarSeed({ banco, force, confirmar, log = console.log 
     parentId: cycle2026._id,
   });
 
-  await Cycle.create({ title: 'Realizadoras', slug: 'realizadoras', year: 2026, subtitle: 'filmes dirigidos por mulheres' });
-  await Cycle.create({ title: 'Cinema Marginal', slug: 'cinema-marginal', year: 2026 });
-  await Cycle.create({ title: 'Comédia Moderna', slug: 'comedia-moderna', year: 2025 });
-  await Cycle.create({ title: 'A rotina tem seu charme', slug: 'a-rotina-tem-seu-charme', year: 2025 });
+  const comedia = await Cycle.create({
+    title: 'Comédia Moderna',
+    subtitle: 'o riso diante das máquinas',
+    slug: 'comedia-moderna',
+    coverImage: '/demo/capa-ciclo-comedia.png',
+    year: 2025,
+    description:
+      'Uma mostra sobre comédias em que a cidade, os aparelhos e os escritórios são personagens.\n' +
+      'As sessões foram pensadas para famílias: filmes curtos de duração e longos de gargalhada.',
+    author: 'Lucas Régis',
+    screenings: [
+      {
+        date: '05.10',
+        time: '16h',
+        filmTitle: 'Meu Tio (1958)',
+        filmSlug: 'meu-tio',
+        director: 'Jacques Tati',
+        duration: "117'",
+        country: 'França',
+      },
+      {
+        date: '12.10',
+        time: '16h',
+        filmTitle: 'Tempos Modernos (1936)',
+        filmSlug: 'tempos-modernos',
+        director: 'Charles Chaplin',
+        duration: "87'",
+        country: 'Estados Unidos',
+      },
+    ],
+  });
+
+  await Film.create({
+    title: 'Meu Tio',
+    slug: 'meu-tio',
+    director: 'Jacques Tati',
+    year: 1958,
+    duration: "117'",
+    country: 'França',
+    synopsis: 'Um tio distraído visita a casa automatizada da irmã, onde cada aparelho parece ter vontade própria.',
+    content: 'A casa moderna faz barulhos que ninguém pediu. O riso nasce de reparar nesses barulhos junto com o sobrinho.',
+    author: 'Lucas Régis',
+    cycleId: comedia._id,
+    order: 1,
+  });
+
+  await Film.create({
+    title: 'Tempos Modernos',
+    slug: 'tempos-modernos',
+    director: 'Charles Chaplin',
+    year: 1936,
+    duration: "87'",
+    country: 'Estados Unidos',
+    synopsis: 'Um operário da linha de montagem tenta sobreviver à fábrica, à crise e à polícia, sem perder a gentileza.',
+    content: 'A engrenagem que engole o operário ainda é uma das imagens mais claras sobre o trabalho que o cinema já fez.',
+    author: 'Davi Bastos',
+    cycleId: comedia._id,
+    order: 2,
+  });
+
+  const riso = [p('Rir em grupo é contagioso, e as sessões desta mostra provaram isso: as crianças riam primeiro, os adultos depois.')];
+  await Article.create({
+    title: 'Quem ri primeiro na sala',
+    slug: 'ciclo-quem-ri-primeiro-na-sala',
+    author: 'Lucas Régis',
+    column: 'textos',
+    blocks: riso,
+    content: corrido(riso),
+    order: 1,
+    parentType: 'ciclo',
+    parentId: comedia._id,
+  });
+
+  // Exibição sem capa de propósito: mostra a capa padrão (título e logo sobre o roxo)
+  const realizadoras = await Cycle.create({
+    title: 'Realizadoras',
+    subtitle: 'filmes dirigidos por mulheres',
+    slug: 'realizadoras',
+    year: 2026,
+    description:
+      'Uma sessão por mês dedicada a diretoras de várias épocas, seguida de conversa com convidadas.\n' +
+      'A programação cresce ao longo do ano: as novas sessões são anunciadas aqui.',
+    author: 'Brenda Valois',
+    screenings: [
+      {
+        date: '14.11',
+        time: '19h',
+        filmTitle: 'Cléo das 5 às 7 (1962)',
+        filmSlug: 'cleo-das-5-as-7',
+        director: 'Agnès Varda',
+        duration: "90'",
+        country: 'França',
+      },
+    ],
+  });
+
+  await Film.create({
+    title: 'Cléo das 5 às 7',
+    slug: 'cleo-das-5-as-7',
+    director: 'Agnès Varda',
+    year: 1962,
+    duration: "90'",
+    country: 'França',
+    synopsis: 'Uma cantora espera o resultado de um exame médico e atravessa Paris em quase tempo real.',
+    content: 'O relógio da tela e o da sala andam juntos: a espera da personagem vira a espera de quem assiste.',
+    author: 'Brenda Valois',
+    cycleId: realizadoras._id,
+    order: 1,
+  });
 
   // Sobre (equipe fictícia: o conteúdo real é cadastrado pelo painel)
   const sobre = [

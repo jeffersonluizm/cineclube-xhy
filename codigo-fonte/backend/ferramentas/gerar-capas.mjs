@@ -1,4 +1,5 @@
-// Gera as capas abstratas dos dados de demonstração (PNG 600x800) nas cores do cineclube: node demo-imagens/gerar-capas.mjs
+// Gera as capas abstratas dos dados de demonstração (PNG 600x800) nas cores do cineclube: node ferramentas/gerar-capas.mjs
+// (o script fica fora de demo-imagens/, que a API publica em /demo)
 import zlib from 'node:zlib';
 import fs from 'node:fs';
 
@@ -59,6 +60,19 @@ const capas = {
     if (x + y > 760 && x + y < 860) c = C.gold;
     return grao(c, x, y);
   },
+  'capa-revista-2.png': (x, y) => {
+    let c = C.cream;
+    if (x < 200) c = C.azul;
+    if (y > 470 && y < 610) c = C.pink;
+    if (x >= 200 && (x - 420) ** 2 + (y - 260) ** 2 < 120 ** 2) c = C.roxo;
+    return grao(c, x, y);
+  },
+  'capa-ciclo-comedia.png': (x, y) => {
+    let c = C.gold;
+    if (Math.floor(y / 100) % 2 === 1) c = C.cream;
+    if (x > 120 && x < 480 && y > 320 && y < 480) c = C.pink;
+    return grao(c, x, y);
+  },
   'capa-ciclo-tempo.png': (x, y) => {
     let c = C.tinta;
     const r = Math.hypot(x - 300, y - 420);
@@ -67,5 +81,5 @@ const capas = {
     return grao(c, x, y);
   },
 };
-for (const [nome, f] of Object.entries(capas)) fs.writeFileSync(new URL(nome, import.meta.url), png(f));
+for (const [nome, f] of Object.entries(capas)) fs.writeFileSync(new URL(`../demo-imagens/${nome}`, import.meta.url), png(f));
 console.log('capas geradas');
