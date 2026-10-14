@@ -43,7 +43,9 @@ export default function PainelInicio() {
     : [];
 
   return (
-    <div className="flex flex-col gap-12">
+    // O cabeçalho já traz a própria margem (como nas outras telas): fica fora do gap das seções,
+    // senão o vão entre o título e os números somava 80 px
+    <div>
       <CabecalhoPagina
         sobretitulo="painel do editor"
         titulo="início"
@@ -56,38 +58,39 @@ export default function PainelInicio() {
           </>
         }
       />
+      <div className="flex flex-col gap-12">
+        {erro && <EstadoErro mensagem={`Não foi possível carregar o resumo: ${erro}`} tentarDeNovo={recarregar} />}
+        {!dados && !erro && <EstadoCarregando />}
 
-      {erro && <EstadoErro mensagem={`Não foi possível carregar o resumo: ${erro}`} tentarDeNovo={recarregar} />}
-      {!dados && !erro && <EstadoCarregando />}
+        {dados && (
+          <>
+            <dl className="grid grid-cols-2 sm:grid-cols-3 border-l border-t border-text-dark/30">
+              {numeros.map((n) => (
+                <div key={n.rotulo} className="border-r border-b border-text-dark/30 px-5 py-4">
+                  <dt className="font-sans text-sm text-text-suave">{n.rotulo}</dt>
+                  <dd className="font-display font-black text-4xl text-text-dark">
+                    {n.href ? (
+                      <Link href={n.href} className="hover:text-olive-escuro hover:underline">
+                        {n.valor}
+                      </Link>
+                    ) : (
+                      n.valor
+                    )}
+                  </dd>
+                </div>
+              ))}
+            </dl>
 
-      {dados && (
-        <>
-          <dl className="grid grid-cols-2 sm:grid-cols-3 border-l border-t border-text-dark/30">
-            {numeros.map((n) => (
-              <div key={n.rotulo} className="border-r border-b border-text-dark/30 px-5 py-4">
-                <dt className="font-sans text-sm text-text-suave">{n.rotulo}</dt>
-                <dd className="font-display font-black text-4xl text-text-dark">
-                  {n.href ? (
-                    <Link href={n.href} className="hover:text-olive-escuro hover:underline">
-                      {n.valor}
-                    </Link>
-                  ) : (
-                    n.valor
-                  )}
-                </dd>
-              </div>
-            ))}
-          </dl>
+            <Secao titulo="rascunhos esperando revisão" descricao="Textos que não aparecem no site até serem publicados.">
+              <ListaTextos textos={dados.rascunhos} vazio="Nenhum rascunho pendente." />
+            </Secao>
 
-          <Secao titulo="rascunhos esperando revisão" descricao="Textos que não aparecem no site até serem publicados.">
-            <ListaTextos textos={dados.rascunhos} vazio="Nenhum rascunho pendente." />
-          </Secao>
-
-          <Secao titulo="editados por último">
-            <ListaTextos textos={dados.ultimosEditados} vazio="Nada editado ainda. Comece criando uma revista." />
-          </Secao>
-        </>
-      )}
+            <Secao titulo="editados por último">
+              <ListaTextos textos={dados.ultimosEditados} vazio="Nada editado ainda. Comece criando uma revista." />
+            </Secao>
+          </>
+        )}
+      </div>
     </div>
   );
 }

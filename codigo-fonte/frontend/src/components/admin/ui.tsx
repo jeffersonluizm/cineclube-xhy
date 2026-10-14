@@ -233,7 +233,12 @@ export function BarraSalvar({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="sticky bottom-0 z-10 bg-cream/95 border-t border-text-dark/20 py-3 flex flex-wrap items-center gap-4">
+    // Fundo opaco e de ponta a ponta (compensa o recuo do <main>): no celular o texto rolando por
+    // baixo não aparece através da barra
+    <div
+      data-barra-salvar
+      className="sticky bottom-0 z-10 -mx-4 px-4 sm:-mx-8 sm:px-8 bg-cream border-t border-text-dark/20 py-3 flex flex-wrap items-center gap-4"
+    >
       <button type="submit" disabled={salvando} className={classeBotao('principal', 'px-8')}>
         {salvando ? 'salvando…' : rotulo}
       </button>
