@@ -1,5 +1,6 @@
 import TopNav from '@/components/TopNav';
 import Rodape from '@/components/Rodape';
+import ConviteDemo from '@/components/ConviteDemo';
 import HomeShowcase, { ShowcaseSlide } from '@/components/HomeShowcase';
 import { api } from '@/lib/api';
 import type { Catalog } from '@/lib/types';
@@ -42,6 +43,10 @@ export default async function HomePage() {
           <h1 className="sr-only">Cineclube XHY: revista, catálogos e exibições</h1>
           <HomeShowcase slides={slides} />
         </main>
+      </div>
+      {/* só aparece com a API em modo demonstração */}
+      <div className="px-5 sm:px-8 md:px-10">
+        <ConviteDemo />
       </div>
       <Rodape />
     </div>

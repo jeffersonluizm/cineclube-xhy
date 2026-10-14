@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { LINKS_PRINCIPAIS, REDES, WHATSAPP } from '@/lib/navegacao';
+import { LinkPainelDemo } from './DemoContexto';
 
 const externo = { target: '_blank', rel: 'noopener noreferrer' } as const;
 
@@ -89,11 +90,7 @@ export default function Rodape({ tom = 'cream' }: { tom?: 'cream' | 'dark' }) {
                 como foi feito →
               </Link>
             </li>
-            <li>
-              <Link href="/admin/login" className={link}>
-                painel do editor (demonstração) →
-              </Link>
-            </li>
+            <LinkPainelDemo className={link} />
           </ul>
         </section>
       </div>
