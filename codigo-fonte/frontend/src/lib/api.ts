@@ -25,7 +25,7 @@ import { API_URL } from './media';
  * (build local ou numa máquina sem o backend), a página passa a ser renderizada por pedido
  * em vez de quebrar o build; os dados continuam no cache de 60 s.
  *
- * Erros: 404 vira ErroNaoEncontrado (a página responde com o "não encontrado" do site);
+ * Erros: 404 e 400 (endereço malformado) viram ErroNaoEncontrado (a página responde com o "não encontrado" do site);
  * qualquer outra falha vira ErroApi e sobe para o error.tsx ("serviço indisponível"),
  * em vez de virar uma lista vazia ou um 404 falso.
  */
@@ -56,7 +56,8 @@ async function buscar<T>(path: string): Promise<T> {
     if (NA_COMPILACAO) noStore(); // sem API no build: a rota fica dinâmica em vez de falhar
     throw new ErroApi(`API indisponível em ${path}: ${(err as Error).message}`);
   }
-  if (res.status === 404) throw new ErroNaoEncontrado(path);
+  // 400 numa leitura pública = endereço malformado (/revista/abc): para o visitante, não existe
+  if (res.status === 404 || res.status === 400) throw new ErroNaoEncontrado(path);
   if (!res.ok) {
     if (NA_COMPILACAO) noStore();
     throw new ErroApi(`API respondeu ${res.status} em ${path}`);
