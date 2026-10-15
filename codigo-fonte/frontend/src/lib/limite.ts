@@ -25,10 +25,15 @@ export function criarLimitador({ limite, janelaMs }: { limite: number; janelaMs:
 }
 
 /**
- * Uma visita a uma página passa pelo middleware cerca de 7 vezes: o documento e os
- * pré-carregamentos (prefetch) dos links visíveis. O Next 14 remove os cabeçalhos de prefetch
- * antes do middleware e o Purpose: prefetch vem do cliente, então NADA é isento: a cota de
- * páginas é dimensionada para 60 visitas por minuto.
+ * Quantas vezes uma página passa pelo middleware: o documento (ou o RSC, na navegação por
+ * clique) e os pré-carregamentos (prefetch) dos links visíveis. Medido no Chrome headless em
+ * 15/10/2026, com os dados de demonstração:
+ *  - navegação por cliques home → /revista → edição → texto → /autores: 34 requisições em
+ *    5 páginas, 6,8 por página (os prefetch já feitos não se repetem);
+ *  - abrir uma página do zero: 10 (home no celular) a 16 (home no desktop).
+ * O Next 14 remove os cabeçalhos de prefetch antes do middleware e o Purpose: prefetch vem
+ * do cliente, então NADA é isento. A cota de páginas comporta 60 páginas por minuto
+ * navegando, ou cerca de 26 aberturas do zero.
  */
 export const REQUISICOES_POR_VISITA = 7;
 const MINUTO = 60_000;
