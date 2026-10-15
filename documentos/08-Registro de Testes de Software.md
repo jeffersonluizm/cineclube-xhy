@@ -107,7 +107,7 @@ o CI roda) e verificação no navegador.
 | CT-18 | Lint, formatação e build | ✅ Aprovado: ESLint sem avisos nos dois projetos, Prettier sem diferenças, `next build` concluído; o build de produção para com mensagem clara sem `NEXT_PUBLIC_API_URL` em https ou sem `SERVIDOR_SEGREDO` |
 | CT-19 | Status HTTP honestos | ✅ Aprovado: `/revista/999`, `/revista/abc` e `/autores/<inexistente>` respondem 404; com a API fora, páginas em cache continuam com conteúdo (H11) |
 | CT-20 | Fluxo do visitante e do editor | ✅ Aprovado no Chrome headless (`ferramentas/verificar-fluxos.mjs`, 10 de 10 conferências): entrar como editor de demonstração, criar catálogo sem capa e ver a capa padrão, item inexistente no painel, barra de salvar no celular; "tentar novamente" recupera com a API de volta |
-| CT-21 | Carga antes/depois | ✅ Executado com a trava compartilhada (14 e 15/10): H1, H2, H3, H4, H6, H7, H8, H9 e H11 confirmadas; H5 refutada para melhor (1,7× a 2,7×, a previsão era 1,3×); H10 parcial (banco fora do caminho, vazão 1,1× a 3,3× em vez de 10×). Detalhes em `docs/carga/2026-10-04-resultados.md` |
+| CT-21 | Carga antes/depois | ✅ Executado com a trava compartilhada (14 e 15/10): H1, H2, H3, H4, H6, H7, H8, H9 e H11 confirmadas; H5 refutada para melhor (1,7× a 2,7×, a previsão era 1,3×); H10 parcial (banco fora do caminho, vazão 1,2× a 6,5× em vez de 10×). Detalhes em `docs/carga/2026-10-04-resultados.md` |
 
 ### Defeitos encontrados e corrigidos na 1.3.0
 

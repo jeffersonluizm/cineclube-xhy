@@ -15,7 +15,7 @@ export const RESUMO_CARGA: LinhaCarga[] = [
   {
     cenario: 'Página inicial na API, 30 edições',
     antes: '34 consultas · 56 req/s',
-    depois: '4 consultas · 255 req/s',
+    depois: '5 consultas · 492 req/s',
     conclusao: 'Consultas fixas (fim do N+1)',
   },
   { cenario: 'Sumário de uma edição', antes: '384 kB · 146 req/s', depois: '7 kB · 385 req/s', conclusao: 'Só os campos usados' },
@@ -41,8 +41,8 @@ export const RESUMO_CARGA: LinhaCarga[] = [
   {
     cenario: 'Vazão do site com cache',
     antes: '52 a 135 req/s',
-    depois: '122 a 412 req/s',
-    conclusao: 'Hipótese de 10× refutada: só 1,1× a 3,3×. O limite passou a ser renderizar o HTML num processo só',
+    depois: '138 a 466 req/s',
+    conclusao: 'Hipótese de 10× refutada: só 1,2× a 6,5×. O limite passou a ser renderizar o HTML num processo só',
   },
   {
     cenario: 'Site com a API fora do ar',

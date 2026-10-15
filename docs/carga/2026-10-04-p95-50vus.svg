@@ -16,23 +16,23 @@
 <line x1="210" x2="210" y1="126" y2="162" stroke="#D9D2B8"/>
 <rect x="210" y="130" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 238,7 ms</title></rect>
 <text x="646" y="141" font-size="11" fill="#2B2040">238,7 ms</text>
-<rect x="210" y="146" width="118.10376739709093" height="13" rx="3" fill="#C7176C"><title>depois: 65,5 ms</title></rect>
-<text x="334.1037673970909" y="157" font-size="11" fill="#2B2040">65,5 ms</text>
-<text x="744" y="146" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">3,6× melhor</text>
+<rect x="210" y="146" width="140.34409220403458" height="13" rx="3" fill="#C7176C"><title>depois: 77,9 ms</title></rect>
+<text x="356.3440922040346" y="157" font-size="11" fill="#2B2040">77,9 ms</text>
+<text x="744" y="146" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">3,1× melhor</text>
 <text x="16" y="192" font-size="12" fill="#2B2040">H2 home, 10 revistas</text>
 <line x1="210" x2="210" y1="172" y2="208" stroke="#D9D2B8"/>
 <rect x="210" y="176" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 461,6 ms</title></rect>
 <text x="646" y="187" font-size="11" fill="#2B2040">461,6 ms</text>
-<rect x="210" y="192" width="107.7598026486008" height="13" rx="3" fill="#C7176C"><title>depois: 115,7 ms</title></rect>
-<text x="323.7598026486008" y="203" font-size="11" fill="#2B2040">115,7 ms</text>
-<text x="744" y="192" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">4× melhor</text>
+<rect x="210" y="192" width="94.11174169458332" height="13" rx="3" fill="#C7176C"><title>depois: 101 ms</title></rect>
+<text x="310.1117416945833" y="203" font-size="11" fill="#2B2040">101 ms</text>
+<text x="744" y="192" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">4,6× melhor</text>
 <text x="16" y="238" font-size="12" fill="#2B2040">H2 home, 30 revistas</text>
 <line x1="210" x2="210" y1="218" y2="254" stroke="#D9D2B8"/>
 <rect x="210" y="222" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 953,3 ms</title></rect>
 <text x="646" y="233" font-size="11" fill="#2B2040">953,3 ms</text>
-<rect x="210" y="238" width="100.1471537373773" height="13" rx="3" fill="#C7176C"><title>depois: 222 ms</title></rect>
-<text x="316.14715373737727" y="249" font-size="11" fill="#2B2040">222 ms</text>
-<text x="744" y="238" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">4,3× melhor</text>
+<rect x="210" y="238" width="57.31826016138381" height="13" rx="3" fill="#C7176C"><title>depois: 127,1 ms</title></rect>
+<text x="273.3182601613838" y="249" font-size="11" fill="#2B2040">127,1 ms</text>
+<text x="744" y="238" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">7,5× melhor</text>
 <text x="16" y="284" font-size="12" fill="#2B2040">H3 sumário da revista</text>
 <line x1="210" x2="210" y1="264" y2="300" stroke="#D9D2B8"/>
 <rect x="210" y="268" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 378,5 ms</title></rect>
@@ -79,35 +79,35 @@
 <line x1="210" x2="210" y1="540" y2="576" stroke="#D9D2B8"/>
 <rect x="210" y="544" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 1.014,2 ms</title></rect>
 <text x="646" y="555" font-size="11" fill="#2B2040">1.014,2 ms</text>
-<rect x="210" y="560" width="137.2290035098176" height="13" rx="3" fill="#C7176C"><title>depois: 323,7 ms</title></rect>
-<text x="353.22900350981763" y="571" font-size="11" fill="#2B2040">323,7 ms</text>
-<text x="744" y="560" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">3,1× melhor</text>
+<rect x="210" y="560" width="73.71525289843237" height="13" rx="3" fill="#C7176C"><title>depois: 173,9 ms</title></rect>
+<text x="289.71525289843237" y="571" font-size="11" fill="#2B2040">173,9 ms</text>
+<text x="744" y="560" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">5,8× melhor</text>
 <text x="16" y="606" font-size="12" fill="#2B2040">H9/H10 site: /revista</text>
 <line x1="210" x2="210" y1="586" y2="622" stroke="#D9D2B8"/>
 <rect x="210" y="590" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 406,1 ms</title></rect>
 <text x="646" y="601" font-size="11" fill="#2B2040">406,1 ms</text>
-<rect x="210" y="606" width="150.31989497503332" height="13" rx="3" fill="#C7176C"><title>depois: 142 ms</title></rect>
-<text x="366.3198949750333" y="617" font-size="11" fill="#2B2040">142 ms</text>
-<text x="744" y="606" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">2,9× melhor</text>
+<rect x="210" y="606" width="131.3133315055682" height="13" rx="3" fill="#C7176C"><title>depois: 124 ms</title></rect>
+<text x="347.31333150556816" y="617" font-size="11" fill="#2B2040">124 ms</text>
+<text x="744" y="606" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">3,3× melhor</text>
 <text x="16" y="652" font-size="12" fill="#2B2040">H9/H10 site: sumário</text>
 <line x1="210" x2="210" y1="632" y2="668" stroke="#D9D2B8"/>
 <rect x="210" y="636" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 671 ms</title></rect>
 <text x="646" y="647" font-size="11" fill="#2B2040">671 ms</text>
-<rect x="210" y="652" width="292.7346398062144" height="13" rx="3" fill="#C7176C"><title>depois: 456,8 ms</title></rect>
-<text x="508.7346398062144" y="663" font-size="11" fill="#2B2040">456,8 ms</text>
-<text x="744" y="652" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">1,5× melhor</text>
+<rect x="210" y="652" width="267.1266141613872" height="13" rx="3" fill="#C7176C"><title>depois: 416,8 ms</title></rect>
+<text x="483.1266141613872" y="663" font-size="11" fill="#2B2040">416,8 ms</text>
+<text x="744" y="652" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">1,6× melhor</text>
 <text x="16" y="698" font-size="12" fill="#2B2040">H9/H10 site: artigo</text>
 <line x1="210" x2="210" y1="678" y2="714" stroke="#D9D2B8"/>
 <rect x="210" y="682" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 418 ms</title></rect>
 <text x="646" y="693" font-size="11" fill="#2B2040">418 ms</text>
-<rect x="210" y="698" width="413.2330502120994" height="13" rx="3" fill="#C7176C"><title>depois: 401,7 ms</title></rect>
-<text x="629.2330502120994" y="709" font-size="11" fill="#2B2040">401,7 ms</text>
-<text x="744" y="698" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">1× melhor</text>
+<rect x="210" y="698" width="374.9910741360558" height="13" rx="3" fill="#C7176C"><title>depois: 364,5 ms</title></rect>
+<text x="590.9910741360558" y="709" font-size="11" fill="#2B2040">364,5 ms</text>
+<text x="744" y="698" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">1,1× melhor</text>
 <text x="16" y="744" font-size="12" fill="#2B2040">H9/H10 site: ciclo</text>
 <line x1="210" x2="210" y1="724" y2="760" stroke="#D9D2B8"/>
 <rect x="210" y="728" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 526,8 ms</title></rect>
 <text x="646" y="739" font-size="11" fill="#2B2040">526,8 ms</text>
-<rect x="210" y="744" width="346.28512907734836" height="13" rx="3" fill="#C7176C"><title>depois: 424,3 ms</title></rect>
-<text x="562.2851290773483" y="755" font-size="11" fill="#2B2040">424,3 ms</text>
-<text x="744" y="744" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">1,2× melhor</text>
+<rect x="210" y="744" width="328.4673572765531" height="13" rx="3" fill="#C7176C"><title>depois: 402,4 ms</title></rect>
+<text x="544.4673572765531" y="755" font-size="11" fill="#2B2040">402,4 ms</text>
+<text x="744" y="744" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">1,3× melhor</text>
 </svg>

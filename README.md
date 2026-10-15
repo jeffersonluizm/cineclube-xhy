@@ -120,13 +120,13 @@ a medição foi feita antes e depois das correções, na mesma máquina que gera
 
 | Cenário (50 usuários simultâneos) | Antes | Depois | Hipótese |
 |---|---|---|---|
-| Home na API, 30 edições | 34 consultas · 56 req/s | 4 consultas · 255 req/s | H2 confirmada |
+| Home na API, 30 edições | 34 consultas · 56 req/s | 5 consultas · 492 req/s | H2 confirmada |
 | Sumário de uma edição | 384 kB · 146 req/s | 7 kB · 385 req/s | H3 confirmada |
 | Texto com anterior/próximo | 172 req/s · p95 317 ms | 726 req/s · p95 75 ms | H4 confirmada |
 | Reordenar 50 textos | 49 req/s · p95 1,1 s | 451 req/s · p95 308 ms | H8 confirmada |
 | 10 criações simultâneas, mesmo título | 66% com erro 500 | 0 erros | H7 confirmada |
 | Consultas ao banco por página do site | 65 na home | 0 (cache) | H10 parcial |
-| Vazão do site (cache) | 52 a 135 req/s | 122 a 412 req/s | H10 refutada (1,1× a 3,3×; a meta era 10×) |
+| Vazão do site (cache) | 52 a 135 req/s | 138 a 466 req/s | H10 refutada (1,2× a 6,5×; a meta era 10×) |
 | Site com a API fora do ar | 404 falso e listas vazias | conteúdo do cache | H11 confirmada |
 
 Medido em 14 e 15/10/2026 com a trava compartilhada da oficina: uma carga por vez na máquina.
