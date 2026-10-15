@@ -34,6 +34,8 @@ Roteiro sugerido: página inicial → uma edição da revista → um texto → b
 → painel: início → abrir a revista → editar um texto (o rascunho fica guardado no navegador)
 → ver no site → excluir uma exibição (diálogo com contagem) → sair.
 
+![O roteiro em 15 segundos: home, revista, texto, busca, login de demonstração e painel](docs/img/demonstracao.gif)
+
 
 ## Em 30 segundos
 
