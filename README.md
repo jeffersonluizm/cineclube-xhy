@@ -89,10 +89,18 @@ flowchart LR
 
 ## Testes
 
+| Suíte | Testes | O que roda |
+|---|---|---|
+| API (`codigo-fonte/backend`) | 128 | node:test + supertest + MongoDB em memória |
+| Site (`codigo-fonte/frontend`) | 34 | regras do front e o `middleware.ts` de verdade |
+| Harness e preparo local (`carga/`, `ferramentas/`) | 11 | trava de carga e `.env` do `iniciar.bat` |
+| Fluxos no navegador (`ferramentas/verificar-fluxos.mjs`) | 10 conferências | visitante e editor no Chrome headless |
+
 ```bash
-cd codigo-fonte/backend && npm test     # node:test + supertest + MongoDB em memória
-cd codigo-fonte/frontend && npm test    # regras do front: contraste AA dos tokens, sessão, login, RSS
-cd codigo-fonte/frontend && npm run build
+cd codigo-fonte/backend && npm test     # API
+cd codigo-fonte/frontend && npm test    # site: contraste AA, sessão, login, RSS, limite por IP
+node --test "carga/*.test.mjs" "ferramentas/*.test.mjs"
+node ferramentas/verificar-fluxos.mjs http://localhost:3000   # com o iniciar.bat rodando
 ```
 
 O backend cobre rotas públicas, CRUD do painel, validação (ids, operadores do MongoDB nos
@@ -109,14 +117,17 @@ a medição foi feita antes e depois das correções, na mesma máquina que gera
 
 | Cenário (50 usuários simultâneos) | Antes | Depois | Hipótese |
 |---|---|---|---|
-| Home na API, 30 edições | 34 consultas · 43 req/s | 4 consultas · 87 req/s | H2 confirmada |
-| Sumário de uma edição | 384 kB · 105 req/s | 7 kB · 257 req/s | H3 confirmada |
-| Texto com anterior/próximo | 118 req/s · p95 477 ms | 692 req/s · p95 82 ms | H4 confirmada |
-| Reordenar 50 textos | 33 req/s · p95 3,0 s | 474 req/s · p95 146 ms | H8 confirmada |
-| 10 criações simultâneas, mesmo título | 61% com erro 500 | 0 erros | H7 confirmada |
+| Home na API, 30 edições | 34 consultas · 56 req/s | 4 consultas · 255 req/s | H2 confirmada |
+| Sumário de uma edição | 384 kB · 146 req/s | 7 kB · 385 req/s | H3 confirmada |
+| Texto com anterior/próximo | 172 req/s · p95 317 ms | 726 req/s · p95 75 ms | H4 confirmada |
+| Reordenar 50 textos | 49 req/s · p95 1,1 s | 451 req/s · p95 308 ms | H8 confirmada |
+| 10 criações simultâneas, mesmo título | 66% com erro 500 | 0 erros | H7 confirmada |
 | Consultas ao banco por página do site | 65 na home | 0 (cache) | H10 parcial |
-| Vazão do site (cache) | 40 a 97 req/s | 94 a 333 req/s | H10 refutada (meta era 10×) |
+| Vazão do site (cache) | 52 a 135 req/s | 122 a 412 req/s | H10 refutada (1,1× a 3,3×; a meta era 10×) |
 | Site com a API fora do ar | 404 falso e listas vazias | conteúdo do cache | H11 confirmada |
+
+Medido em 14 e 15/10/2026 com a trava compartilhada da oficina: uma carga por vez na máquina.
+As rodadas anteriores mediram sem a trava (bug no caminho dela) e foram descartadas.
 
 ![Vazão antes e depois](docs/carga/2026-10-04-vazao-50vus.svg)
 
