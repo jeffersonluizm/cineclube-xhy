@@ -1,9 +1,19 @@
 # Dependências
 node_modules/
 
-# Variáveis de ambiente (contêm senhas — nunca commitar)
+# Variáveis de ambiente (contêm senhas: nunca commitar); os modelos *.example ficam
 .env
-.env.local
+.env.*
+!*.example
+*.pem
+
+# Caches, relatórios e logs gerados
+.next/cache/
+coverage/
+*.log
+npm-debug.log*
+.eslintcache
+codigo-fonte/frontend/out/
 
 # Builds
 codigo-fonte/frontend/.next/
