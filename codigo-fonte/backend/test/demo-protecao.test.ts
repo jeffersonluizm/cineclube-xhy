@@ -13,10 +13,11 @@ import { imagemSegura } from '../src/lib/links';
 
 let pasta: string;
 before(() => {
-  pasta = fs.mkdtempSync(path.join(os.tmpdir(), 'cineclube-demo-upload-'));
+  // com acento de propósito: o repositório fica em "Projetos do portfólio" (ver limparUploadsDemonstracao)
+  pasta = fs.mkdtempSync(path.join(os.tmpdir(), 'cineclube-demo-portfólio-'));
 });
-after(() => {
-  fs.rmSync(pasta, { recursive: true, force: true });
+after(async () => {
+  await fs.promises.rm(pasta, { recursive: true, force: true });
 });
 
 const PNG = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(32)]);
@@ -50,11 +51,11 @@ test(`na demonstração cada IP envia no máximo ${ENVIOS_DEMO_POR_HORA} imagens
   assert.match(res.body.error, /demonstração/);
 });
 
-test('o reset da demonstração apaga só a pasta de uploads da demonstração', () => {
+test('o reset da demonstração apaga só a pasta de uploads da demonstração (também em caminho com acento)', async () => {
   fs.mkdirSync(path.join(pasta, 'demo'), { recursive: true });
   fs.writeFileSync(path.join(pasta, 'demo', 'x.png'), PNG);
   fs.writeFileSync(path.join(pasta, 'do-editor.png'), PNG);
-  limparUploadsDemonstracao(pasta);
+  await limparUploadsDemonstracao(pasta);
   assert.equal(fs.existsSync(path.join(pasta, 'demo')), false);
   assert.equal(fs.existsSync(path.join(pasta, 'do-editor.png')), true);
 });

@@ -49,9 +49,13 @@ export function bancoAceitaDemonstracao(nomeBanco: string, env: NodeJS.ProcessEn
 /** Pasta das imagens enviadas na demonstração (fica dentro da pasta de uploads) */
 export const pastaUploadsDemonstracao = (pasta = pastaUploads()) => path.join(pasta, 'demo');
 
-/** Apaga as imagens enviadas na demonstração (e só elas) */
-export function limparUploadsDemonstracao(pasta = pastaUploads()) {
-  fs.rmSync(pastaUploadsDemonstracao(pasta), { recursive: true, force: true });
+/**
+ * Apaga as imagens enviadas na demonstração (e só elas). Usa fs.promises.rm: no Node 24
+ * (Windows) o fs.rmSync volta sem erro e sem apagar quando o caminho tem acento, como o
+ * "Projetos do portfólio" deste repositório.
+ */
+export async function limparUploadsDemonstracao(pasta = pastaUploads()) {
+  await fs.promises.rm(pastaUploadsDemonstracao(pasta), { recursive: true, force: true });
 }
 
 const COLECOES = [Magazine, Article, Catalog, Cycle, Film, About];
@@ -63,7 +67,7 @@ export async function restaurarDemonstracao({ soSeVazio, log = console.log }: { 
     if (total > 0) return 'mantido' as const;
   }
   await executarSeed({ banco: 'demonstração', force: true, confirmar: async () => true, log });
-  if (!soSeVazio) limparUploadsDemonstracao();
+  if (!soSeVazio) await limparUploadsDemonstracao();
   return 'restaurado' as const;
 }
 
