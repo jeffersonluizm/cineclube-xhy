@@ -1,4 +1,5 @@
-/** @type {import('next').NextConfig} */
+const { PHASE_PRODUCTION_BUILD } = require('next/constants');
+const { conferirAmbienteDoBuild } = require('./conferir-ambiente');
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 const DEV = process.env.NODE_ENV !== 'production';
@@ -62,4 +63,16 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+/** @type {(fase: string) => import('next').NextConfig} */
+module.exports = (fase) => {
+  // Build de produção com configuração que quebraria o site: para aqui, com a explicação.
+  // O `next lint` também carrega a config nessa fase; a conferência vale só para `next build`.
+  if (fase === PHASE_PRODUCTION_BUILD && process.argv.includes('build')) {
+    const { erros, avisos } = conferirAmbienteDoBuild(process.env);
+    for (const aviso of avisos) console.warn(`AVISO: ${aviso}`);
+    if (erros.length) {
+      throw new Error(`Configuração inválida para o build de produção do site:\n- ${erros.join('\n- ')}`);
+    }
+  }
+  return nextConfig;
+};
