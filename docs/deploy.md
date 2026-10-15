@@ -50,7 +50,7 @@ própria API ao subir.
 |---|---|
 | `MONGODB_URI` | a string do Atlas com `/cineclube_demo` |
 | `ADMIN_PASSWORD` | a senha gerada (12+ caracteres, senão a API não sobe) |
-| `SERVIDOR_SEGREDO` | o segredo gerado (32+ caracteres); o mesmo valor vai na Vercel |
+| `SERVIDOR_SEGREDO` | o segredo gerado (32+ caracteres); o mesmo valor vai na Vercel. **Obrigatório:** sem ele a API não sobe em produção |
 | `FRONTEND_URL` | `https://<seu-site>.vercel.app` (some o domínio próprio, separado por vírgula) |
 | `CLOUDINARY_URL` | deixe vazio na demonstração (é ignorado com `DEMO_ENABLED`); use no site oficial |
 
@@ -79,7 +79,7 @@ própria API ao subir.
 |---|---|---|
 | `NEXT_PUBLIC_API_URL` | `https://<api>.onrender.com` | pública (vai para o navegador) |
 | `NEXT_PUBLIC_SITE_URL` | `https://<seu-site>.vercel.app` | metatags, RSS e sitemap |
-| `SERVIDOR_SEGREDO` | o mesmo segredo do Render | **só de servidor**: nunca prefixe com `NEXT_PUBLIC_` |
+| `SERVIDOR_SEGREDO` | o mesmo segredo do Render | **só de servidor**: nunca prefixe com `NEXT_PUBLIC_`. Obrigatório: sem ele o build falha |
 | `NEXT_PUBLIC_DEMO` | `1` | tira o site da demonstração dos buscadores (`noindex` e `robots.txt` bloqueando tudo) |
 | `CLOUDINARY_CLOUD_NAME` | o nome da conta | só no site oficial: libera o `next/image` para essa conta |
 
@@ -98,7 +98,10 @@ própria API ao subir.
 A API limita 300 requisições por minuto **por IP**. Quem busca os dados das páginas é o
 servidor da Vercel, então todos os visitantes chegariam à API com o mesmo IP e um único
 visitante abusivo derrubaria o site para todos. O servidor do site manda o cabeçalho
-`X-Servidor-Site` com `SERVIDOR_SEGREDO`; a API o reconhece (comparação em tempo
+`X-Servidor-Site` com `SERVIDOR_SEGREDO`. Por isso, sem o segredo, a API não sobe em produção
+e o build do site falha: avisar não bastaria, porque o site quebraria sob carga. O build
+do site também falha sem `NEXT_PUBLIC_API_URL` ou com ela em `http://` (só `localhost` é
+aceito sem TLS). A API reconhece o cabeçalho (comparação em tempo
 constante) e não o limita. O abuso é contido no próprio site pelo `middleware.ts`, que
 limita por IP do visitante (busca com termo: 20/min; revalidação: 30/min; páginas: 420/min,
 o equivalente a 60 visitas, já que cada visita passa umas 7 vezes pelo middleware). Nenhum

@@ -80,7 +80,8 @@ ADMIN_PASSWORD=senha-do-editor      # senha de acesso ao painel /admin
 JWT_SECRET=um-segredo-aleatorio     # assina os tokens de sessão do editor (obrigatório com banco remoto)
 FRONTEND_URL=http://localhost:3000  # origens permitidas (CORS), separadas por vírgula
 # CLOUDINARY_URL=cloudinary://...   # opcional local; obrigatório na hospedagem (ver abaixo)
-# SERVIDOR_SEGREDO=...              # 32+ caracteres; o mesmo no site: identifica o servidor do site (fora do limite por IP)
+# SERVIDOR_SEGREDO=...              # 32+ caracteres; o mesmo no site: identifica o servidor do site (fora do limite por IP).
+#                                   # Obrigatório em produção: sem ele a API não sobe
 # DEMO_ENABLED=true                 # modo demonstração (desligado por padrão; só no ambiente da demo).
 #                                   # A API recusa partir se o nome do banco não tiver "demo", exceto
 #                                   # o banco local com DEMO_RESET_MINUTOS=0 fora de produção.
@@ -111,6 +112,8 @@ npm test       # testes das regras do front (tokens/contraste, sessão, login, R
 NEXT_PUBLIC_API_URL=http://localhost:3001    # endereço da API
 NEXT_PUBLIC_SITE_URL=http://localhost:3000   # endereço público do site (metatags de compartilhamento)
 SERVIDOR_SEGREDO=...                          # só de servidor (nunca NEXT_PUBLIC_): o mesmo valor da API
+# No build de produção (next build), NEXT_PUBLIC_API_URL é obrigatória e precisa de https
+# (exceto localhost); com API remota, SERVIDOR_SEGREDO também. Faltando, o build para.
 # CLOUDINARY_CLOUD_NAME=...                   # opcional: next/image aceita só essa conta
 # NEXT_PUBLIC_DEMO=1                          # site da demonstração: noindex e robots.txt bloqueando tudo
 ```

@@ -18,8 +18,12 @@ test('produção recusa subir com senha do editor curta ou segredos fracos', () 
     JWT_SECRET: 'j'.repeat(40),
     FRONTEND_URL: 'https://site',
     ADMIN_PASSWORD: 'senha-bem-longa-ok',
+    SERVIDOR_SEGREDO: 's'.repeat(64),
   };
   assert.deepEqual(problemasDeConfiguracao(base), []);
+  // sem o segredo, o site cai no limite por IP da API sob carga: em produção, não sobe
+  const { SERVIDOR_SEGREDO: _semSegredo, ...semSegredo } = base;
+  assert.match(problemasDeConfiguracao(semSegredo).join(), /SERVIDOR_SEGREDO não definida.*limite/);
   assert.match(problemasDeConfiguracao({ ...base, ADMIN_PASSWORD: 'curta123' }).join(), /ADMIN_PASSWORD.*12/);
   assert.match(problemasDeConfiguracao({ ...base, JWT_SECRET: 'curto' }).join(), /JWT_SECRET.*32/);
   assert.match(problemasDeConfiguracao({ ...base, SERVIDOR_SEGREDO: 'curto' }).join(), /SERVIDOR_SEGREDO.*32/);

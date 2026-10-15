@@ -16,7 +16,13 @@ export function problemasDeConfiguracao(env: NodeJS.ProcessEnv = process.env): s
       "JWT_SECRET precisa ter pelo menos 32 caracteres (gere com: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\")"
     );
   }
-  if (env.SERVIDOR_SEGREDO !== undefined && env.SERVIDOR_SEGREDO.length < 32) {
+  // Sem o segredo, todo pedido do servidor do site chega como um IP só e cai no limite geral
+  // (300/min): sob carga, as páginas do site quebram. Em produção isso impede a partida.
+  if (!env.SERVIDOR_SEGREDO) {
+    problemas.push(
+      'SERVIDOR_SEGREDO não definida: o site cairia no limite geral por IP desta API sob carga. Defina o mesmo valor na API e no site.'
+    );
+  } else if (env.SERVIDOR_SEGREDO.length < 32) {
     problemas.push('SERVIDOR_SEGREDO precisa ter pelo menos 32 caracteres');
   }
   return problemas;
