@@ -17,17 +17,84 @@ export function caminhoDaTrava(env = process.env) {
   return caminho;
 }
 
-/** true se criou a trava; false se outra carga já está com ela. Outros erros sobem. */
-export function adquirirTrava(caminho) {
+const DONO = 'dono.json';
+
+/**
+ * true se criou a trava; false se outra carga já está com ela. Outros erros sobem.
+ * Grava dono.json no mesmo formato do com-trava.sh da oficina ("pid": N, ...), para os
+ * outros projetos reconhecerem uma trava abandonada por esta carga.
+ */
+export function adquirirTrava(caminho, { projeto = 'cineclube', comando = '' } = {}) {
   try {
     fs.mkdirSync(caminho);
-    return true;
   } catch (e) {
     if (e.code === 'EEXIST') return false;
     throw e;
   }
+  const inicio = new Date().toISOString();
+  const limpo = (t) => String(t).replace(/["\\]/g, '').slice(0, 120);
+  fs.writeFileSync(
+    path.join(caminho, DONO),
+    `{"projeto": "${limpo(projeto)}", "pid": ${process.pid}, "inicio": "${inicio}", "comando": "${limpo(comando)}"}\n`
+  );
+  return true;
 }
 
+export function lerDono(caminho) {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(caminho, DONO), 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+/** Processo vivo? (process.kill com sinal 0 só consulta) */
+export function pidVivo(pid) {
+  if (!pid) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (e) {
+    return e.code === 'EPERM';
+  }
+}
+
+/** Órfã: tem dono.json e o dono (e o filho, se houver) já morreu. Sem dono.json, nunca. */
+export function travaOrfa(caminho, vivo = pidVivo) {
+  const dono = lerDono(caminho);
+  if (!dono || !dono.pid) return false;
+  if (vivo(dono.pid)) return false;
+  if (dono.filho && vivo(dono.filho)) return false;
+  return true;
+}
+
+export function removerOrfa(caminho) {
+  apagarPastaVazia(caminho, true);
+}
+
+/**
+ * A trava é uma pasta com um dono.json: unlink + rmdirSync. Não use fs.rmSync aqui: no Node 24
+ * (Windows) ele volta sem erro e sem apagar quando o caminho tem acento ("portfólio"), e a
+ * trava vazava para a próxima carga.
+ */
+function apagarPastaVazia(caminho, comDono) {
+  if (comDono) {
+    try {
+      fs.unlinkSync(path.join(caminho, DONO));
+    } catch (e) {
+      if (e.code !== 'ENOENT') throw e;
+    }
+  }
+  try {
+    fs.rmdirSync(caminho);
+  } catch (e) {
+    if (e.code !== 'ENOENT') throw e;
+  }
+}
+
+/** Libera só a trava desta carga (dono.json com o pid deste processo, ou sem dono.json) */
 export function liberarTrava(caminho) {
-  fs.rmSync(caminho, { recursive: true, force: true });
+  const dono = lerDono(caminho);
+  if (dono && dono.pid !== process.pid) return;
+  apagarPastaVazia(caminho, true);
 }

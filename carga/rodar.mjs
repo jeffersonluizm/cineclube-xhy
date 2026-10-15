@@ -21,7 +21,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { popular } from './popular.mjs';
-import { caminhoDaTrava, adquirirTrava, liberarTrava } from './trava.mjs';
+import { caminhoDaTrava, adquirirTrava, liberarTrava, lerDono, travaOrfa, removerOrfa } from './trava.mjs';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BACKEND = path.join(RAIZ, 'codigo-fonte/backend');
@@ -478,11 +478,18 @@ let travaCriada = false;
 async function esperarTrava(meta) {
   const limite = Date.now() + Number(process.env.CARGA_ESPERA_MIN || 120) * 60_000;
   let avisou = false;
-  while (!adquirirTrava(TRAVA)) {
+  const comando = `rodar.mjs ${process.argv.slice(2).join(' ')}`;
+  while (!adquirirTrava(TRAVA, { projeto: 'cineclube', comando })) {
+    // Trava com dono.json de processo morto é órfã (o com-trava.sh da oficina faz o mesmo)
+    if (travaOrfa(TRAVA)) {
+      log('trava órfã removida', JSON.stringify(lerDono(TRAVA)));
+      removerOrfa(TRAVA);
+      continue;
+    }
     if (Date.now() > limite) throw new Error(`Outra carga ficou com ${TRAVA} por tempo demais.`);
-    if (!avisou) log(`outra carga em andamento (${TRAVA} existe); esperando a vez...`);
+    if (!avisou) log(`outra carga em andamento (${TRAVA} existe, dono: ${JSON.stringify(lerDono(TRAVA))}); esperando a vez...`);
     avisou = true;
-    await esperar(15_000);
+    await esperar(7_000);
   }
   travaCriada = true;
   meta.trava = TRAVA;
@@ -500,9 +507,16 @@ async function limpar() {
   }
   if (travaCriada) liberarTrava(TRAVA);
 }
-process.on('SIGINT', async () => {
-  await limpar();
-  process.exit(130);
+// Interrupção (Ctrl+C, TaskStop, fim da sessão): para tudo e libera a trava
+for (const sinal of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
+  process.on(sinal, async () => {
+    await limpar();
+    process.exit(130);
+  });
+}
+// Rede de segurança: qualquer saída do processo libera a trava (só operações síncronas aqui)
+process.on('exit', () => {
+  if (travaCriada) liberarTrava(TRAVA);
 });
 
 try {
