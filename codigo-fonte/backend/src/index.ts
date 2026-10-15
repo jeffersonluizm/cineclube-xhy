@@ -7,7 +7,7 @@ import app from './app';
 import { conectarBanco } from './lib/banco';
 import { problemasDeConfiguracao } from './lib/configuracao';
 import mongoose from 'mongoose';
-import { agendarResetDemonstracao, bancoAceitaDemonstracao, demoLigado, restaurarDemonstracao } from './lib/demo';
+import { agendarConferenciaDemonstracao, bancoAceitaDemonstracao, conferirDemonstracao, demoLigado } from './lib/demo';
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 const PORT = process.env.PORT || 3001;
@@ -32,10 +32,11 @@ conectarBanco({ timeoutMs: Number(process.env.MONGODB_TIMEOUT_MS) || undefined }
         console.error(recusa);
         process.exit(1);
       }
-      // Demonstração: popula o banco vazio na primeira partida e restaura os exemplos periodicamente
-      const r = await restaurarDemonstracao({ soSeVazio: true, log: () => {} });
-      console.log(`Modo demonstração LIGADO (dados de exemplo ${r === 'restaurado' ? 'criados' : 'mantidos'}).`);
-      agendarResetDemonstracao();
+      // Demonstração: confere na partida (o servidor pode ter dormido além do prazo do reset)
+      // e a cada 5 min; o horário do último reset fica no banco, não na memória
+      const r = await conferirDemonstracao();
+      console.log(`Modo demonstração LIGADO (dados de exemplo ${r}).`);
+      agendarConferenciaDemonstracao();
     }
     app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
   })

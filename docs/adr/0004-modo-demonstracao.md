@@ -31,5 +31,11 @@ demonstração pode estar no código, e o site oficial não pode ter essa porta 
 
 - O avaliador entra com um clique em "Entrar no painel como editor de demonstração".
 - Qualquer pessoa na demonstração pode editar e excluir; o reset limita o dano a uma hora.
+  O prazo conta a partir do último reset gravado no banco (`demo_meta`), conferido na
+  partida e a cada 5 minutos: não depende de a API ficar no ar (o Render gratuito dorme
+  depois de 15 min). Uma imagem enviada que sumiu do disco efêmero também dispara o reset.
+- O reset roda numa transação quando o banco é replica set (Atlas M0): uma falha no meio
+  não deixa o banco pela metade. As imagens enviadas são apagadas mesmo se o seed falhar,
+  e o site é avisado para invalidar o cache.
 - Ligar a flag num banco com conteúdo real apagaria esse conteúdo: além do aviso no
   `docs/deploy.md`, no `render.yaml` e nesta decisão, a API recusa um banco sem `demo` no nome.

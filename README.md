@@ -27,8 +27,9 @@
 
 **Conta de demonstração:** no login do painel, o botão **"Entrar no painel como editor de
 demonstração"** entra com um clique, sem senha. Pode criar, editar e excluir à vontade: os
-dados de exemplo e as imagens enviadas voltam ao original a cada hora. A primeira visita
-pode levar até um minuto (o servidor gratuito acorda) e o site avisa enquanto isso.
+dados de exemplo e as imagens enviadas voltam ao original a cada hora, mesmo que o servidor
+gratuito tenha dormido no meio (o horário do último reset fica no banco). A primeira visita
+pode levar até um minuto (o servidor acorda) e o site avisa enquanto isso.
 
 Roteiro sugerido: página inicial → uma edição da revista → um texto → busca → `como foi feito`
 → painel: início → abrir a revista → editar um texto (o rascunho fica guardado no navegador)

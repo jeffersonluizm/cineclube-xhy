@@ -100,11 +100,17 @@ limita por IP do visitante (busca com termo: 20/min; revalidação: 30/min; pág
 o equivalente a 60 visitas, já que cada visita passa umas 7 vezes pelo middleware). Nenhum
 cabeçalho de prefetch isenta da contagem, porque o cliente pode forjá-lo.
 
-## 5. Manter acordado (opcional)
+## 5. Manter acordado (recomendado, não obrigatório)
 
 O Render gratuito dorme depois de 15 minutos sem tráfego e leva de 30 a 60 s para
 acordar. O site lida com isso: as páginas públicas saem do cache da Vercel, e o painel
-mostra "acordando o servidor de demonstração" em vez de erro. Para evitar a espera:
+mostra "acordando o servidor de demonstração" em vez de erro.
+
+**O reset da demonstração não depende do keep-alive.** O horário do último reset fica no
+banco (coleção `demo_meta`). A API confere o prazo ao acordar e a cada 5 minutos: se já
+passou `DEMO_RESET_MINUTOS`, restaura. Também restaura quando uma imagem enviada sumiu do
+disco, que o Render apaga ao dormir. O keep-alive só serve para o visitante não esperar a
+API acordar. Para isso:
 
 - **GitHub Actions:** o workflow `keep-alive.yml` faz um ping a cada 10 minutos; crie a
   variável `API_HEALTH_URL = https://<api>.onrender.com/api/health` em
