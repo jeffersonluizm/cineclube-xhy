@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { adminApi, InfoDemo } from '@/lib/adminApi';
+import { intervaloEmTexto } from '@/lib/intervalo';
 import { classeBotao } from './estilos';
 
 const ACORDANDO_APOS_MS = 2500;
@@ -69,7 +70,7 @@ export default function CartaoDemo({ aoEntrar }: { aoEntrar: () => void }) {
       </button>
       <p className="font-sans text-xs text-text-suave">
         {info.resetMinutos > 0
-          ? `Pode editar e excluir à vontade: os dados de exemplo voltam ao original a cada ${Math.max(1, Math.round(info.resetMinutos / 60))} h.`
+          ? `Pode editar e excluir à vontade: os dados de exemplo voltam ao original a cada ${intervaloEmTexto(info.resetMinutos)}.`
           : 'Pode editar e excluir à vontade.'}
       </p>
       <div aria-live="assertive">{erro && <p className="font-sans text-sm text-pink-escuro">{erro}</p>}</div>
