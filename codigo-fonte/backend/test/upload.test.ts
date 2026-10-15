@@ -63,3 +63,11 @@ test('upload sem token responde 401', async () => {
   const res = await request(app).post('/api/upload').attach('image', PNG, { filename: 'a.png', contentType: 'image/png' });
   assert.equal(res.status, 401);
 });
+
+test('imagem AVIF enviada é servida com Content-Type image/avif (não application/octet-stream)', async () => {
+  fs.writeFileSync(path.join(pasta, '1700000000000-cartaz.avif'), Buffer.from('avif-de-mentira'));
+  const res = await request(app).get('/uploads/1700000000000-cartaz.avif');
+  assert.equal(res.status, 200);
+  assert.match(res.headers['content-type'], /^image\/avif/);
+  assert.equal(res.headers['x-content-type-options'], 'nosniff');
+});

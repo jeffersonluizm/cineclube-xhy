@@ -68,6 +68,10 @@ app.use(
   express.static(pastaUploads(), {
     maxAge: IS_PRODUCTION ? '30d' : 0,
     immutable: IS_PRODUCTION,
+    // O mime do Express 4 não conhece .avif e mandaria application/octet-stream
+    setHeaders: (res, arquivo) => {
+      if (arquivo.toLowerCase().endsWith('.avif')) res.setHeader('Content-Type', 'image/avif');
+    },
   })
 );
 
