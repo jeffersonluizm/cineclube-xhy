@@ -22,8 +22,8 @@
 | | Endereço |
 |---|---|
 | Site | `https://cineclube-xhy.vercel.app` *(a publicar: ver [docs/deploy.md](docs/deploy.md))* |
-| Painel do editor | `https://cineclube-xhy.vercel.app/admin/login` |
-| API | `https://cineclube-xhy-api.onrender.com/api/health` |
+| Painel do editor | `https://cineclube-xhy.vercel.app/admin/login` *(a publicar)* |
+| API | `https://cineclube-xhy-api.onrender.com/api/health` *(a publicar)* |
 
 **Conta de demonstração:** no login do painel, o botão **"Entrar no painel como editor de
 demonstração"** entra com um clique, sem senha. Pode criar, editar e excluir à vontade: os
@@ -94,9 +94,9 @@ flowchart LR
 
 | Suíte | Testes | O que roda |
 |---|---|---|
-| API (`codigo-fonte/backend`) | 128 | node:test + supertest + MongoDB em memória |
-| Site (`codigo-fonte/frontend`) | 34 | regras do front e o `middleware.ts` de verdade |
-| Harness e preparo local (`carga/`, `ferramentas/`) | 11 | trava de carga e `.env` do `iniciar.bat` |
+| API (`codigo-fonte/backend`) | 150 | node:test + supertest + MongoDB em memória |
+| Site (`codigo-fonte/frontend`) | 43 | regras do front e o `middleware.ts` de verdade |
+| Harness e preparo local (`carga/`, `ferramentas/`) | 16 | trava de carga e `.env` do `iniciar.bat` |
 | Fluxos no navegador (`ferramentas/verificar-fluxos.mjs`) | 10 conferências | visitante e editor no Chrome headless |
 
 ```bash

@@ -17,8 +17,8 @@
 > harness criava uma pasta errada e nunca via a trava das outras cargas, que mediram ao mesmo
 > tempo: em 04/10 a partir de 18:27:07 e em 13/10 a partir de 21:56:39. As duas rodadas
 > foram descartadas (ficam fora do Git, em `carga/resultados/*-colidiu`). Os horários de
-> todas as rodadas estão em `docs/planos/2026-10-13-janelas-carga-cineclube.md`, na pasta
-> da oficina.
+> todas as rodadas ficam num registro de janelas de carga mantido fora deste repositório,
+> no espaço de trabalho onde as cargas de vários projetos dividiram a mesma máquina.
 
 > **Limitações desta medição**
 >

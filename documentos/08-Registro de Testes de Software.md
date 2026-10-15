@@ -100,14 +100,14 @@ o CI roda) e verificação no navegador.
 
 | Caso | Título | Resultado |
 |---|---|---|
-| CT-14 | Suíte da API (rotas e regras) | ✅ Aprovado: 112 testes passando (`npm test` no backend, 13/10/2026) |
-| CT-15 | Segurança da API | ✅ Aprovado (incluído nos 112) |
-| CT-16 | Modo demonstração | ✅ Aprovado (incluído nos 112) |
-| CT-17 | Regras do front | ✅ Aprovado: 19 testes passando (`npm test` no frontend) |
-| CT-18 | Lint, formatação e build | ✅ Aprovado: ESLint sem avisos nos dois projetos, Prettier sem diferenças, `next build` concluído sem a API no ar |
-| CT-19 | Status HTTP honestos | ✅ Aprovado: `/revista/999` e `/revista/1/artigo/nada` respondem 404; com a API fora, páginas em cache continuam com conteúdo (H11) |
-| CT-20 | Fluxo do editor | ✅ Aprovado: senha errada anunciada; sessão invalidada no meio de uma edição abriu o re-login por cima da página com o campo editado preservado; depois de entrar, salvar funcionou e mostrou o aviso de sucesso; diálogo de exclusão mostrou "3 textos" e exigiu digitar o nome |
-| CT-21 | Carga antes/depois | ✅ Executado: H1 a H9 e H11 confirmadas, H5 refutada para melhor, H10 parcial (detalhes em `docs/carga/2026-10-04-resultados.md`) |
+| CT-14 | Suíte da API (rotas e regras) | ✅ Aprovado: 150 testes passando (`npm test` no backend, 15/10/2026) |
+| CT-15 | Segurança da API | ✅ Aprovado (incluído nos 150) |
+| CT-16 | Modo demonstração (reset que sobrevive ao servidor dormir, transação, teto de volume, upload contido) | ✅ Aprovado (incluído nos 150) |
+| CT-17 | Regras do front e middleware | ✅ Aprovado: 43 testes passando (`npm test` no frontend) |
+| CT-18 | Lint, formatação e build | ✅ Aprovado: ESLint sem avisos nos dois projetos, Prettier sem diferenças, `next build` concluído; o build de produção para com mensagem clara sem `NEXT_PUBLIC_API_URL` em https ou sem `SERVIDOR_SEGREDO` |
+| CT-19 | Status HTTP honestos | ✅ Aprovado: `/revista/999`, `/revista/abc` e `/autores/<inexistente>` respondem 404; com a API fora, páginas em cache continuam com conteúdo (H11) |
+| CT-20 | Fluxo do visitante e do editor | ✅ Aprovado no Chrome headless (`ferramentas/verificar-fluxos.mjs`, 10 de 10 conferências): entrar como editor de demonstração, criar catálogo sem capa e ver a capa padrão, item inexistente no painel, barra de salvar no celular; "tentar novamente" recupera com a API de volta |
+| CT-21 | Carga antes/depois | ✅ Executado com a trava compartilhada (14 e 15/10): H1, H2, H3, H4, H6, H7, H8, H9 e H11 confirmadas; H5 refutada para melhor (1,7× a 2,7×, a previsão era 1,3×); H10 parcial (banco fora do caminho, vazão 1,1× a 3,3× em vez de 10×). Detalhes em `docs/carga/2026-10-04-resultados.md` |
 
 ### Defeitos encontrados e corrigidos na 1.3.0
 
