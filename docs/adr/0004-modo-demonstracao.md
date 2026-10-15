@@ -20,6 +20,9 @@ demonstração pode estar no código, e o site oficial não pode ter essa porta 
 - A API popula o banco vazio na primeira partida e **restaura os dados de exemplo a cada
   `DEMO_RESET_MINUTOS`** (padrão 60): como não há contas, a proteção contra vandalismo é
   voltar ao estado conhecido.
+- Volume contido na demonstração: teto por coleção (50 revistas, 300 textos, 50 catálogos,
+  50 exibições, 300 filmes; variáveis `DEMO_TETO_*`) com 409 em português, corpo JSON de até
+  256 kB e até 60 escritas por hora por IP (`DEMO_ESCRITAS_POR_HORA`).
 - Upload contido na demonstração: até 2 MB, 10 imagens por hora por IP, sempre em disco
   na pasta `uploads/demo` (nunca no Cloudinary), apagada a cada reset.
 - A API se recusa a partir com a flag se o nome do banco não tiver `demo`. Única exceção:

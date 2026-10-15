@@ -173,7 +173,8 @@ imagem é conferido pelos primeiros bytes do arquivo, não pelo que o navegador 
   número em `src/app.ts`.
 - CORS fechado em `FRONTEND_URL`: as prévias da Vercel (outra URL por branch) recebem 403
   no painel até a URL delas entrar na lista.
-- Demonstração (`DEMO_ENABLED`): upload de até 2 MB, 10 por hora por IP, em `uploads/demo`,
+- Demonstração (`DEMO_ENABLED`): teto por coleção (409), corpo JSON de até 256 kB,
+  60 escritas por hora por IP; upload de até 2 MB, 10 por hora por IP, em `uploads/demo`,
   apagado a cada reset (60 min); banco precisa ter `demo` no nome.
 - Teto global de 100 logins errados por hora (força bruta distribuída).
 - Query string simples (sem objetos aninhados) e filtros com `z.strictObject`.

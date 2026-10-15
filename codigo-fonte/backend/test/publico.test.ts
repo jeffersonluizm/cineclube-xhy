@@ -122,7 +122,7 @@ test('home faz um número fixo de consultas, qualquer que seja o número de edi�
   try {
     const res = await request(app).get('/api/home');
     assert.equal(res.status, 200);
-    assert.equal(res.body.editions.length, 32);
+    assert.equal(res.body.editions.length, 12, 'só as últimas edições: as outras ficam em /revista');
   } finally {
     mongoose.set('debug', false);
   }

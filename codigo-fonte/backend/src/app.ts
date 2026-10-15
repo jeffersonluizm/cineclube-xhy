@@ -16,6 +16,7 @@ import descobertaRouter from './routes/descoberta';
 import demoRouter from './routes/demo';
 import { ErroHttp, rotaInexistente, tratadorDeErros } from './middleware/erros';
 import { criarLimitadorGeral } from './middleware/limitadores';
+import { corpoJson } from './middleware/demo';
 import { pastaUploads } from './lib/uploads';
 
 // Só monta o app: a conexão com o banco e o listen ficam em index.ts (os testes importam este módulo)
@@ -58,7 +59,8 @@ app.use(
   })
 );
 app.use('/api', criarLimitadorGeral(Number(process.env.RATE_LIMIT_GERAL ?? 300)));
-app.use(express.json({ limit: '2mb' }));
+// Corpo JSON: 2 MB, ou 256 kB na demonstração pública (middleware/demo.ts)
+app.use(corpoJson);
 
 // Imagens enviadas pelo editor (apenas quando o Cloudinary não está configurado)
 app.use(

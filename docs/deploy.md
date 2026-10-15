@@ -56,7 +56,11 @@ própria API ao subir.
 
 3. Já vêm preenchidas: `NODE_ENV=production`, `DEMO_ENABLED=true`, `DEMO_RESET_MINUTOS=60`,
    `MONGODB_TIMEOUT_MS=30000`, `JWT_SECRET` (gerado).
-   Na demonstração o upload fica contido: até 2 MB por imagem, 10 envios por hora por
+   Na demonstração o volume também fica contido: teto por coleção (`DEMO_TETO_REVISTAS=50`,
+   `DEMO_TETO_TEXTOS=300`, `DEMO_TETO_CATALOGOS=50`, `DEMO_TETO_EXIBICOES=50`,
+   `DEMO_TETO_FILMES=300`), corpo JSON de até 256 kB e `DEMO_ESCRITAS_POR_HORA=60` por IP.
+   Os padrões já valem sem definir nada.
+   O upload também fica contido: até 2 MB por imagem, 10 envios por hora por
    visitante, gravados em `uploads/demo` e apagados a cada reset.
 4. **Proxy:** a API usa `app.set('trust proxy', 1)` em produção, que é o correto no Render
    (um proxy na frente). Assim o limite de requisições e o de logins enxergam o IP real
