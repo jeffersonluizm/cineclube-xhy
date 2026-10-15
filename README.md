@@ -173,7 +173,9 @@ Next 14.2 com a superfície dos advisories fechada.
 - Datas estruturadas nas sessões e agenda "próximas sessões" com calendário (.ics).
 - Prévia de rascunho no próprio site (`draftMode`) e imagem de compartilhamento gerada (`next/og`).
 - Cookie `httpOnly` com proxy no mesmo domínio para o token do painel.
-- Migrar para Next 15.5+ / React 19 (fecha os advisories que hoje são contornados por configuração).
+- Migrar para Next 15.5+ / React 19: fecha os advisories hoje contornados por configuração e
+  os três de DoS em RSC/App Router (GHSA-h25m-26qc-wcjf, GHSA-q4gf-8mx6-v5v3,
+  GHSA-8h8q-6873-q5fj), aceitos como risco residual no [ADR 0006](docs/adr/0006-next-14-e-advisories.md).
 
 ## Rodar localmente
 
