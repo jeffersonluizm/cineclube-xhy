@@ -206,7 +206,10 @@ export default function HomeShowcase({ slides }: HomeShowcaseProps) {
         );
       })}
 
-      <p className="absolute top-3 sm:top-6 left-5 sm:left-8 text-pink-escuro font-serif italic text-xs sm:text-sm z-40" aria-hidden="true">
+      <p
+        className="absolute top-3 sm:top-6 left-5 sm:left-8 bg-cream px-1 text-pink-escuro font-serif italic text-xs sm:text-sm z-40"
+        aria-hidden="true"
+      >
         {index === 0 ? 'últimas atualizações' : 'edições anteriores'}
       </p>
 
@@ -287,7 +290,10 @@ function SlideContent({ slide, hideInfo, eager }: { slide: ShowcaseSlide; hideIn
             className="w-full aspect-[3/4] object-cover shadow-[0_18px_40px_rgba(38,24,64,0.35)] group-hover:opacity-95 transition-opacity"
           />
         ) : (
-          <CapaPadrao titulo={nomeDoSlide(slide)} className="shadow-[0_18px_40px_rgba(38,24,64,0.35)]" />
+          <CapaPadrao
+            titulo={slide.type === 'revista' ? `Revista XHY n°${slide.magazine?.number}` : (slide.catalog?.title ?? '')}
+            className="shadow-[0_18px_40px_rgba(38,24,64,0.35)]"
+          />
         )}
       </Link>
 
