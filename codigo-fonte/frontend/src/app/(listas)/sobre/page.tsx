@@ -6,15 +6,13 @@ import BlockContent from '@/components/BlockContent';
 import Credit from '@/components/Credit';
 import { api, ouNulo } from '@/lib/api';
 import type { TeamMember } from '@/lib/types';
+import { atributosDoLinkDoEditor, linkDoEditorSeguro } from '@/lib/linksDoEditor';
 
 export const metadata: Metadata = {
   title: 'Sobre',
   description: 'Quem faz o Cineclube XHY: apresentação, equipe e contatos.',
   alternates: { canonical: '/sobre' },
 };
-
-/** Só links seguros chegam ao href (a API já valida; esta é a segunda barreira) */
-const linkSeguro = (url: string) => /^(https:|mailto:)/i.test(url.trim());
 
 export default async function SobrePage() {
   // 404 da API = Sobre ainda não preenchido (mostramos o aviso); outras falhas sobem para o error.tsx
@@ -55,7 +53,7 @@ export default async function SobrePage() {
             const contatos = [
               ...(membro.email ? [{ chave: 'email', href: `mailto:${membro.email}`, rotulo: membro.email, externo: false }] : []),
               ...(membro.links ?? [])
-                .filter((l) => linkSeguro(l.url))
+                .filter((l) => linkDoEditorSeguro(l.url))
                 .map((l) => ({ chave: l.label, href: l.url, rotulo: l.label, externo: !l.url.startsWith('mailto:') })),
             ];
             return (
@@ -72,7 +70,7 @@ export default async function SobrePage() {
                         )}
                         <a
                           href={c.href}
-                          {...(c.externo ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                          {...(c.externo ? atributosDoLinkDoEditor(c.href) : {})}
                           className={`font-serif text-sm hover:underline break-all ${c.externo ? 'text-olive-escuro' : 'text-azul-escuro'}`}
                         >
                           {c.rotulo}

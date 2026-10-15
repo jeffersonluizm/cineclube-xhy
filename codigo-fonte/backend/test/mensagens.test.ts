@@ -35,7 +35,8 @@ test('todo campo dos esquemas do painel tem rótulo em português', async () => 
   const fs = await import('node:fs');
   const fonte = fs.readFileSync(new URL('../src/validacao/esquemas.ts', import.meta.url), 'utf8');
   const campos = new Set(Array.from(fonte.matchAll(/^\s+([a-zA-Z]+):/gm), (m) => m[1]));
-  const semRotulo = [...campos].filter((c) => !(c in ROTULOS));
+  // 'error' é opção do zod (mensagem), não campo do editor
+  const semRotulo = [...campos].filter((c) => c !== 'error' && !(c in ROTULOS));
   assert.deepEqual(semRotulo, []);
 });
 

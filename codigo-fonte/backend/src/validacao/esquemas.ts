@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { imagemSegura, linkSeguro } from '../lib/links';
+import { demoLigado } from '../lib/demoFlag';
 
 // Mensagens padrão em português para o que não tem mensagem própria
 z.config(z.locales.pt());
@@ -30,7 +31,16 @@ const inteiro = (rotulo: string, min: number, max: number) =>
     .min(min, { error: `${rotulo} deve ser no mínimo ${min}` })
     .max(max, { error: `${rotulo} deve ser no máximo ${max}` });
 const ano = inteiro('o ano', 1890, 2100);
-const imagem = z.string().trim().max(2000).refine(imagemSegura, { error: 'Imagem precisa ser um upload do painel ou um endereço https' });
+const imagem = z
+  .string()
+  .trim()
+  .max(2000)
+  .refine((v) => imagemSegura(v), {
+    error: () =>
+      demoLigado()
+        ? 'Na demonstração, a imagem precisa ser enviada pelo painel (endereços externos não são aceitos)'
+        : 'Imagem precisa ser um upload do painel ou um endereço https',
+  });
 const notas = z.array(texto(5000)).max(100);
 
 export const bloco = z.object({

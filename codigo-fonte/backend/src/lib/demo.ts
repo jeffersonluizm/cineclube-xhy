@@ -8,6 +8,7 @@ import fs from 'fs';
 import mongoose from 'mongoose';
 import path from 'path';
 import { executarSeed } from '../scripts/seed';
+import { demoLigado } from './demoFlag';
 import { pastaUploads } from './uploads';
 import { avisarSite as avisarSitePadrao } from './avisarSite';
 
@@ -22,9 +23,7 @@ import { avisarSite as avisarSitePadrao } from './avisarSite';
  *  - a API só parte se o banco tiver "demo" no nome (bancoAceitaDemonstracao).
  * Nunca ligue num banco com conteúdo real: o reset apaga tudo.
  */
-export function demoLigado(env: NodeJS.ProcessEnv = process.env): boolean {
-  return ['true', '1', 'sim'].includes(String(env.DEMO_ENABLED ?? '').toLowerCase());
-}
+export { demoLigado };
 
 /** Minutos entre os resets (padrão 60, mínimo 15); 0 desliga o reset periódico */
 export function intervaloResetMinutos(env: NodeJS.ProcessEnv = process.env): number {

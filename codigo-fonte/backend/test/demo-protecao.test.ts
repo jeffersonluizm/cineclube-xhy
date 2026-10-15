@@ -75,3 +75,12 @@ test('exceção local: o banco de desenvolvimento serve à demonstração só co
   assert.equal(bancoAceitaDemonstracao('cineclube_xhy', { DEMO_RESET_MINUTOS: '0' }), null);
   assert.notEqual(bancoAceitaDemonstracao('cineclube_xhy', { DEMO_RESET_MINUTOS: '0', NODE_ENV: 'production' }), null);
 });
+
+test('na demonstração, imagem só de upload próprio ou capa de exemplo; https externo é recusado', () => {
+  const demo = { DEMO_ENABLED: 'true' };
+  assert.equal(imagemSegura('/uploads/demo/1-x.png', demo), true);
+  assert.equal(imagemSegura('/demo/capa-revista-1.png', demo), true);
+  assert.equal(imagemSegura('', demo), true);
+  assert.equal(imagemSegura('https://exemplo.com/foto.jpg', demo), false);
+  assert.equal(imagemSegura('https://exemplo.com/foto.jpg', {}), true, 'fora da demonstração, https vale');
+});

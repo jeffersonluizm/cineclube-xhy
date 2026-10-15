@@ -96,3 +96,12 @@ test('/api/home: sem editorial e com número limitado de edições', async () =>
   assert.ok(res.body.editions.every((e: { magazine: object }) => !('editorial' in e.magazine)));
   assert.ok(!('editorial' in res.body.latest.data));
 });
+
+test('na demonstração, revista com capa externa responde 400 explicando; fora dela, https vale', async () => {
+  const capaExterna = { ...novaRevista(77), coverImage: 'https://exemplo.com/capa.jpg' };
+  const res = await request(app).post('/api/admin/revistas').set(auth()).send(capaExterna);
+  assert.equal(res.status, 400);
+  assert.match(res.body.error, /demonstração/);
+  delete process.env.DEMO_ENABLED;
+  assert.equal((await request(app).post('/api/admin/revistas').set(auth()).send(capaExterna)).status, 201);
+});

@@ -23,6 +23,9 @@ demonstração pode estar no código, e o site oficial não pode ter essa porta 
 - Volume contido na demonstração: teto por coleção (50 revistas, 300 textos, 50 catálogos,
   50 exibições, 300 filmes; variáveis `DEMO_TETO_*`) com 409 em português, corpo JSON de até
   256 kB e até 60 escritas por hora por IP (`DEMO_ESCRITAS_POR_HORA`).
+- Conteúdo externo contido na demonstração: imagem só de upload do próprio painel ou capa
+  de exemplo (endereço https externo responde 400), para ninguém pôr na home uma imagem
+  hospedada em qualquer lugar; links da equipe saem com `rel="noopener noreferrer nofollow"`.
 - Upload contido na demonstração: até 2 MB, 10 imagens por hora por IP, sempre em disco
   na pasta `uploads/demo` (nunca no Cloudinary), apagada a cada reset.
 - A API se recusa a partir com a flag se o nome do banco não tiver `demo`. Única exceção:
