@@ -1,13 +1,18 @@
-// Trava compartilhada da oficina: só uma carga por vez na máquina.
+// Trava de carga: só uma carga por vez na máquina.
 //
-// O caminho precisa ser ABSOLUTO. Até o commit 6332309 ele estava numa string JS comum com
-// barras invertidas simples ('E:\Faculdade\...'), que o JavaScript lê como
-// 'E:FaculdadeProjeto - ...martorelli-oficina.carga-lock': um caminho relativo à pasta atual da
-// unidade E:. A carga criava essa pasta errada e nunca enxergava a trava das outras cargas.
+// O caminho precisa ser ABSOLUTO. Antes da correção ele estava numa string JS comum com
+// barras invertidas simples ('D:\pasta\...'), que o JavaScript lê como 'D:pasta...': um
+// caminho relativo à pasta atual da unidade. A carga criava essa pasta errada e nunca
+// enxergava a trava das outras cargas.
+//
+// Sem CARGA_TRAVA, a trava fica na pasta temporária do sistema: vale para uma máquina com
+// um projeto só. Numa máquina com várias cargas (a oficina), defina CARGA_TRAVA com o caminho
+// absoluto da trava compartilhada, o mesmo que os outros projetos usam.
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
-export const TRAVA_PADRAO = String.raw`E:\Faculdade\Projeto - Faculdade\Projetos do portfólio\martorelli-oficina\.carga-lock`;
+export const TRAVA_PADRAO = path.join(os.tmpdir(), 'cineclube-carga-lock');
 
 export function caminhoDaTrava(env = process.env) {
   const caminho = env.CARGA_TRAVA || TRAVA_PADRAO;
@@ -33,10 +38,16 @@ export function adquirirTrava(caminho, { projeto = 'cineclube', comando = '' } =
   }
   const inicio = new Date().toISOString();
   const limpo = (t) => String(t).replace(/["\\]/g, '').slice(0, 120);
-  fs.writeFileSync(
-    path.join(caminho, DONO),
-    `{"projeto": "${limpo(projeto)}", "pid": ${process.pid}, "inicio": "${inicio}", "comando": "${limpo(comando)}"}\n`
-  );
+  try {
+    fs.writeFileSync(
+      path.join(caminho, DONO),
+      `{"projeto": "${limpo(projeto)}", "pid": ${process.pid}, "inicio": "${inicio}", "comando": "${limpo(comando)}"}\n`
+    );
+  } catch (e) {
+    // Sem dono.json ninguém saberia de quem é a trava (e esta carga não poderia liberá-la)
+    fs.rmdirSync(caminho);
+    throw e;
+  }
   return true;
 }
 
@@ -92,9 +103,9 @@ function apagarPastaVazia(caminho, comDono) {
   }
 }
 
-/** Libera só a trava desta carga (dono.json com o pid deste processo, ou sem dono.json) */
+/** Libera só a trava desta carga: dono.json legível e com o pid deste processo. Nada mais. */
 export function liberarTrava(caminho) {
   const dono = lerDono(caminho);
-  if (dono && dono.pid !== process.pid) return;
+  if (!dono || dono.pid !== process.pid) return;
   apagarPastaVazia(caminho, true);
 }

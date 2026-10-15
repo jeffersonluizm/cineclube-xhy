@@ -8,10 +8,10 @@ import { TRAVA_PADRAO, caminhoDaTrava, adquirirTrava, liberarTrava, lerDono, tra
 
 const noWindows = process.platform === 'win32';
 
-test('o caminho padrão da trava é absoluto e mantém as barras invertidas', { skip: !noWindows }, () => {
-  assert.ok(path.isAbsolute(TRAVA_PADRAO), TRAVA_PADRAO);
-  assert.ok(TRAVA_PADRAO.endsWith('\\martorelli-oficina\\.carga-lock'), TRAVA_PADRAO);
+test('sem CARGA_TRAVA a trava fica na pasta temporária do sistema (nada desta máquina no código)', () => {
+  assert.equal(TRAVA_PADRAO, path.join(os.tmpdir(), 'cineclube-carga-lock'));
   assert.equal(caminhoDaTrava({}), TRAVA_PADRAO);
+  assert.doesNotMatch(fs.readFileSync(new URL('./trava.mjs', import.meta.url), 'utf8'), /martorelli-oficina|Faculdade/);
 });
 
 test('recusa trava relativa', () => {
@@ -124,6 +124,20 @@ test('liberar não apaga a trava de outro dono', async () => {
     fs.writeFileSync(path.join(p, 'dono.json'), '{"projeto": "outro", "pid": 999999, "inicio": "2026-10-15T00:00:00-03:00"}');
     liberarTrava(p);
     assert.equal(fs.existsSync(path.join(p, 'dono.json')), true);
+  } finally {
+    await limpar();
+  }
+});
+
+test('liberar não apaga trava cujo dono.json falta ou não pode ser lido (só apaga a sua)', async () => {
+  const { p, limpar } = pastaTemporaria();
+  try {
+    fs.mkdirSync(p);
+    liberarTrava(p);
+    assert.equal(fs.existsSync(p), true, 'sem dono.json: não é desta carga');
+    fs.writeFileSync(path.join(p, 'dono.json'), '{quebrado');
+    liberarTrava(p);
+    assert.equal(fs.existsSync(path.join(p, 'dono.json')), true, 'dono.json ilegível: não apaga');
   } finally {
     await limpar();
   }

@@ -9,7 +9,8 @@
 //   - API compilada (dist/) rodando com o diretório de trabalho FORA do repositório, para o
 //     dotenv não ler backend/.env; todas as variáveis vêm daqui;
 //   - site com `next build` apontando para a API de teste e `next start` na 3200.
-// Só uma carga por vez na máquina: a trava .carga-lock da oficina (carga/trava.mjs) é criada só
+// Só uma carga por vez na máquina: a trava (carga/trava.mjs; na oficina, CARGA_TRAVA aponta
+// para a trava compartilhada) é criada só
 // na hora de medir, depois dos builds, e apagada assim que a medição termina. Se outra carga
 // estiver com ela, a medição espera (CARGA_ESPERA_MIN, padrão 120 min).
 // Depois da última rodada, refaça o build normal do site (npm run build em codigo-fonte/frontend).
@@ -28,6 +29,9 @@ const BACKEND = path.join(RAIZ, 'codigo-fonte/backend');
 const FRONTEND = path.join(RAIZ, 'codigo-fonte/frontend');
 // Trava compartilhada da oficina (caminho absoluto: vale também quando a carga roda de um worktree)
 const TRAVA = caminhoDaTrava();
+if (!process.env.CARGA_TRAVA) {
+  console.warn(`AVISO: CARGA_TRAVA não definida; usando a trava local ${TRAVA}. Com outras cargas na máquina, aponte para a trava compartilhada.`);
+}
 const K6 = process.env.K6_BIN || 'C:\\Program Files\\k6\\k6.exe';
 const PORTA_MONGO = 27200;
 const PORTA_API = 3201;
