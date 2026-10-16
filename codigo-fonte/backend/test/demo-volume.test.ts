@@ -114,6 +114,10 @@ test('salvar uma imagem /uploads/demo/<nome> que não existe no disco responde 4
   const res = await request(app).post('/api/admin/revistas').set(auth()).send(inexistente);
   assert.equal(res.status, 400);
   assert.match(res.body.error, /não está no servidor/);
+  // pasta só deste teste: outros arquivos de teste rodam em paralelo e limpam a pasta padrão
+  const os = await import('node:os');
+  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'cineclube-demo-volume-'));
+  process.env.UPLOADS_DIR = base;
   const pasta = pastaUploadsDemonstracao();
   fs.mkdirSync(pasta, { recursive: true });
   const nome = `${Date.now()}-existe.png`;
@@ -125,6 +129,7 @@ test('salvar uma imagem /uploads/demo/<nome> que não existe no disco responde 4
       .send({ ...novaRevista(79), coverImage: `/uploads/demo/${nome}` });
     assert.equal(ok.status, 201);
   } finally {
-    fs.unlinkSync(path.join(pasta, nome));
+    delete process.env.UPLOADS_DIR;
+    await fs.promises.rm(base, { recursive: true, force: true });
   }
 });

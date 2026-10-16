@@ -100,9 +100,9 @@ o CI roda) e verificação no navegador.
 
 | Caso | Título | Resultado |
 |---|---|---|
-| CT-14 | Suíte da API (rotas e regras) | ✅ Aprovado: 150 testes passando (`npm test` no backend, 15/10/2026) |
-| CT-15 | Segurança da API | ✅ Aprovado (incluído nos 150) |
-| CT-16 | Modo demonstração (reset que sobrevive ao servidor dormir, transação, teto de volume, upload contido) | ✅ Aprovado (incluído nos 150) |
+| CT-14 | Suíte da API (rotas e regras) | ✅ Aprovado: 157 testes passando (`npm test` no backend, 15/10/2026) |
+| CT-15 | Segurança da API | ✅ Aprovado (incluído nos 157) |
+| CT-16 | Modo demonstração (reset que sobrevive ao servidor dormir, transação, teto de volume, upload contido) | ✅ Aprovado (incluído nos 157) |
 | CT-17 | Regras do front e middleware | ✅ Aprovado: 43 testes passando (`npm test` no frontend) |
 | CT-18 | Lint, formatação e build | ✅ Aprovado: ESLint sem avisos nos dois projetos, Prettier sem diferenças, `next build` concluído; o build de produção para com mensagem clara sem `NEXT_PUBLIC_API_URL` em https ou sem `SERVIDOR_SEGREDO` |
 | CT-19 | Status HTTP honestos | ✅ Aprovado: `/revista/999`, `/revista/abc` e `/autores/<inexistente>` respondem 404; com a API fora, páginas em cache continuam com conteúdo (H11) |

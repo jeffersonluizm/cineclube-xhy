@@ -1,6 +1,8 @@
 import { test, before, after, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import request from 'supertest';
+import os from 'node:os';
+import path from 'node:path';
 import app from '../src/app';
 import Magazine from '../src/models/Magazine';
 import { abrirBancoEmMemoria } from './helpers/bancoEmMemoria';
@@ -62,7 +64,12 @@ test('restaurar a demonstração repõe os dados de exemplo e só popula banco v
   await Magazine.create({ number: 50, volume: 1, month: 'maio', year: 2026, slug: 'revista-50' });
   await restaurarDemonstracao({ soSeVazio: true, log: () => {} });
   assert.equal(await Magazine.countDocuments(), exemplo + 1, 'com dados, soSeVazio não mexe');
-  await restaurarDemonstracao({ soSeVazio: false, log: () => {} });
+  // pasta temporária: o reset apaga uploads/demo, e a padrão é a do desenvolvimento
+  await restaurarDemonstracao({
+    soSeVazio: false,
+    log: () => {},
+    pasta: path.join(os.tmpdir(), `cineclube-demo-test-${process.pid}`),
+  });
   assert.equal(await Magazine.countDocuments(), exemplo, 'o reset periódico volta ao estado de exemplo');
 });
 

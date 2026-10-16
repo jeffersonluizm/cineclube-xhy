@@ -94,7 +94,7 @@ flowchart LR
 
 | Suíte | Testes | O que roda |
 |---|---|---|
-| API (`codigo-fonte/backend`) | 150 | node:test + supertest + MongoDB em memória |
+| API (`codigo-fonte/backend`) | 157 | node:test + supertest + MongoDB em memória |
 | Site (`codigo-fonte/frontend`) | 43 | regras do front e o `middleware.ts` de verdade |
 | Harness e preparo local (`carga/`, `ferramentas/`) | 16 | trava de carga e `.env` do `iniciar.bat` |
 | Fluxos no navegador (`ferramentas/verificar-fluxos.mjs`) | 10 conferências | visitante e editor no Chrome headless |
