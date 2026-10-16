@@ -73,13 +73,15 @@ própria API ao subir.
 ## 4. Site na Vercel
 
 1. **Add New → Project**, importe o repositório, **Root Directory = `codigo-fonte/frontend`**.
-2. Environment Variables (Production):
+2. Environment Variables, marcando **Production e Preview** nas obrigatórias: o `next build`
+   das prévias também para sem `NEXT_PUBLIC_API_URL` em https e sem `SERVIDOR_SEGREDO`.
+   Em Preview, `NEXT_PUBLIC_SITE_URL` pode ficar com a URL de produção.
 
 | Variável | Valor | Observação |
 |---|---|---|
-| `NEXT_PUBLIC_API_URL` | `https://<api>.onrender.com` | pública (vai para o navegador) |
+| `NEXT_PUBLIC_API_URL` | `https://<api>.onrender.com` | Production e Preview; pública (vai para o navegador). Obrigatória e com https, senão o build falha |
 | `NEXT_PUBLIC_SITE_URL` | `https://<seu-site>.vercel.app` | metatags, RSS e sitemap |
-| `SERVIDOR_SEGREDO` | o mesmo segredo do Render | **só de servidor**: nunca prefixe com `NEXT_PUBLIC_`. Obrigatório: sem ele o build falha |
+| `SERVIDOR_SEGREDO` | o mesmo segredo do Render | Production e Preview; **só de servidor**: nunca prefixe com `NEXT_PUBLIC_`. Obrigatório: sem ele o build falha |
 | `NEXT_PUBLIC_DEMO` | `1` | tira o site da demonstração dos buscadores (`noindex` e `robots.txt` bloqueando tudo) |
 | `CLOUDINARY_CLOUD_NAME` | o nome da conta | só no site oficial: libera o `next/image` para essa conta |
 
@@ -88,9 +90,10 @@ própria API ao subir.
    volta a gerar as páginas estáticas.
 4. Atualize `FRONTEND_URL` no Render com a URL final da Vercel (e o domínio próprio, se houver).
 5. **Prévias da Vercel:** cada branch ganha uma URL própria (`<projeto>-git-<branch>.vercel.app`).
-   O site público dessas prévias funciona, porque os dados saem do servidor da Vercel. Já o
-   painel chama a API pelo navegador, e a API responde **403** a uma origem que não está em
-   `FRONTEND_URL`. Isso é proposital (CORS fechado). Para testar o painel numa prévia,
+   O build da prévia usa as variáveis marcadas como Preview (sem elas, ele falha com a
+   explicação no log). O site público dessas prévias funciona, porque os dados saem do
+   servidor da Vercel. Já o painel chama a API pelo navegador, e a API responde **403** a
+   uma origem que não está em `FRONTEND_URL`. Isso é proposital (CORS fechado). Para testar o painel numa prévia,
    acrescente a URL dela em `FRONTEND_URL`, separada por vírgula, e remova depois.
 
 ### Por que o segredo servidor-a-servidor
