@@ -124,7 +124,8 @@ export async function conectarBanco(opcoes: OpcoesConexao = {}): Promise<Conexao
   fs.mkdirSync(dbPath, { recursive: true });
   const mongod = await MongoMemoryServer.create({
     // portGeneration: false mantém a porta fixa, para o seed e a API se encontrarem
-    instance: { dbName: NOME_BANCO, dbPath, storageEngine: 'wiredTiger', port: porta, portGeneration: false },
+    // launchTimeout: numa máquina ocupada o mongod pode passar dos 10 s padrão para subir
+    instance: { dbName: NOME_BANCO, dbPath, storageEngine: 'wiredTiger', port: porta, portGeneration: false, launchTimeout: 30_000 },
   });
   // appName único identifica as conexões deste processo entre os clientes do mongod
   const appName = `cineclube-xhy-${process.pid}-${Math.random().toString(36).slice(2, 8)}`;

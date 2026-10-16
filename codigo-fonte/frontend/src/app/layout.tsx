@@ -1,5 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import { Cormorant_Garamond, Inter, Nunito } from 'next/font/google';
+import { cores } from '@/lib/tokens';
+import { robotsDaRaiz } from '@/lib/indexacao';
+import { api, ouNulo } from '@/lib/api';
+import { ProvedorDemo } from '@/components/DemoContexto';
 import './globals.css';
 
 // Fontes self-hosted pelo Next: sem requisição externa ao Google e sem "piscar" de fonte
@@ -38,6 +42,7 @@ export const metadata: Metadata = {
   },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
+  alternates: { types: { 'application/rss+xml': [{ url: '/feed.xml', title: 'Textos do Cineclube XHY' }] } },
   openGraph: {
     type: 'website',
     locale: 'pt_BR',
@@ -51,11 +56,12 @@ export const metadata: Metadata = {
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
   },
-  robots: { index: true, follow: true },
+  // NEXT_PUBLIC_DEMO=1 (site da demonstração): noindex em tudo
+  robots: robotsDaRaiz(),
 };
 
 export const viewport: Viewport = {
-  themeColor: '#F2EDD6',
+  themeColor: cores.cream,
   width: 'device-width',
   initialScale: 1,
 };
@@ -63,10 +69,20 @@ export const viewport: Viewport = {
 // Dá tempo para a API "acordar" em hospedagens gratuitas que hibernam (Render, Koyeb...)
 export const maxDuration = 60;
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Demonstração ligada na API? (fora do ar ou desligada: sem link do painel no rodapé)
+  const demo = await ouNulo(api.demo()).catch(() => null);
   return (
     <html lang="pt-BR" className={`${cormorant.variable} ${nunito.variable} ${inter.variable}`}>
-      <body>{children}</body>
+      <body>
+        <a
+          href="#conteudo"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:bg-text-dark focus:text-cream focus:px-4 focus:py-2 font-display font-bold"
+        >
+          pular para o conteúdo
+        </a>
+        <ProvedorDemo ativo={Boolean(demo)}>{children}</ProvedorDemo>
+      </body>
     </html>
   );
 }

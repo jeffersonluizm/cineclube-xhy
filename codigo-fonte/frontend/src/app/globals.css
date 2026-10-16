@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Cores via theme(): a fonte única é src/lib/tokens.ts */
 @layer base {
   html {
     scroll-behavior: smooth;
@@ -9,8 +10,8 @@
   }
 
   body {
-    background-color: #F2EDD6;
-    color: #2B2040;
+    background-color: theme('colors.cream');
+    color: theme('colors.text-dark');
     font-family: var(--font-serif), Georgia, serif;
     overflow-x: hidden;
   }
@@ -20,22 +21,42 @@
   }
 
   /* Palavras muito longas (títulos de filmes, e-mails) não estouram a tela no celular */
-  h1, h2, h3, p, a {
+  h1,
+  h2,
+  h3,
+  p,
+  a {
     overflow-wrap: break-word;
   }
 
   /* Foco visível para navegação por teclado */
   a:focus-visible,
-  button:focus-visible {
-    outline: 2px solid #E8368C;
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  summary:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid theme('colors.pink-escuro');
     outline-offset: 2px;
+  }
+
+  .tom-escuro a:focus-visible,
+  .tom-escuro button:focus-visible {
+    outline-color: theme('colors.pink-claro');
+  }
+
+  dialog::backdrop {
+    background: rgb(38 24 64 / 0.6);
   }
 
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
     }
-    *, *::before, *::after {
+    *,
+    *::before,
+    *::after {
       transition-duration: 0.01ms !important;
       animation-duration: 0.01ms !important;
     }

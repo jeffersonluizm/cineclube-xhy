@@ -1,21 +1,33 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import CycleForm from '@/components/admin/CycleForm';
+import { useToast } from '@/components/admin/Toasts';
+import { CabecalhoPagina } from '@/components/admin/ui';
 import { adminApi, CycleInput } from '@/lib/adminApi';
 
 export default function NovoCicloPage() {
   const router = useRouter();
+  const avisar = useToast();
 
-  async function handleSave(data: CycleInput) {
-    const cycle = await adminApi.ciclos.create(data);
-    router.replace(`/admin/ciclos/${cycle._id}`);
+  async function salvar(data: CycleInput) {
+    const novo = await adminApi.ciclos.create(data);
+    avisar('Exibição criada. Agora crie as páginas dos filmes.');
+    router.replace(`/admin/ciclos/${novo._id}`);
   }
 
   return (
     <div>
-      <h1 className="font-display font-black text-text-dark text-3xl mb-8">nova exibição</h1>
-      <CycleForm onSave={handleSave} />
+      <CabecalhoPagina
+        titulo="nova exibição"
+        acoes={
+          <Link href="/admin/ciclos" className="font-display text-azul-escuro hover:underline">
+            cancelar
+          </Link>
+        }
+      />
+      <CycleForm onSave={salvar} />
     </div>
   );
 }

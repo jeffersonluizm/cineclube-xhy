@@ -1,169 +1,118 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
+import { useCallback, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import CycleForm from '@/components/admin/CycleForm';
-import ArticleList from '@/components/admin/ArticleList';
+import ListaReordenavel from '@/components/admin/ListaReordenavel';
+import { DialogoExclusao } from '@/components/admin/Dialogo';
+import { useCarregar } from '@/components/admin/hooks';
+import { useToast } from '@/components/admin/Toasts';
+import { Botao, BotaoLink, CabecalhoPagina, EstadoCarregando, EstadoErro, ItemNaoEncontrado, Secao } from '@/components/admin/ui';
 import { adminApi, CycleInput } from '@/lib/adminApi';
-import type { Article, Cycle, Film } from '@/lib/types';
+import type { Article, Film } from '@/lib/types';
 
 export default function CicloAdminPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const [cycle, setCycle] = useState<Cycle | null>(null);
-  const [films, setFilms] = useState<Film[]>([]);
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [error, setError] = useState('');
-  const [saved, setSaved] = useState(false);
-
-  const load = useCallback(async () => {
-    try {
-      const [cycles, cycleFilms, cycleArticles] = await Promise.all([
-        adminApi.ciclos.list(),
-        adminApi.filmes.list(id),
-        adminApi.artigos.list(id),
-      ]);
-      const found = cycles.find((c) => c._id === id);
-      if (!found) throw new Error('Ciclo não encontrado');
-      setCycle(found);
-      setFilms(cycleFilms);
-      setArticles(cycleArticles);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao carregar');
-    }
+  const avisar = useToast();
+  const [excluindo, setExcluindo] = useState(false);
+  const { dados, setDados, erro, naoEncontrado, recarregar } = useCarregar(async () => {
+    const [cycle, films, articles] = await Promise.all([adminApi.ciclos.get(id), adminApi.filmes.list(id), adminApi.artigos.list(id)]);
+    return { cycle, films, articles };
   }, [id]);
+  const impacto = useCallback(() => adminApi.ciclos.impacto(id), [id]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  if (naoEncontrado) return <ItemNaoEncontrado oQue="Esta exibição" lista="/admin/ciclos" rotuloLista="exibições" />;
+  if (erro) return <EstadoErro mensagem={erro} tentarDeNovo={recarregar} />;
+  if (!dados) return <EstadoCarregando />;
+  const { cycle, films, articles } = dados;
 
-  async function handleSaveCycle(data: CycleInput) {
-    await adminApi.ciclos.update(id, data);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+  async function salvar(data: CycleInput) {
+    const atualizado = await adminApi.ciclos.update(id, data);
+    setDados((d) => (d ? { ...d, cycle: atualizado } : d));
+    avisar('Exibição e programação salvas.');
   }
-
-  async function move(index: number, dir: -1 | 1) {
-    const next = [...films];
-    const target = index + dir;
-    if (target < 0 || target >= next.length) return;
-    [next[index], next[target]] = [next[target], next[index]];
-    setFilms(next);
-    await adminApi.filmes.reorder(next.map((f) => f._id));
-  }
-
-  async function removeFilm(film: Film) {
-    if (!window.confirm(`Excluir a página do filme "${film.title}"?`)) return;
-    await adminApi.filmes.remove(film._id);
-    setFilms((prev) => prev.filter((f) => f._id !== film._id));
-  }
-
-  async function removeCycle() {
-    if (!cycle) return;
-    if (!window.confirm(`Excluir o ciclo "${cycle.title}" e TODOS os seus filmes e textos?`)) return;
-    await adminApi.ciclos.remove(id);
-    router.replace('/admin/ciclos');
-  }
-
-  if (error) return <p className="font-sans text-pink">{error}</p>;
-  if (!cycle) return <p className="font-sans text-text-dark/60">carregando…</p>;
 
   return (
     <div className="flex flex-col gap-12">
-      <div>
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="font-display font-black text-text-dark text-3xl">{cycle.title}</h1>
-          <Link href={`/ciclos-mostras/${cycle.slug}`} target="_blank" className="font-display text-blue-link hover:underline">
-            ver no site ↗
-          </Link>
-        </div>
-
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="font-display font-bold text-text-dark text-xl">páginas de filmes</h2>
-            <p className="font-sans text-sm text-text-dark/60">
-              Cada filme da programação pode ter uma página própria com imagem, sinopse e texto.
-            </p>
-          </div>
-          <Link
-            href={`/admin/ciclos/${id}/filmes/novo`}
-            className="bg-pink text-white font-display font-bold px-5 py-2 rounded hover:opacity-90 transition-opacity"
+      <CabecalhoPagina
+        sobretitulo="exibição"
+        titulo={cycle.title}
+        acoes={
+          <a
+            href={`/ciclos-mostras/${cycle.slug}`}
+            target="_blank"
+            rel="noopener"
+            className="font-display text-azul-escuro hover:underline"
           >
-            + novo filme
-          </Link>
-        </div>
-
-        {films.length === 0 && <p className="font-serif text-text-dark/70">Nenhuma página de filme ainda.</p>}
-
-        <div className="grid gap-2">
-          {films.map((film, i) => (
-            <div
-              key={film._id}
-              className="bg-white rounded-lg px-5 py-4 flex items-center gap-4 border border-text-dark/10"
-            >
-              <div className="flex flex-col gap-1">
-                <button
-                  onClick={() => move(i, -1)}
-                  disabled={i === 0}
-                  aria-label="mover para cima"
-                  className="text-text-dark/50 hover:text-pink disabled:opacity-20 leading-none"
-                >
-                  ▲
-                </button>
-                <button
-                  onClick={() => move(i, 1)}
-                  disabled={i === films.length - 1}
-                  aria-label="mover para baixo"
-                  className="text-text-dark/50 hover:text-pink disabled:opacity-20 leading-none"
-                >
-                  ▼
-                </button>
-              </div>
-
-              <div className="min-w-0">
-                <p className="font-display font-bold text-text-dark truncate">
-                  {film.title} ({film.year})
-                </p>
-                <p className="font-sans text-sm text-text-dark/60">
-                  {film.director} · {film.duration} · {film.country}
-                </p>
-              </div>
-
-              <div className="ml-auto flex items-center gap-4 shrink-0">
-                <Link href={`/admin/filmes/${film._id}`} className="font-display text-blue-link hover:underline">
-                  editar
-                </Link>
-                <button onClick={() => removeFilm(film)} className="font-display text-pink hover:underline">
-                  excluir
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <p className="font-sans text-xs text-text-dark/50 mt-3">
-          Dica: para a sessão da programação virar link para a página do filme, o título do filme na
-          programação deve ser o mesmo usado aqui.
-        </p>
-      </div>
-
-      <ArticleList
-        articles={articles}
-        onChange={setArticles}
-        newHref={`/admin/ciclos/${id}/textos/novo`}
-        emptyText="Nenhum texto nesta exibição ainda."
-        description="Textos publicados aparecem na página da exibição, abaixo da programação."
+            ver no site ↗
+          </a>
+        }
       />
 
-      <div>
-        <h2 className="font-display font-bold text-text-dark text-xl mb-4">dados da exibição e programação</h2>
-        {saved && <p className="font-sans text-sm text-olive mb-2">salvo ✓</p>}
-        <CycleForm initial={cycle} onSave={handleSaveCycle} />
-        <button onClick={removeCycle} className="mt-6 font-display text-pink hover:underline">
+      <Secao
+        titulo="páginas de filmes"
+        descricao="Cada filme pode ter uma página com imagem, sinopse e texto. Na programação, escolha a página de cada sessão."
+        acoes={<BotaoLink href={`/admin/ciclos/${id}/filmes/novo`}>+ novo filme</BotaoLink>}
+      >
+        <ListaReordenavel<Film>
+          itens={films}
+          aoMudar={(novos) => setDados((d) => (d ? { ...d, films: novos } : d))}
+          titulo={(f) => `${f.title} (${f.year})`}
+          detalhe={(f) => `${f.director} · ${f.duration} · ${f.country}`}
+          hrefEditar={(f) => `/admin/filmes/${f._id}`}
+          reordenar={adminApi.filmes.reorder}
+          excluir={(f) => adminApi.filmes.remove(f._id)}
+          artigo="a página do filme"
+          vazio="Nenhuma página de filme ainda."
+        />
+      </Secao>
+
+      <Secao
+        titulo="textos"
+        descricao="Textos publicados aparecem na página da exibição, abaixo da programação."
+        acoes={<BotaoLink href={`/admin/ciclos/${id}/textos/novo`}>+ novo texto</BotaoLink>}
+      >
+        <ListaReordenavel<Article>
+          itens={articles}
+          aoMudar={(novos) => setDados((d) => (d ? { ...d, articles: novos } : d))}
+          titulo={(a) => a.title}
+          detalhe={(a) => (
+            <>
+              {a.column} · por {a.author}
+              {a.published === false && <span className="text-gold-escuro font-bold"> · rascunho</span>}
+            </>
+          )}
+          hrefEditar={(a) => `/admin/artigos/${a._id}`}
+          reordenar={adminApi.artigos.reorder}
+          excluir={(a) => adminApi.artigos.remove(a._id)}
+          artigo="o texto"
+          vazio="Nenhum texto nesta exibição ainda."
+        />
+      </Secao>
+
+      <Secao titulo="dados da exibição e programação">
+        <CycleForm key={cycle._id} initial={cycle} filmes={films} onSave={salvar} />
+      </Secao>
+
+      <Secao titulo="zona de perigo">
+        <Botao variante="perigo" onClick={() => setExcluindo(true)}>
           excluir esta exibição
-        </button>
-      </div>
+        </Botao>
+      </Secao>
+
+      <DialogoExclusao
+        aberto={excluindo}
+        oQue={`a exibição "${cycle.title}"`}
+        confirmacao={cycle.title}
+        carregarImpacto={impacto}
+        aoFechar={() => setExcluindo(false)}
+        aoConfirmar={async () => {
+          await adminApi.ciclos.remove(id);
+          avisar(`Exibição "${cycle.title}" excluída.`);
+          router.replace('/admin/ciclos');
+        }}
+      />
     </div>
   );
 }

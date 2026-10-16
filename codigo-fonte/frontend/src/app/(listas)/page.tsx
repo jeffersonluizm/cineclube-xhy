@@ -1,19 +1,13 @@
 import TopNav from '@/components/TopNav';
+import Rodape from '@/components/Rodape';
+import ConviteDemo from '@/components/ConviteDemo';
 import HomeShowcase, { ShowcaseSlide } from '@/components/HomeShowcase';
 import { api } from '@/lib/api';
-import { Magazine, Catalog, Article } from '@/lib/types';
+import type { Catalog } from '@/lib/types';
 
 export default async function HomePage() {
-  let latest: { type: string; data: unknown; articles?: unknown[] } | null = null;
-  let editions: { magazine: Magazine; articles: Article[] }[] = [];
-
-  try {
-    const res = await api.home();
-    latest = res.latest;
-    editions = res.editions ?? [];
-  } catch {
-    // sem dados ainda
-  }
+  // Se a API falhar, o error.tsx mostra "serviço indisponível" em vez de uma prateleira vazia
+  const { latest, editions } = await api.home();
 
   const slides: ShowcaseSlide[] = [];
 
@@ -30,7 +24,7 @@ export default async function HomePage() {
     });
   }
 
-  for (const ed of editions) {
+  for (const ed of editions ?? []) {
     slides.push({
       key: `mag-${ed.magazine._id}`,
       type: 'revista',
@@ -42,9 +36,19 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="h-dvh overflow-hidden bg-cream flex flex-col">
-      <TopNav />
-      <HomeShowcase slides={slides} />
+    <div className="bg-cream">
+      <div className="h-dvh flex flex-col">
+        <TopNav />
+        <main id="conteudo" tabIndex={-1} className="flex-1 min-h-0 flex flex-col focus:outline-none">
+          <h1 className="sr-only">Cineclube XHY: revista, catálogos e exibições</h1>
+          <HomeShowcase slides={slides} />
+        </main>
+      </div>
+      {/* só aparece com a API em modo demonstração */}
+      <div className="px-5 sm:px-8 md:px-10">
+        <ConviteDemo />
+      </div>
+      <Rodape />
     </div>
   );
 }

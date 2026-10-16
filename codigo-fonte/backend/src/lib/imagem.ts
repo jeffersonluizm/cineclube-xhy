@@ -36,3 +36,17 @@ export function uploadFileName(originalname: string, mimetype: string, timestamp
   const { base } = safeBaseName(originalname);
   return `${timestamp}-${base}${extensaoDaImagem(mimetype) ?? ''}`;
 }
+
+/**
+ * Tipo real da imagem pelos primeiros bytes (assinatura do formato). O mimetype do upload
+ * vem do navegador e pode mentir: um HTML enviado como image/png não passa daqui.
+ */
+export function tipoPelosBytes(buf: Buffer): string | undefined {
+  if (buf.length < 12) return undefined;
+  if (buf[0] === 0x89 && buf.toString('latin1', 1, 4) === 'PNG') return 'image/png';
+  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return 'image/jpeg';
+  if (buf.toString('latin1', 0, 6) === 'GIF87a' || buf.toString('latin1', 0, 6) === 'GIF89a') return 'image/gif';
+  if (buf.toString('latin1', 0, 4) === 'RIFF' && buf.toString('latin1', 8, 12) === 'WEBP') return 'image/webp';
+  if (buf.toString('latin1', 4, 8) === 'ftyp' && /^avi[fs]$/.test(buf.toString('latin1', 8, 12))) return 'image/avif';
+  return undefined;
+}

@@ -1,37 +1,34 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import AboutForm from '@/components/admin/AboutForm';
+import { useCarregar } from '@/components/admin/hooks';
+import { useToast } from '@/components/admin/Toasts';
+import { CabecalhoPagina, EstadoCarregando, EstadoErro } from '@/components/admin/ui';
 import { adminApi, AboutInput } from '@/lib/adminApi';
-import type { About } from '@/lib/types';
 
 export default function AdminSobrePage() {
-  const [about, setAbout] = useState<About | null>(null);
-  const [error, setError] = useState('');
-  const [saved, setSaved] = useState(false);
+  const avisar = useToast();
+  const { dados: about, setDados, erro, recarregar } = useCarregar(() => adminApi.sobre.get(), []);
 
-  useEffect(() => {
-    adminApi.sobre
-      .get()
-      .then(setAbout)
-      .catch((err) => setError(err instanceof Error ? err.message : 'Erro ao carregar'));
-  }, []);
+  if (erro) return <EstadoErro mensagem={erro} tentarDeNovo={recarregar} />;
+  if (!about) return <EstadoCarregando />;
 
-  async function handleSave(data: AboutInput) {
-    const updated = await adminApi.sobre.update(data);
-    setAbout(updated);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+  async function salvar(data: AboutInput) {
+    setDados(await adminApi.sobre.update(data));
+    avisar('Página sobre salva.');
   }
-
-  if (error) return <p className="font-sans text-pink">{error}</p>;
-  if (!about) return <p className="font-sans text-text-dark/60">carregando…</p>;
 
   return (
     <div>
-      <h1 className="font-display font-black text-text-dark text-3xl mb-8">sobre</h1>
-      {saved && <p className="font-sans text-sm text-olive mb-4">salvo ✓</p>}
-      <AboutForm initial={about} onSave={handleSave} />
+      <CabecalhoPagina
+        titulo="sobre"
+        acoes={
+          <a href="/sobre" target="_blank" rel="noopener" className="font-display text-azul-escuro hover:underline">
+            ver no site ↗
+          </a>
+        }
+      />
+      <AboutForm initial={about} onSave={salvar} />
     </div>
   );
 }

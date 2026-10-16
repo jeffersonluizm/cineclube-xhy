@@ -1,16 +1,16 @@
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
 import About from '../models/About';
+import { assincrono, naoEncontrado } from '../middleware/erros';
 
 const router = Router();
 
-router.get('/', async (_req: Request, res: Response) => {
-  try {
-    const about = await About.findOne();
-    if (!about) return res.status(404).json({ error: 'Dados não encontrados' });
+router.get(
+  '/',
+  assincrono(async (_req, res) => {
+    const about = await About.findOne().lean();
+    if (!about) throw naoEncontrado('Dados não encontrados');
     res.json(about);
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar dados' });
-  }
-});
+  })
+);
 
 export default router;

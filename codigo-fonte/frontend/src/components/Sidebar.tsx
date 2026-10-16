@@ -1,13 +1,6 @@
-import Link from 'next/link';
 import Logo from './Logo';
 import SocialIcons from './SocialIcons';
-
-const navLinks = [
-  { label: 'revista', href: '/revista' },
-  { label: 'exibições', href: '/ciclos-mostras' },
-  { label: 'catálogos', href: '/catalogos' },
-  { label: 'sobre', href: '/sobre' },
-];
+import NavPrincipal from './NavPrincipal';
 
 /**
  * Navegação das páginas internas.
@@ -23,33 +16,13 @@ export default function Sidebar() {
           <Logo className="w-12" />
           <SocialIcons size={20} />
         </div>
-        <nav aria-label="principal" className="flex flex-wrap gap-x-5 gap-y-1">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="font-display font-bold text-text-dark text-base leading-tight hover:text-olive hover:underline transition-colors"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+        <NavPrincipal className="flex flex-wrap gap-x-5 gap-y-1" linkClassName="font-bold text-base leading-tight" />
       </header>
 
       {/* Desktop */}
       <aside className="hidden md:flex w-[160px] shrink-0 bg-cream px-6 py-6 flex-col gap-8 min-h-screen sticky top-0 self-start">
         <Logo />
-        <nav aria-label="principal" className="flex flex-col gap-4">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="font-display font-bold text-text-dark text-lg leading-tight hover:text-olive hover:underline transition-colors"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+        <NavPrincipal className="flex flex-col gap-4" linkClassName="font-bold text-lg leading-tight" />
         <SocialIcons size={20} className="mt-auto" />
       </aside>
     </>

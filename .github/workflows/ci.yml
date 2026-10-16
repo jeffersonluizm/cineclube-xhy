@@ -1,0 +1,54 @@
+# Integração contínua: lint, formatação, testes e build da API e do site a cada push e PR
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: codigo-fonte/backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: codigo-fonte/backend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run build
+      # Testes com MongoDB em memória (mongodb-memory-server baixa o binário na primeira vez)
+      - run: npm test
+      # Testes do harness de carga (trava compartilhada) e do preparo local (iniciar.bat)
+      - run: node --test "carga/*.test.mjs" "ferramentas/*.test.mjs"
+        working-directory: .
+
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: codigo-fonte/frontend
+    env:
+      NEXT_TELEMETRY_DISABLED: 1
+      # Sem API no CI: as páginas viram renderização por pedido em vez de quebrar o build
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: codigo-fonte/frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm test
+      - run: npm run build

@@ -10,21 +10,13 @@ function ImageBlock({ block }: { block: Block }) {
   return (
     <figure className={figureClassFor(block)}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={imageUrl(block.src)}
-        alt={block.caption || ''}
-        loading="lazy"
-        decoding="async"
-        className="w-full h-auto rounded-sm"
-      />
-      {block.caption && (
-        <figcaption className="font-sans text-xs text-text-dark/50 mt-2 italic">{block.caption}</figcaption>
-      )}
+      <img src={imageUrl(block.src)} alt={block.caption || ''} loading="lazy" decoding="async" className="w-full h-auto rounded-sm" />
+      {block.caption && <figcaption className="font-sans text-xs text-text-suave mt-2 italic">{block.caption}</figcaption>}
     </figure>
   );
 }
 
-/** Renderiza blocos (parágrafo, subtítulo, citação, imagem) sobre fundo claro — usado em páginas como "sobre" */
+/** Renderiza blocos (parágrafo, subtítulo, citação, imagem) sobre fundo claro, usado em páginas como "sobre" */
 export default function BlockContent({ blocks }: BlockContentProps) {
   return (
     <div>
@@ -38,10 +30,7 @@ export default function BlockContent({ blocks }: BlockContentProps) {
             );
           case 'quote':
             return (
-              <blockquote
-                key={i}
-                className="font-serif italic text-gold text-lg leading-relaxed border-l-2 border-gold pl-5 my-6"
-              >
+              <blockquote key={i} className="font-serif italic text-gold-escuro text-lg leading-relaxed border-l-2 border-gold pl-5 my-6">
                 {block.text}
               </blockquote>
             );

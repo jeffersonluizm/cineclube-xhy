@@ -42,4 +42,14 @@ const ArticleSchema = new Schema<IArticle>(
   { timestamps: true }
 );
 
+// Leituras do site e do painel: textos de um pai, publicados, na ordem
+ArticleSchema.index({ parentType: 1, parentId: 1, published: 1, order: 1 });
+ArticleSchema.index({ published: 1, createdAt: -1 });
+
+// Busca do site: título pesa mais que autor, que pesa mais que o corpo; sem acentos (índice de texto v3)
+ArticleSchema.index(
+  { title: 'text', author: 'text', content: 'text' },
+  { name: 'busca_textos', default_language: 'portuguese', weights: { title: 5, author: 3, content: 1 } }
+);
+
 export default mongoose.model<IArticle>('Article', ArticleSchema);

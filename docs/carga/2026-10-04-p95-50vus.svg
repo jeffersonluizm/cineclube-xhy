@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 798" role="img" aria-labelledby="t d" font-family="Inter, system-ui, sans-serif">
+<title id="t">Latência p95 com 50 usuários simultâneos</title><desc id="d">milissegundos (menor é melhor); cada linha na própria escala</desc>
+<rect width="100%" height="100%" fill="#F2EDD6"/>
+<text x="16" y="28" font-size="17" font-weight="700" fill="#2B2040">Latência p95 com 50 usuários simultâneos</text>
+<text x="16" y="48" font-size="12" fill="#5A5070">milissegundos (menor é melhor); cada linha na própria escala</text>
+<rect x="530" y="58" width="12" height="12" rx="2" fill="#5860AF"/><text x="547" y="68" font-size="12" fill="#2B2040">antes</text>
+<rect x="600" y="58" width="12" height="12" rx="2" fill="#C7176C"/><text x="617" y="68" font-size="12" fill="#2B2040">depois</text>
+<text x="16" y="100" font-size="12" fill="#2B2040">H1 health (sem banco)</text>
+<line x1="210" x2="210" y1="80" y2="116" stroke="#D9D2B8"/>
+<rect x="210" y="84" width="383.89290107306556" height="13" rx="3" fill="#5860AF"><title>antes: 8,5 ms</title></rect>
+<text x="599.8929010730656" y="95" font-size="11" fill="#2B2040">8,5 ms</text>
+<rect x="210" y="100" width="430" height="13" rx="3" fill="#C7176C"><title>depois: 9,5 ms</title></rect>
+<text x="646" y="111" font-size="11" fill="#2B2040">9,5 ms</text>
+<text x="744" y="100" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">1,1× pior</text>
+<text x="16" y="146" font-size="12" fill="#2B2040">H2 home, 1 revista</text>
+<line x1="210" x2="210" y1="126" y2="162" stroke="#D9D2B8"/>
+<rect x="210" y="130" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 238,7 ms</title></rect>
+<text x="646" y="141" font-size="11" fill="#2B2040">238,7 ms</text>
+<rect x="210" y="146" width="140.34409220403458" height="13" rx="3" fill="#C7176C"><title>depois: 77,9 ms</title></rect>
+<text x="356.3440922040346" y="157" font-size="11" fill="#2B2040">77,9 ms</text>
+<text x="744" y="146" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">3,1× melhor</text>
+<text x="16" y="192" font-size="12" fill="#2B2040">H2 home, 10 revistas</text>
+<line x1="210" x2="210" y1="172" y2="208" stroke="#D9D2B8"/>
+<rect x="210" y="176" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 461,6 ms</title></rect>
+<text x="646" y="187" font-size="11" fill="#2B2040">461,6 ms</text>
+<rect x="210" y="192" width="94.11174169458332" height="13" rx="3" fill="#C7176C"><title>depois: 101 ms</title></rect>
+<text x="310.1117416945833" y="203" font-size="11" fill="#2B2040">101 ms</text>
+<text x="744" y="192" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">4,6× melhor</text>
+<text x="16" y="238" font-size="12" fill="#2B2040">H2 home, 30 revistas</text>
+<line x1="210" x2="210" y1="218" y2="254" stroke="#D9D2B8"/>
+<rect x="210" y="222" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 953,3 ms</title></rect>
+<text x="646" y="233" font-size="11" fill="#2B2040">953,3 ms</text>
+<rect x="210" y="238" width="57.31826016138381" height="13" rx="3" fill="#C7176C"><title>depois: 127,1 ms</title></rect>
+<text x="273.3182601613838" y="249" font-size="11" fill="#2B2040">127,1 ms</text>
+<text x="744" y="238" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">7,5× melhor</text>
+<text x="16" y="284" font-size="12" fill="#2B2040">H3 sumário da revista</text>
+<line x1="210" x2="210" y1="264" y2="300" stroke="#D9D2B8"/>
+<rect x="210" y="268" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 378,5 ms</title></rect>
+<text x="646" y="279" font-size="11" fill="#2B2040">378,5 ms</text>
+<rect x="210" y="284" width="164.13573302718012" height="13" rx="3" fill="#C7176C"><title>depois: 144,5 ms</title></rect>
+<text x="380.1357330271801" y="295" font-size="11" fill="#2B2040">144,5 ms</text>
+<text x="744" y="284" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">2,6× melhor</text>
+<text x="16" y="330" font-size="12" fill="#2B2040">H4 artigo (vizinhos)</text>
+<line x1="210" x2="210" y1="310" y2="346" stroke="#D9D2B8"/>
+<rect x="210" y="314" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 316,5 ms</title></rect>
+<text x="646" y="325" font-size="11" fill="#2B2040">316,5 ms</text>
+<rect x="210" y="330" width="102.3361293539185" height="13" rx="3" fill="#C7176C"><title>depois: 75,3 ms</title></rect>
+<text x="318.3361293539185" y="341" font-size="11" fill="#2B2040">75,3 ms</text>
+<text x="744" y="330" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">4,2× melhor</text>
+<text x="16" y="376" font-size="12" fill="#2B2040">H4 texto do ciclo</text>
+<line x1="210" x2="210" y1="356" y2="392" stroke="#D9D2B8"/>
+<rect x="210" y="360" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 195,2 ms</title></rect>
+<text x="646" y="371" font-size="11" fill="#2B2040">195,2 ms</text>
+<rect x="210" y="376" width="173.20324362760067" height="13" rx="3" fill="#C7176C"><title>depois: 78,6 ms</title></rect>
+<text x="389.20324362760067" y="387" font-size="11" fill="#2B2040">78,6 ms</text>
+<text x="744" y="376" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">2,5× melhor</text>
+<text x="16" y="422" font-size="12" fill="#2B2040">H5 ciclo</text>
+<line x1="210" x2="210" y1="402" y2="438" stroke="#D9D2B8"/>
+<rect x="210" y="406" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 289,7 ms</title></rect>
+<text x="646" y="417" font-size="11" fill="#2B2040">289,7 ms</text>
+<rect x="210" y="422" width="158.74720009482706" height="13" rx="3" fill="#C7176C"><title>depois: 107 ms</title></rect>
+<text x="374.74720009482706" y="433" font-size="11" fill="#2B2040">107 ms</text>
+<text x="744" y="422" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">2,7× melhor</text>
+<text x="16" y="468" font-size="12" fill="#2B2040">H5 filme</text>
+<line x1="210" x2="210" y1="448" y2="484" stroke="#D9D2B8"/>
+<rect x="210" y="452" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 123,9 ms</title></rect>
+<text x="646" y="463" font-size="11" fill="#2B2040">123,9 ms</text>
+<rect x="210" y="468" width="247.49277243059643" height="13" rx="3" fill="#C7176C"><title>depois: 71,3 ms</title></rect>
+<text x="463.49277243059646" y="479" font-size="11" fill="#2B2040">71,3 ms</text>
+<text x="744" y="468" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">1,7× melhor</text>
+<text x="16" y="514" font-size="12" fill="#2B2040">H8 reordenar 50 textos</text>
+<line x1="210" x2="210" y1="494" y2="530" stroke="#D9D2B8"/>
+<rect x="210" y="498" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 1.068,9 ms</title></rect>
+<text x="646" y="509" font-size="11" fill="#2B2040">1.068,9 ms</text>
+<rect x="210" y="514" width="123.7315419270688" height="13" rx="3" fill="#C7176C"><title>depois: 307,6 ms</title></rect>
+<text x="339.7315419270688" y="525" font-size="11" fill="#2B2040">307,6 ms</text>
+<text x="744" y="514" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">3,5× melhor</text>
+<text x="16" y="560" font-size="12" fill="#2B2040">H9/H10 site: home</text>
+<line x1="210" x2="210" y1="540" y2="576" stroke="#D9D2B8"/>
+<rect x="210" y="544" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 1.014,2 ms</title></rect>
+<text x="646" y="555" font-size="11" fill="#2B2040">1.014,2 ms</text>
+<rect x="210" y="560" width="73.71525289843237" height="13" rx="3" fill="#C7176C"><title>depois: 173,9 ms</title></rect>
+<text x="289.71525289843237" y="571" font-size="11" fill="#2B2040">173,9 ms</text>
+<text x="744" y="560" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">5,8× melhor</text>
+<text x="16" y="606" font-size="12" fill="#2B2040">H9/H10 site: /revista</text>
+<line x1="210" x2="210" y1="586" y2="622" stroke="#D9D2B8"/>
+<rect x="210" y="590" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 406,1 ms</title></rect>
+<text x="646" y="601" font-size="11" fill="#2B2040">406,1 ms</text>
+<rect x="210" y="606" width="131.3133315055682" height="13" rx="3" fill="#C7176C"><title>depois: 124 ms</title></rect>
+<text x="347.31333150556816" y="617" font-size="11" fill="#2B2040">124 ms</text>
+<text x="744" y="606" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">3,3× melhor</text>
+<text x="16" y="652" font-size="12" fill="#2B2040">H9/H10 site: sumário</text>
+<line x1="210" x2="210" y1="632" y2="668" stroke="#D9D2B8"/>
+<rect x="210" y="636" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 671 ms</title></rect>
+<text x="646" y="647" font-size="11" fill="#2B2040">671 ms</text>
+<rect x="210" y="652" width="267.1266141613872" height="13" rx="3" fill="#C7176C"><title>depois: 416,8 ms</title></rect>
+<text x="483.1266141613872" y="663" font-size="11" fill="#2B2040">416,8 ms</text>
+<text x="744" y="652" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">1,6× melhor</text>
+<text x="16" y="698" font-size="12" fill="#2B2040">H9/H10 site: artigo</text>
+<line x1="210" x2="210" y1="678" y2="714" stroke="#D9D2B8"/>
+<rect x="210" y="682" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 418 ms</title></rect>
+<text x="646" y="693" font-size="11" fill="#2B2040">418 ms</text>
+<rect x="210" y="698" width="374.9910741360558" height="13" rx="3" fill="#C7176C"><title>depois: 364,5 ms</title></rect>
+<text x="590.9910741360558" y="709" font-size="11" fill="#2B2040">364,5 ms</text>
+<text x="744" y="698" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">1,1× melhor</text>
+<text x="16" y="744" font-size="12" fill="#2B2040">H9/H10 site: ciclo</text>
+<line x1="210" x2="210" y1="724" y2="760" stroke="#D9D2B8"/>
+<rect x="210" y="728" width="430" height="13" rx="3" fill="#5860AF"><title>antes: 526,8 ms</title></rect>
+<text x="646" y="739" font-size="11" fill="#2B2040">526,8 ms</text>
+<rect x="210" y="744" width="328.4673572765531" height="13" rx="3" fill="#C7176C"><title>depois: 402,4 ms</title></rect>
+<text x="544.4673572765531" y="755" font-size="11" fill="#2B2040">402,4 ms</text>
+<text x="744" y="744" font-size="12" font-weight="700" text-anchor="end" fill="#2B2040">1,3× melhor</text>
+</svg>

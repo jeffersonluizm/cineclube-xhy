@@ -1,41 +1,30 @@
 import { Router, Request, Response } from 'express';
-import { rateLimit } from 'express-rate-limit';
-import { timingSafeEqual } from 'crypto';
-import { signToken } from '../middleware/auth';
+import { AuthRequest, requireAuth, signToken, VALIDADE_TOKEN_S } from '../middleware/auth';
+import { criarLimitadorLoginGlobal, limitadorLogin } from '../middleware/limitadores';
+import { senhaConfere } from '../lib/senha';
 
 const router = Router();
 
-// Protege a senha única do editor contra tentativas em massa:
-// no máximo 10 tentativas por IP a cada 15 minutos
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 10,
-  standardHeaders: 'draft-7',
-  legacyHeaders: false,
-  skipSuccessfulRequests: true,
-  message: { error: 'Muitas tentativas de login. Aguarde alguns minutos e tente novamente.' },
-});
+const limitadorLoginGlobal = criarLimitadorLoginGlobal(Number(process.env.LOGIN_ERRADOS_POR_HORA ?? 100));
 
-function safeEqual(a: string, b: string) {
-  const bufA = Buffer.from(a);
-  const bufB = Buffer.from(b);
-  if (bufA.length !== bufB.length) return false;
-  return timingSafeEqual(bufA, bufB);
-}
-
-router.post('/login', loginLimiter, (req: Request, res: Response) => {
-  const { password } = req.body as { password?: string };
+router.post('/login', limitadorLoginGlobal, limitadorLogin, (req: Request, res: Response) => {
+  const { password } = (req.body ?? {}) as { password?: unknown };
   const adminPassword = process.env.ADMIN_PASSWORD;
 
   if (!adminPassword) {
     return res.status(500).json({ error: 'ADMIN_PASSWORD não configurado no servidor' });
   }
 
-  if (!password || !safeEqual(password, adminPassword)) {
+  if (typeof password !== 'string' || !senhaConfere(password, adminPassword)) {
     return res.status(401).json({ error: 'Senha incorreta' });
   }
 
-  res.json({ token: signToken() });
+  res.json({ token: signToken(), expiraEm: VALIDADE_TOKEN_S });
+});
+
+/** O painel confere a sessão ao abrir e sabe quando avisar que ela vai expirar */
+router.get('/sessao', requireAuth, (req: AuthRequest, res: Response) => {
+  res.json({ ok: true, expiraEm: req.editor?.exp });
 });
 
 export default router;

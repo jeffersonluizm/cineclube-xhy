@@ -1,5 +1,6 @@
 import type { Block } from '@/lib/types';
 import { imageUrl } from '@/lib/media';
+import Notas from './Notas';
 
 interface ArticleBodyProps {
   content: string;
@@ -35,16 +36,8 @@ function ImageBlock({ block }: { block: Block }) {
   return (
     <figure className={figureClassFor(block)}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={imageUrl(block.src)}
-        alt={block.caption || ''}
-        loading="lazy"
-        decoding="async"
-        className="w-full h-auto rounded-sm"
-      />
-      {block.caption && (
-        <figcaption className="font-sans text-xs text-light-text mt-2 italic">{block.caption}</figcaption>
-      )}
+      <img src={imageUrl(block.src)} alt={block.caption || ''} loading="lazy" decoding="async" className="w-full h-auto rounded-sm" />
+      {block.caption && <figcaption className="font-sans text-xs text-light-text mt-2 italic">{block.caption}</figcaption>}
     </figure>
   );
 }
@@ -52,9 +45,7 @@ function ImageBlock({ block }: { block: Block }) {
 function BlockRenderer({ block }: { block: Block }) {
   switch (block.type) {
     case 'subtitle':
-      return (
-        <h2 className="font-display font-bold text-cream text-2xl mt-10 mb-4 clear-both">{block.text}</h2>
-      );
+      return <h2 className="font-display font-bold text-cream text-2xl mt-10 mb-4 clear-both">{block.text}</h2>;
     case 'quote':
       return (
         <blockquote className="font-serif italic text-gold text-lg leading-relaxed border-l-2 border-gold pl-5 my-8">
@@ -68,9 +59,10 @@ function BlockRenderer({ block }: { block: Block }) {
   }
 }
 
+/** Corpo de leitura (fundo roxo): epígrafe, blocos e notas laterais */
 export default function ArticleBody({ content, blocks, epigraph, footnotes }: ArticleBodyProps) {
   const hasBlocks = Array.isArray(blocks) && blocks.length > 0;
-  const paragraphs = hasBlocks ? [] : content.split('\n').filter((p) => p.trim());
+  const paragraphs = hasBlocks ? [] : (content ?? '').split('\n').filter((p) => p.trim());
 
   return (
     <div className="relative max-w-4xl">
@@ -92,18 +84,7 @@ export default function ArticleBody({ content, blocks, epigraph, footnotes }: Ar
           <div className="clear-both" />
         </div>
 
-        {footnotes && footnotes.length > 0 && (
-          <aside
-            aria-label="notas"
-            className="md:w-48 shrink-0 border-t border-light-text/30 pt-6 md:border-0 md:pt-0"
-          >
-            {footnotes.map((note, i) => (
-              <p key={i} className="font-serif text-light-text text-xs leading-relaxed mb-4">
-                {note}
-              </p>
-            ))}
-          </aside>
-        )}
+        {footnotes && footnotes.length > 0 && <Notas notas={footnotes} chamadas={[1]} />}
       </div>
     </div>
   );

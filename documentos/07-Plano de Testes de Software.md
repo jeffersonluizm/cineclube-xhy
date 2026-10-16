@@ -99,3 +99,66 @@ Os resultados estão no [Registro de Testes](08-Registro%20de%20Testes%20de%20So
 | Objetivo | Garantir que os dois projetos compilam sem erros de tipo. |
 | Passos | 1. `npx tsc --noEmit` no backend. 2. `npx next build` no frontend. |
 | Critérios de êxito | Ambos terminam com código 0; o build lista todas as rotas públicas e administrativas. |
+
+## Casos adicionados na versão 1.3.0
+
+A partir da 1.3.0 a maior parte da verificação é automatizada e roda sem banco externo
+(`npm test` no backend e no frontend, também no CI). Os casos abaixo dizem o que cada
+suíte garante; a verificação de telas foi feita no navegador (desktop 1200 px e celular
+375 px) e o desempenho no teste de carga.
+
+| Caso de Teste | **CT-14 — Suíte da API (rotas e regras)** |
+|:---|:---|
+| Requisitos associados | RF-001 a RF-012, RF-016, RF-017, RF-020, RF-023, RF-024, RNF-009, RNF-010 |
+| Objetivo | Verificar rotas públicas, CRUD do painel, validação, busca, autores, RSS, sitemap, resumo, impacto da exclusão, sessões com `filmId` e criação concorrente com o mesmo título. |
+| Passos | `cd codigo-fonte/backend && npm test` (node:test + supertest, MongoDB em memória). |
+| Critérios de êxito | Todos os testes passam; nenhum teste toca `backend/data/db` nem a porta 27018. |
+
+| Caso de Teste | **CT-15 — Segurança da API** |
+|:---|:---|
+| Requisitos associados | RNF-003, RNF-009 |
+| Objetivo | CORS 403 para origem desconhecida, cabeçalhos (helmet), 404/400/413/503 em JSON, limitador geral e de login (por IP e global), segredo servidor-a-servidor, senha por hash, token de 8 h invalidado ao trocar a senha, segredo de desenvolvimento só com banco local, upload pelos bytes e falha de disco respondendo 500, links só `https:`/`mailto:`, filtros sem operadores do MongoDB, configuração de produção recusando segredos fracos. |
+| Passos | Arquivos `seguranca.test.ts`, `revisao-seguranca.test.ts`, `upload.test.ts`, `admin-validacao.test.ts`. |
+| Critérios de êxito | Todos os testes passam. |
+
+| Caso de Teste | **CT-16 — Modo demonstração** |
+|:---|:---|
+| Requisitos associados | RF-021, ADR 0004 |
+| Objetivo | Flag desligada por padrão (404), `GET /api/demo` sem senha, entrar como editor com um clique, reset que só popula banco vazio quando pedido e `DEMO_RESET_MINUTOS=0` desligando o reset. |
+| Passos | `demo.test.ts`. |
+| Critérios de êxito | Todos os testes passam. |
+
+| Caso de Teste | **CT-17 — Regras do front** |
+|:---|:---|
+| Requisitos associados | RNF-002, RNF-007, RF-018, RF-022 |
+| Objetivo | Contraste AA de todo par texto/fundo dos tokens, leitura da expiração do token, destino seguro depois do login (sem redirecionamento aberto), tempo de espera do limite de login, RSS válido e escapado, agrupamento por ano, sessão ligada ao filme, slug de autor igual ao da API, normalização de `?q=` repetido, filtro do token antes de revalidar, limpeza dos rascunhos ao sair e limitador por IP. |
+| Passos | `cd codigo-fonte/frontend && npm test`. |
+| Critérios de êxito | Todos os testes passam. |
+
+| Caso de Teste | **CT-18 — Lint, formatação e build** |
+|:---|:---|
+| Requisitos associados | RNF-008 |
+| Objetivo | Código sem erros de lint e formatado; build de produção do site sem a API no ar. |
+| Passos | `npm run lint`, `npm run format:check` e `npm run build` nos dois projetos. |
+| Critérios de êxito | Todos terminam com código 0. |
+
+| Caso de Teste | **CT-19 — Status HTTP honestos no site** |
+|:---|:---|
+| Requisitos associados | RF-015, RF-019 |
+| Objetivo | 404 real para conteúdo inexistente e "serviço indisponível" (500) com a API fora do ar, nunca lista vazia nem 404 falso. |
+| Passos | Com o site em `next start`: requisitar `/revista/999` e `/revista/1/artigo/nada`; derrubar a API e requisitar páginas sem cache (cenário H11 da carga). |
+| Critérios de êxito | 404 nas inexistentes; com a API fora, páginas em cache continuam servindo e as sem cache mostram "serviço indisponível". |
+
+| Caso de Teste | **CT-20 — Fluxo do editor no navegador** |
+|:---|:---|
+| Requisitos associados | RF-020 a RF-023 |
+| Objetivo | Login com erro anunciado; sessão expirada no meio de uma edição abre o re-login por cima e preserva o formulário; diálogo de exclusão com contagem; toasts de sucesso. |
+| Passos | No navegador: senha errada; entrar; alterar um campo; invalidar o token; salvar; entrar de novo no diálogo; salvar de novo; abrir a exclusão de uma revista. |
+| Critérios de êxito | Mensagens corretas, nenhum dado digitado perdido, nenhuma janela nativa (`alert`/`confirm`). |
+
+| Caso de Teste | **CT-21 — Teste de carga antes/depois** |
+|:---|:---|
+| Requisitos associados | RNF-004 |
+| Objetivo | Validar ou refutar as hipóteses H1 a H11 registradas antes de medir. |
+| Passos | `node carga/rodar.mjs --rotulo antes` (no código anterior às correções) e `--rotulo depois`; `node carga/relatorio.mjs`. |
+| Critérios de êxito | Relatório em `docs/carga/2026-10-04-resultados.md` com cada hipótese confirmada ou refutada. |

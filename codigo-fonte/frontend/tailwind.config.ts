@@ -1,19 +1,15 @@
 import type { Config } from 'tailwindcss';
+import { cores, escalaTitulos } from './src/lib/tokens';
 
+// Cores e escala de títulos vêm de src/lib/tokens.ts (fonte única, com teste de contraste)
 const config: Config = {
   content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
   theme: {
     extend: {
-      colors: {
-        cream: '#F2EDD6',
-        'dark-purple': '#261840',
-        'text-dark': '#2B2040',
-        pink: '#E8368C',
-        olive: '#B5BB38',
-        gold: '#C8A030',
-        'blue-link': '#6B72B8',
-        'light-text': '#9090B8',
-      },
+      colors: { ...cores },
+      fontSize: Object.fromEntries(
+        Object.entries(escalaTitulos).map(([nome, [tamanho, linha]]) => [nome, [tamanho, { lineHeight: linha }]])
+      ),
       fontFamily: {
         serif: ['var(--font-serif)', 'Georgia', 'serif'],
         sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],

@@ -5,26 +5,56 @@ dotenv.config();
 
 import app from './app';
 import { conectarBanco } from './lib/banco';
+import { problemasDeConfiguracao } from './lib/configuracao';
+import mongoose from 'mongoose';
+import { limitesDaDemonstracao } from './middleware/demo';
+import { comTentativas } from './lib/tentativas';
+import { agendarConferenciaDemonstracao, bancoAceitaDemonstracao, conferirDemonstracao, demoLigado } from './lib/demo';
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 const PORT = process.env.PORT || 3001;
 
-// Em produção, segredos precisam estar definidos — sem fallback silencioso
-if (IS_PRODUCTION) {
-  const missing = ['MONGODB_URI', 'ADMIN_PASSWORD', 'JWT_SECRET', 'FRONTEND_URL'].filter((k) => !process.env[k]);
-  if (missing.length > 0) {
-    console.error(`Variáveis de ambiente obrigatórias em produção não definidas: ${missing.join(', ')}`);
+// Em produção, configuração faltando ou fraca impede a partida, com mensagem do que corrigir
+const problemas = problemasDeConfiguracao();
+if (problemas.length > 0) {
+  console.error(`Configuração inválida para produção:\n- ${problemas.join('\n- ')}`);
+  process.exit(1);
+}
+// Demonstração: limites só inteiros finitos numa faixa (Infinity ou 1e9 desligariam o teto)
+if (demoLigado()) {
+  const limites = limitesDaDemonstracao();
+  if (limites.problemas.length > 0) {
+    console.error(`Configuração inválida da demonstração:\n- ${limites.problemas.join('\n- ')}`);
     process.exit(1);
   }
-  if (!process.env.CLOUDINARY_URL) {
-    console.warn(
-      'AVISO: CLOUDINARY_URL não definida. Imagens serão salvas em disco local e podem ser perdidas a cada deploy.'
-    );
-  }
+  console.log(`Demonstração: ${limites.resumo}.`);
+}
+if (IS_PRODUCTION && !process.env.CLOUDINARY_URL) {
+  console.warn('AVISO: CLOUDINARY_URL não definida. Imagens serão salvas em disco local e podem ser perdidas a cada deploy.');
 }
 
-conectarBanco()
-  .then(() => {
+// MONGODB_TIMEOUT_MS: prazo para achar o banco (padrão 8 s); maior ajuda com Atlas acordando ou máquina ocupada
+conectarBanco({ timeoutMs: Number(process.env.MONGODB_TIMEOUT_MS) || undefined })
+  .then(async () => {
+    if (demoLigado()) {
+      // O reset apaga tudo: a demonstração só parte num banco que é de demonstração
+      const recusa = bancoAceitaDemonstracao(mongoose.connection.name);
+      if (recusa) {
+        console.error(recusa);
+        process.exit(1);
+      }
+      // Demonstração: confere na partida (o servidor pode ter dormido além do prazo do reset)
+      // e a cada 5 min; o horário do último reset fica no banco, não na memória
+      // Erro transitório (Atlas acordando) não derruba a partida de primeira
+      try {
+        const r = await comTentativas(() => conferirDemonstracao(), { tentativas: 4, esperaMs: 5000, rotulo: 'preparar a demonstração' });
+        console.log(`Modo demonstração LIGADO (dados de exemplo ${r}).`);
+      } catch (e) {
+        console.error('Não foi possível preparar os dados da demonstração (conferir ou restaurar o exemplo):', e);
+        process.exit(1);
+      }
+      agendarConferenciaDemonstracao();
+    }
     app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
   })
   .catch((err) => {
