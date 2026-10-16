@@ -105,3 +105,26 @@ test('na demonstração, revista com capa externa responde 400 explicando; fora 
   delete process.env.DEMO_ENABLED;
   assert.equal((await request(app).post('/api/admin/revistas').set(auth()).send(capaExterna)).status, 201);
 });
+
+test('salvar uma imagem /uploads/demo/<nome> que não existe no disco responde 400', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const { pastaUploadsDemonstracao } = await import('../src/lib/demo');
+  const inexistente = { ...novaRevista(78), coverImage: '/uploads/demo/nao-existe.png' };
+  const res = await request(app).post('/api/admin/revistas').set(auth()).send(inexistente);
+  assert.equal(res.status, 400);
+  assert.match(res.body.error, /não está no servidor/);
+  const pasta = pastaUploadsDemonstracao();
+  fs.mkdirSync(pasta, { recursive: true });
+  const nome = `${Date.now()}-existe.png`;
+  fs.writeFileSync(path.join(pasta, nome), 'x');
+  try {
+    const ok = await request(app)
+      .post('/api/admin/revistas')
+      .set(auth())
+      .send({ ...novaRevista(79), coverImage: `/uploads/demo/${nome}` });
+    assert.equal(ok.status, 201);
+  } finally {
+    fs.unlinkSync(path.join(pasta, nome));
+  }
+});

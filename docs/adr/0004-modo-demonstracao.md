@@ -39,7 +39,12 @@ demonstração pode estar no código, e o site oficial não pode ter essa porta 
 - Qualquer pessoa na demonstração pode editar e excluir; o reset limita o dano a uma hora.
   O prazo conta a partir do último reset gravado no banco (`demo_meta`), conferido na
   partida e a cada 5 minutos: não depende de a API ficar no ar (o Render gratuito dorme
-  depois de 15 min). Uma imagem enviada que sumiu do disco efêmero também dispara o reset.
+  depois de 15 min).
+- Imagem enviada que sumiu do disco efêmero (o Render apaga o disco ao dormir) **não**
+  dispara o reset completo: só a referência sai (capa e imagem do filme ficam vazias e o site
+  mostra a capa padrão; o bloco de imagem quebrado é retirado). Assim ninguém consegue apagar
+  o trabalho dos outros de propósito. O painel também recusa salvar um `/uploads/demo/<nome>`
+  que não existe, e a conferência só olha os campos de imagem (texto corrido não conta).
 - O reset roda numa transação quando o banco é replica set (Atlas M0): uma falha no meio
   não deixa o banco pela metade. As imagens enviadas são apagadas mesmo se o seed falhar,
   e o site é avisado para invalidar o cache.

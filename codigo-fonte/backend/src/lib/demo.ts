@@ -134,22 +134,51 @@ export function resetVencido(ultimo: Date | null, agora: Date, minutos: number):
   return agora.getTime() - ultimo.getTime() >= minutos * 60_000;
 }
 
+const UPLOAD_DEMO = /^\/uploads\/demo\//;
+
 /**
- * Imagens da demonstração citadas no conteúdo que não estão mais no disco. O disco do Render
- * gratuito é efêmero: ao dormir e acordar, a pasta uploads/demo some e as imagens quebram.
+ * Imagens da demonstração (URLs /uploads/demo/...) citadas nos campos de IMAGEM que não estão
+ * mais no disco. Só os campos de imagem contam (texto corrido com o caminho não), e a busca é
+ * por distinct com filtro no banco: nada de carregar documentos inteiros a cada 5 minutos.
  */
 export async function uploadsFaltando(pasta = pastaUploads()): Promise<string[]> {
   const citados = new Set<string>();
-  for (const modelo of COLECOES) {
-    const docs = await (modelo as typeof Magazine).find().lean();
-    for (const m of JSON.stringify(docs).matchAll(/\/uploads\/demo\/([\w.-]+)/g)) citados.add(m[1]);
+  const juntar = (valores: unknown[]) => {
+    for (const v of valores) if (typeof v === 'string' && UPLOAD_DEMO.test(v)) citados.add(v);
+  };
+  for (const modelo of [Magazine, Catalog, Cycle, Article]) {
+    juntar(await (modelo as typeof Magazine).distinct('coverImage', { coverImage: UPLOAD_DEMO }));
   }
-  return [...citados].filter((nome) => !fs.existsSync(path.join(pastaUploadsDemonstracao(pasta), nome)));
+  juntar(await Film.distinct('image', { image: UPLOAD_DEMO }));
+  juntar(await Article.distinct('images', { images: UPLOAD_DEMO }));
+  for (const modelo of [Article, About]) {
+    juntar(await (modelo as typeof Article).distinct('blocks.src', { blocks: { $elemMatch: { type: 'image', src: UPLOAD_DEMO } } }));
+  }
+  return [...citados].filter((url) => !fs.existsSync(path.join(pastaUploadsDemonstracao(pasta), path.basename(url))));
 }
 
 /**
- * Confere se a demonstração precisa voltar ao exemplo e restaura se for o caso:
- * banco vazio, prazo do último reset vencido ou imagem enviada que sumiu do disco.
+ * Tira do conteúdo só as referências a uploads que sumiram: capa e imagem do filme ficam
+ * vazias (o site mostra a capa padrão) e blocos de imagem quebrados saem. O resto do que os
+ * visitantes fizeram fica. Ninguém provoca isso de propósito: o painel recusa salvar um
+ * /uploads/demo/<nome> que não existe, e texto corrido não conta.
+ */
+export async function neutralizarUploadsFaltando(faltando: string[]) {
+  if (faltando.length === 0) return;
+  const lista = { $in: faltando };
+  for (const modelo of [Magazine, Catalog, Cycle, Article]) {
+    await (modelo as typeof Magazine).updateMany({ coverImage: lista }, { $set: { coverImage: '' } });
+  }
+  await Film.updateMany({ image: lista }, { $set: { image: '' } });
+  await Article.updateMany({ images: lista }, { $pull: { images: lista } });
+  for (const modelo of [Article, About]) {
+    await (modelo as typeof Article).updateMany({ 'blocks.src': lista }, { $pull: { blocks: { type: 'image', src: lista } } });
+  }
+}
+
+/**
+ * Confere a demonstração: banco vazio ou prazo do último reset vencido → restaura tudo;
+ * imagem enviada que sumiu do disco → só retira a referência (neutralizarUploadsFaltando).
  * Com DEMO_RESET_MINUTOS=0 (uso local) só popula banco vazio.
  */
 export async function conferirDemonstracao({
@@ -164,7 +193,7 @@ export async function conferirDemonstracao({
   pasta?: string;
   log?: (m: string) => void;
   avisarSite?: () => Promise<void>;
-} = {}): Promise<'restaurado' | 'mantido' | 'criado'> {
+} = {}): Promise<'restaurado' | 'reparado' | 'mantido' | 'criado'> {
   const minutos = intervaloResetMinutos(env);
   const vazio = (await restaurarDemonstracao({ soSeVazio: true, log: () => {}, pasta })) === 'restaurado';
   if (vazio) {
@@ -174,17 +203,21 @@ export async function conferirDemonstracao({
   }
   if (minutos === 0) return 'mantido';
 
-  const faltando = await uploadsFaltando(pasta);
-  const vencido = resetVencido(await lerUltimoReset(), agora, minutos);
-  if (!vencido && faltando.length === 0) return 'mantido';
+  if (resetVencido(await lerUltimoReset(), agora, minutos)) {
+    await restaurarDemonstracao({ soSeVazio: false, log: () => {}, pasta });
+    await gravarUltimoReset(agora);
+    log(`Demonstração restaurada aos dados de exemplo (passaram ${minutos} min).`);
+    await avisarSite().catch(() => {});
+    return 'restaurado';
+  }
 
-  await restaurarDemonstracao({ soSeVazio: false, log: () => {}, pasta });
-  await gravarUltimoReset(agora);
-  log(
-    `Demonstração restaurada aos dados de exemplo (${vencido ? `passaram ${minutos} min` : `${faltando.length} imagem(ns) sumiram do disco`}).`
-  );
+  // Disco efêmero: uploads que sumiram (servidor dormiu) saem do conteúdo, sem reset completo
+  const faltando = await uploadsFaltando(pasta);
+  if (faltando.length === 0) return 'mantido';
+  await neutralizarUploadsFaltando(faltando);
+  log(`Demonstração: ${faltando.length} imagem(ns) enviada(s) sumiram do disco; as referências foram retiradas.`);
   await avisarSite().catch(() => {});
-  return 'restaurado';
+  return 'reparado';
 }
 
 /** Confere a demonstração a cada 5 minutos; devolve a função que para o agendamento */

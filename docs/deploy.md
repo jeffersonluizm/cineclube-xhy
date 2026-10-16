@@ -115,8 +115,8 @@ mostra "acordando o servidor de demonstração" em vez de erro.
 
 **O reset da demonstração não depende do keep-alive.** O horário do último reset fica no
 banco (coleção `demo_meta`). A API confere o prazo ao acordar e a cada 5 minutos: se já
-passou `DEMO_RESET_MINUTOS`, restaura. Também restaura quando uma imagem enviada sumiu do
-disco, que o Render apaga ao dormir. O keep-alive só serve para o visitante não esperar a
+passou `DEMO_RESET_MINUTOS`, restaura. Se uma imagem enviada sumiu do disco (o Render o
+apaga ao dormir), só a referência sai do conteúdo, sem reset. O keep-alive só serve para o visitante não esperar a
 API acordar. Para isso:
 
 - **GitHub Actions:** o workflow `keep-alive.yml` faz um ping a cada 10 minutos; crie a

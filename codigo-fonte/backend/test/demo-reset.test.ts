@@ -8,6 +8,7 @@ import path from 'node:path';
 import mongoose from 'mongoose';
 import Magazine from '../src/models/Magazine';
 import Film from '../src/models/Film';
+import Article from '../src/models/Article';
 import { abrirBancoEmMemoria } from './helpers/bancoEmMemoria';
 import { conferirDemonstracao, lerUltimoReset, resetVencido } from '../src/lib/demo';
 
@@ -72,11 +73,29 @@ test('banco com dados e sem registro de reset (primeira partida desta versão): 
   assert.equal(await conferirDemonstracao({ agora: AGORA, env: ENV, pasta, log: silencioso, avisarSite }), 'restaurado');
 });
 
-test('imagem enviada que sumiu do disco (o Render perde o disco ao dormir): restaura mesmo com reset recente', async () => {
+test('upload que sumiu do disco (o Render perde o disco ao dormir): só a referência sai, sem reset completo', async () => {
   await bancoDeExemploSujo(new Date(AGORA.getTime() - 5 * MIN));
-  await Film.updateOne({}, { $set: { image: '/uploads/demo/1700000000000-sumiu.png' } });
+  const sumiu = '/uploads/demo/1700000000000-sumiu.png';
+  await Film.updateOne({ slug: 'meu-tio' }, { $set: { image: sumiu } });
+  await Magazine.updateOne({ slug: 'vandalismo' }, { $set: { coverImage: sumiu } });
+  await Article.updateOne({}, { $push: { blocks: { type: 'image', src: sumiu } } });
   const r = await conferirDemonstracao({ agora: AGORA, env: ENV, pasta, log: silencioso, avisarSite });
-  assert.equal(r, 'restaurado');
+  assert.equal(r, 'reparado');
+  assert.equal(await Magazine.countDocuments({ slug: 'vandalismo' }), 1, 'o trabalho dos visitantes fica');
+  assert.equal((await Film.findOne({ slug: 'meu-tio' }).lean())?.image, '');
+  assert.equal((await Magazine.findOne({ slug: 'vandalismo' }).lean())?.coverImage, '');
+  assert.equal(await Article.countDocuments({ 'blocks.src': sumiu }), 0, 'bloco de imagem quebrado sai');
+  assert.deepEqual(avisos, ['revalidar']);
+});
+
+test('o caminho de upload citado em texto corrido não dispara nada', async () => {
+  await bancoDeExemploSujo(new Date(AGORA.getTime() - 5 * MIN));
+  const texto = 'veja /uploads/demo/qualquer-coisa.png';
+  await Article.updateOne({}, { $push: { blocks: { type: 'paragraph', text: texto } }, $set: { content: texto } });
+  await Magazine.updateOne({ slug: 'vandalismo' }, { $set: { editorial: texto } });
+  assert.equal(await conferirDemonstracao({ agora: AGORA, env: ENV, pasta, log: silencioso, avisarSite }), 'mantido');
+  assert.equal(await Magazine.countDocuments({ slug: 'vandalismo' }), 1);
+  assert.equal(await Article.countDocuments({ 'blocks.text': texto }), 1);
 });
 
 test('imagem enviada que continua no disco não força o reset', async () => {

@@ -1,6 +1,11 @@
 import { z } from 'zod';
 import { imagemSegura, linkSeguro } from '../lib/links';
+import fs from 'fs';
+import path from 'path';
 import { demoLigado } from '../lib/demoFlag';
+import { pastaUploads } from '../lib/uploads';
+
+const UPLOAD_DEMO = /^\/uploads\/demo\//;
 
 // Mensagens padrão em português para o que não tem mensagem própria
 z.config(z.locales.pt());
@@ -40,6 +45,11 @@ const imagem = z
       demoLigado()
         ? 'Na demonstração, a imagem precisa ser enviada pelo painel (endereços externos não são aceitos)'
         : 'Imagem precisa ser um upload do painel ou um endereço https',
+  })
+  // Upload da demonstração precisa existir no disco: sem isso, qualquer um poderia gravar uma
+  // referência quebrada de propósito (e a conferência da demonstração teria de consertar)
+  .refine((v) => !UPLOAD_DEMO.test(v) || fs.existsSync(path.join(pastaUploads(), 'demo', path.basename(v))), {
+    error: 'A imagem não está no servidor (o disco da demonstração é limpo de tempos em tempos). Envie de novo pelo painel.',
   });
 const notas = z.array(texto(5000)).max(100);
 
