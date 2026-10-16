@@ -70,17 +70,40 @@ export function pidVivo(pid) {
   }
 }
 
-/** Órfã: tem dono.json e o dono (e o filho, se houver) já morreu. Sem dono.json, nunca. */
+const lerDonoTexto = (caminho) => {
+  try {
+    return fs.readFileSync(path.join(caminho, DONO), 'utf8');
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Órfã: tem dono.json e o dono (e o filho, se houver) já morreu. Sem dono.json, nunca.
+ * Devolve o texto do dono.json julgado (para removerOrfa conferir que é o mesmo) ou null.
+ */
 export function travaOrfa(caminho, vivo = pidVivo) {
-  const dono = lerDono(caminho);
-  if (!dono || !dono.pid) return false;
-  if (vivo(dono.pid)) return false;
-  if (dono.filho && vivo(dono.filho)) return false;
-  return true;
+  const texto = lerDonoTexto(caminho);
+  if (!texto) return null;
+  let dono;
+  try {
+    dono = JSON.parse(texto);
+  } catch {
+    return null;
+  }
+  if (!dono.pid || vivo(dono.pid)) return null;
+  if (dono.filho && vivo(dono.filho)) return null;
+  return texto;
 }
 
-export function removerOrfa(caminho) {
+/**
+ * Remove a trava órfã só se o dono.json ainda for exatamente o que foi julgado morto: entre o
+ * julgamento e a remoção, o dono pode ter liberado e outra carga ter pegado a trava.
+ */
+export function removerOrfa(caminho, julgado) {
+  if (!julgado || lerDonoTexto(caminho) !== julgado) return false;
   apagarPastaVazia(caminho, true);
+  return true;
 }
 
 /**

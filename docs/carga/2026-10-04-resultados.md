@@ -7,7 +7,7 @@
 - **Ambiente isolado:** a API compilada roda com o diretório de trabalho fora do repositório, então nenhum `.env` real é lido. O site faz `next build` apontando para a API de teste e sobe com `next start` na porta 3200.
 - **Massa:** 30 revistas com 15 textos de 25 blocos cada, 10 catálogos, 20 ciclos com 25 filmes, 650 textos e 500 filmes.
 - **Protocolo:** 5 s de aquecimento, depois degraus de 10, 50, 100 e 200 VUs, 15 s em cada.
-- **Uma carga por vez:** o harness compila primeiro e só então pega a trava compartilhada da oficina (`.carga-lock`, com `dono.json`). Mede segurando a trava e a libera no fim. Os horários de início e fim de cada medição ficam em `meta.medicaoInicio` e `meta.medicaoFim` do `resultados.json`.
+- **Uma carga por vez:** o harness compila primeiro e só então pega a trava (`carga/trava.mjs`, com `dono.json`); mede segurando a trava e a libera no fim. Sem `CARGA_TRAVA`, a trava fica em `os.tmpdir()`. Nestas medições, numa máquina com cargas de vários projetos, `CARGA_TRAVA` apontava para a trava compartilhada (a outra forma é rodar o harness dentro de um `com-trava.sh`, aí **sem** `CARGA_TRAVA` para a mesma trava, senão ele espera a si mesmo; ver o cabeçalho de `carga/rodar.mjs`). Os horários de início e fim de cada medição ficam em `meta.medicaoInicio` e `meta.medicaoFim` do `resultados.json`.
 
 > **Por que estes números substituem os de 04/10 e 13/10**
 >

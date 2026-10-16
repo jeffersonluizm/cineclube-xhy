@@ -92,25 +92,29 @@ test('órfã = dono.json com processo (e filho) mortos; sem dono.json (formato a
     fs.mkdirSync(p);
     assert.equal(
       travaOrfa(p, () => false),
-      false,
+      null,
       'sem dono.json: só espera'
     );
     fs.writeFileSync(path.join(p, 'dono.json'), '{"projeto": "x", "pid": 111, "filho": 222, "inicio": "2026-10-15T00:00:00-03:00"}');
-    assert.equal(
-      travaOrfa(p, () => false),
-      true
-    );
+    const julgado = travaOrfa(p, () => false);
+    assert.match(julgado, /"pid": 111/, 'devolve o dono.json julgado morto');
     assert.equal(
       travaOrfa(p, (pid) => pid === 222),
-      false,
+      null,
       'filho vivo: não é órfã'
     );
     assert.equal(
       travaOrfa(p, (pid) => pid === 111),
-      false,
+      null,
       'dono vivo: não é órfã'
     );
-    removerOrfa(p);
+    // Entre o julgamento e a remoção o dono liberou e outro pegou a trava: não pode apagar
+    fs.writeFileSync(path.join(p, 'dono.json'), '{"projeto": "outro", "pid": 333, "inicio": "2026-10-15T00:01:00-03:00"}');
+    assert.equal(removerOrfa(p, julgado), false);
+    assert.equal(fs.existsSync(path.join(p, 'dono.json')), true, 'a trava nova ficou');
+    // Mesmo dono.json que foi julgado: aí sim remove
+    const atual = travaOrfa(p, () => false);
+    assert.equal(removerOrfa(p, atual), true);
     assert.equal(fs.existsSync(p), false);
   } finally {
     await limpar();

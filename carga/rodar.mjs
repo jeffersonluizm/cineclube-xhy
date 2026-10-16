@@ -9,10 +9,16 @@
 //   - API compilada (dist/) rodando com o diretório de trabalho FORA do repositório, para o
 //     dotenv não ler backend/.env; todas as variáveis vêm daqui;
 //   - site com `next build` apontando para a API de teste e `next start` na 3200.
-// Só uma carga por vez na máquina: a trava (carga/trava.mjs; na oficina, CARGA_TRAVA aponta
-// para a trava compartilhada) é criada só
-// na hora de medir, depois dos builds, e apagada assim que a medição termina. Se outra carga
-// estiver com ela, a medição espera (CARGA_ESPERA_MIN, padrão 120 min).
+// Só uma carga por vez na máquina: a trava (carga/trava.mjs) é criada só na hora de medir,
+// depois dos builds, e apagada assim que a medição termina. Se outra carga estiver com ela, a
+// medição espera (CARGA_ESPERA_MIN, padrão 120 min).
+//   - Fora da oficina (sem CARGA_TRAVA): a trava fica em os.tmpdir(), só desta máquina.
+//   - Na oficina, uma de duas formas, nunca as duas juntas:
+//       a) CARGA_TRAVA=<caminho absoluto da .carga-lock da oficina> node carga/rodar.mjs ...
+//          (o harness pega a trava compartilhada só para medir);
+//       b) bash com-trava.sh cineclube node carga/rodar.mjs ... SEM CARGA_TRAVA apontando
+//          para a mesma .carga-lock: o com-trava.sh já segura a trava; se o harness também
+//          apontasse para ela, esperaria a própria trava até CARGA_ESPERA_MIN e falharia.
 // Depois da última rodada, refaça o build normal do site (npm run build em codigo-fonte/frontend).
 import { spawn, execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
@@ -485,9 +491,9 @@ async function esperarTrava(meta) {
   const comando = `rodar.mjs ${process.argv.slice(2).join(' ')}`;
   while (!adquirirTrava(TRAVA, { projeto: 'cineclube', comando })) {
     // Trava com dono.json de processo morto é órfã (o com-trava.sh da oficina faz o mesmo)
-    if (travaOrfa(TRAVA)) {
-      log('trava órfã removida', JSON.stringify(lerDono(TRAVA)));
-      removerOrfa(TRAVA);
+    const julgado = travaOrfa(TRAVA);
+    if (julgado && removerOrfa(TRAVA, julgado)) {
+      log('trava órfã removida', julgado.trim());
       continue;
     }
     if (Date.now() > limite) throw new Error(`Outra carga ficou com ${TRAVA} por tempo demais.`);
