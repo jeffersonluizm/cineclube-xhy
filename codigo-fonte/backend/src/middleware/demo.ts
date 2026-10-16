@@ -24,7 +24,37 @@ export const TETOS_DEMO: Record<'revistas' | 'textos' | 'catalogos' | 'ciclos' |
   filmes: { modelo: Film, nome: 'filmes', variavel: 'DEMO_TETO_FILMES', padrao: 300 },
 };
 
-const numero = (valor: string | undefined, padrao: number) => (valor && Number(valor) > 0 ? Number(valor) : padrao);
+const FAIXA = { min: 1, max: 10_000 };
+
+/** Inteiro finito na faixa; Infinity, 1e9, frações e texto desligariam o teto e são recusados */
+function lerInteiro(valor: string | undefined, padrao: number): { valor: number; valido: boolean } {
+  if (valor === undefined || valor.trim() === '') return { valor: padrao, valido: true };
+  const n = Number(valor);
+  const valido = /^\d+$/.test(valor.trim()) && Number.isSafeInteger(n) && n >= FAIXA.min && n <= FAIXA.max;
+  return { valor: valido ? n : padrao, valido };
+}
+const numero = (valor: string | undefined, padrao: number) => lerInteiro(valor, padrao).valor;
+
+const ESCRITAS = { variavel: 'DEMO_ESCRITAS_POR_HORA', padrao: 60 };
+
+/**
+ * Valores efetivos dos limites da demonstração e problemas de configuração (a API não parte
+ * com eles). O resumo vai para o log da partida.
+ */
+export function limitesDaDemonstracao(env: NodeJS.ProcessEnv = process.env) {
+  const valores: Record<string, number> = {};
+  const problemas: string[] = [];
+  for (const { variavel, padrao } of [...Object.values(TETOS_DEMO), ESCRITAS]) {
+    const lido = lerInteiro(env[variavel], padrao);
+    valores[variavel] = lido.valor;
+    if (!lido.valido) problemas.push(`${variavel}="${env[variavel]}" inválida: use um inteiro entre ${FAIXA.min} e ${FAIXA.max}.`);
+  }
+  const tetos = Object.values(TETOS_DEMO)
+    .map((t) => `${t.nome} ${valores[t.variavel]}`)
+    .join(', ');
+  const resumo = `tetos: ${tetos}; ${valores[ESCRITAS.variavel]} escritas por hora por IP`;
+  return { valores, problemas, resumo };
+}
 
 /** Antes de criar: na demonstração, recusa (409) quando a coleção chegou ao teto */
 export function tetoDemo(chave: keyof typeof TETOS_DEMO) {

@@ -7,6 +7,8 @@ import app from './app';
 import { conectarBanco } from './lib/banco';
 import { problemasDeConfiguracao } from './lib/configuracao';
 import mongoose from 'mongoose';
+import { limitesDaDemonstracao } from './middleware/demo';
+import { comTentativas } from './lib/tentativas';
 import { agendarConferenciaDemonstracao, bancoAceitaDemonstracao, conferirDemonstracao, demoLigado } from './lib/demo';
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
@@ -17,6 +19,15 @@ const problemas = problemasDeConfiguracao();
 if (problemas.length > 0) {
   console.error(`Configuração inválida para produção:\n- ${problemas.join('\n- ')}`);
   process.exit(1);
+}
+// Demonstração: limites só inteiros finitos numa faixa (Infinity ou 1e9 desligariam o teto)
+if (demoLigado()) {
+  const limites = limitesDaDemonstracao();
+  if (limites.problemas.length > 0) {
+    console.error(`Configuração inválida da demonstração:\n- ${limites.problemas.join('\n- ')}`);
+    process.exit(1);
+  }
+  console.log(`Demonstração: ${limites.resumo}.`);
 }
 if (IS_PRODUCTION && !process.env.CLOUDINARY_URL) {
   console.warn('AVISO: CLOUDINARY_URL não definida. Imagens serão salvas em disco local e podem ser perdidas a cada deploy.');
@@ -34,8 +45,14 @@ conectarBanco({ timeoutMs: Number(process.env.MONGODB_TIMEOUT_MS) || undefined }
       }
       // Demonstração: confere na partida (o servidor pode ter dormido além do prazo do reset)
       // e a cada 5 min; o horário do último reset fica no banco, não na memória
-      const r = await conferirDemonstracao();
-      console.log(`Modo demonstração LIGADO (dados de exemplo ${r}).`);
+      // Erro transitório (Atlas acordando) não derruba a partida de primeira
+      try {
+        const r = await comTentativas(() => conferirDemonstracao(), { tentativas: 4, esperaMs: 5000, rotulo: 'preparar a demonstração' });
+        console.log(`Modo demonstração LIGADO (dados de exemplo ${r}).`);
+      } catch (e) {
+        console.error('Não foi possível preparar os dados da demonstração (conferir ou restaurar o exemplo):', e);
+        process.exit(1);
+      }
       agendarConferenciaDemonstracao();
     }
     app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));

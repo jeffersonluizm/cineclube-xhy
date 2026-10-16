@@ -48,5 +48,16 @@ demonstração pode estar no código, e o site oficial não pode ter essa porta 
 - O reset roda numa transação quando o banco é replica set (Atlas M0): uma falha no meio
   não deixa o banco pela metade. As imagens enviadas são apagadas mesmo se o seed falhar,
   e o site é avisado para invalidar o cache.
+- Limites conhecidos do reset: uma escrita de visitante concorrente à transação pode
+  sobreviver até o próximo reset (ela não entra na transação); e uma imagem enviada entre o
+  fim da transação e a limpeza da pasta é apagada, e a referência a ela é retirada na
+  conferência seguinte (até 5 minutos). Os dois casos são raros e não deixam o banco
+  inconsistente.
+- Na partida, a conferência da demonstração tenta 4 vezes, com 5 s entre elas, antes de a
+  API desistir com mensagem própria (erro transitório do Atlas acordando não derruba de
+  primeira).
+- Os limites (`DEMO_TETO_*`, `DEMO_ESCRITAS_POR_HORA`) só aceitam inteiros de 1 a 10000.
+  Fora disso (Infinity, 1e9, fração, texto), a API não parte. Os valores efetivos vão para
+  o log da partida.
 - Ligar a flag num banco com conteúdo real apagaria esse conteúdo: além do aviso no
   `docs/deploy.md`, no `render.yaml` e nesta decisão, a API recusa um banco sem `demo` no nome.
