@@ -19,7 +19,7 @@ Duas publicações independentes do mesmo repositório e do mesmo código:
 |---|---|---|
 | Site (Vercel) | `https://cineclubexhy.vercel.app`, indexável | `https://cineclube-xhy.vercel.app`, com `NEXT_PUBLIC_DEMO=1` (noindex) |
 | API (Render) | `cineclubexhy-api`, Blueprint `render.producao.yaml`, **workspace próprio** | `cineclube-xhy-api`, Blueprint `render.yaml` |
-| Banco (Atlas) | projeto `cineclube-xhy-producao`, banco `cineclube_xhy`, usuário só com `readWrite` nele | banco `cineclube_demo` |
+| Banco (Atlas) | projeto próprio da produção, banco `cineclube_xhy`, usuário só com `readWrite` nele | banco `cineclube_demo` |
 | Imagens | Cloudinary, pasta `cineclube-xhy` (persistem) | disco temporário da API, apagado a cada reset |
 | Painel | senha da equipe (`ADMIN_PASSWORD`, ADR 0001); `GET /api/demo` responde 404 | "Entrar como editor de demonstração" com um clique |
 | `SERVIDOR_SEGREDO` | próprio | outro |

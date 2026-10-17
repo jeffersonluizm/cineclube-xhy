@@ -185,7 +185,7 @@ export function EstadoCarregando({ texto = 'carregando…' }: { texto?: string }
       <div className="h-4 w-full bg-text-dark/10" />
       <div className="h-4 w-4/5 bg-text-dark/10" />
       <span className="font-sans text-sm text-text-suave">
-        {demorando ? 'Acordando o servidor… na hospedagem gratuita ele leva até um minuto na primeira visita.' : texto}
+        {demorando ? 'Conectando ao servidor… a primeira resposta pode levar até um minuto.' : texto}
       </span>
     </div>
   );

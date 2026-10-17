@@ -19,7 +19,7 @@ export default function Error({ reset }: { error: Error & { digest?: string }; r
           Não conseguimos falar com o servidor agora. A página existe; é uma falha momentânea.
         </p>
         <p className="font-serif text-light-text text-base leading-relaxed max-w-md mb-10">
-          Em hospedagem gratuita o servidor dorme quando ninguém visita e leva até um minuto para acordar. Tente de novo em instantes.
+          O servidor pode levar até um minuto para responder. Tente de novo em instantes.
         </p>
         <div className="flex flex-wrap gap-x-8 gap-y-3">
           <button
