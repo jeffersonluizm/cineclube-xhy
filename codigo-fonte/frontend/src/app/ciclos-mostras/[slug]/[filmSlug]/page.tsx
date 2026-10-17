@@ -9,12 +9,13 @@ import { imageUrl } from '@/lib/media';
 import { pageMetadata } from '@/lib/seo';
 
 interface Props {
-  params: { slug: string; filmSlug: string };
+  params: Promise<{ slug: string; filmSlug: string }>;
 }
 
-const carregar = (p: Props['params']) => ouNulo(api.ciclos.film(p.slug, p.filmSlug));
+const carregar = (p: Awaited<Props['params']>) => ouNulo(api.ciclos.film(p.slug, p.filmSlug));
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   const dados = await carregar(params).catch(() => null);
   if (!dados) return { title: 'Página não encontrada', robots: { index: false } };
   const { film, cycle } = dados;
@@ -28,7 +29,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-export default async function FilmPage({ params }: Props) {
+export default async function FilmPage(props: Props) {
+  const params = await props.params;
   const dados = await carregar(params);
   if (!dados) notFound();
   const { film, cycle, prev, next } = dados;

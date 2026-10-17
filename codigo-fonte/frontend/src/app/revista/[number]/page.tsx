@@ -9,12 +9,13 @@ import { excerpt } from '@/lib/text';
 import { pageMetadata } from '@/lib/seo';
 
 interface Props {
-  params: { number: string };
+  params: Promise<{ number: string }>;
 }
 
 const carregar = (numero: string) => ouNulo(api.revista.get(numero));
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   const dados = await carregar(params.number).catch(() => null);
   if (!dados) return { title: 'Página não encontrada', robots: { index: false } };
   const { magazine } = dados;
@@ -26,7 +27,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-export default async function RevistaNumberPage({ params }: Props) {
+export default async function RevistaNumberPage(props: Props) {
+  const params = await props.params;
   const dados = await carregar(params.number);
   if (!dados) notFound();
   const { magazine, columns } = dados;

@@ -8,12 +8,13 @@ import { api, ouNulo } from '@/lib/api';
 import { pageMetadata } from '@/lib/seo';
 
 interface Props {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 const carregar = (slug: string) => ouNulo(api.catalogos.get(slug));
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   const dados = await carregar(params.slug).catch(() => null);
   if (!dados) return { title: 'Página não encontrada', robots: { index: false } };
   const { catalog } = dados;
@@ -25,7 +26,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-export default async function CatalogoDetailPage({ params }: Props) {
+export default async function CatalogoDetailPage(props: Props) {
+  const params = await props.params;
   const dados = await carregar(params.slug);
   if (!dados) notFound();
   const { catalog, sections } = dados;

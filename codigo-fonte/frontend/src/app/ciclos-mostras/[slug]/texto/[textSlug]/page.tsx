@@ -5,12 +5,13 @@ import { api, ouNulo } from '@/lib/api';
 import { pageMetadata } from '@/lib/seo';
 
 interface Props {
-  params: { slug: string; textSlug: string };
+  params: Promise<{ slug: string; textSlug: string }>;
 }
 
-const carregar = (p: Props['params']) => ouNulo(api.ciclos.text(p.slug, p.textSlug));
+const carregar = (p: Awaited<Props['params']>) => ouNulo(api.ciclos.text(p.slug, p.textSlug));
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   const dados = await carregar(params).catch(() => null);
   if (!dados) return { title: 'Página não encontrada', robots: { index: false } };
   const { article, cycle } = dados;
@@ -24,7 +25,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-export default async function CicloTextPage({ params }: Props) {
+export default async function CicloTextPage(props: Props) {
+  const params = await props.params;
   const dados = await carregar(params);
   if (!dados) notFound();
   const { article, cycle, prev, next } = dados;
