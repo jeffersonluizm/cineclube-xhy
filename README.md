@@ -21,9 +21,9 @@
 
 | | Endereço |
 |---|---|
-| Site | `https://cineclube-xhy.vercel.app` *(a publicar: ver [docs/deploy.md](docs/deploy.md))* |
-| Painel do editor | `https://cineclube-xhy.vercel.app/admin/login` *(a publicar)* |
-| API | `https://cineclube-xhy-api.onrender.com/api/health` *(a publicar)* |
+| Site | <https://cineclube-xhy.vercel.app> |
+| Painel do editor | <https://cineclube-xhy.vercel.app/admin/login> |
+| API | <https://cineclube-xhy-api.onrender.com/api/health> |
 
 **Conta de demonstração:** no login do painel, o botão **"Entrar no painel como editor de
 demonstração"** entra com um clique, sem senha. Pode criar, editar e excluir à vontade: os
