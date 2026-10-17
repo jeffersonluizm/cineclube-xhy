@@ -204,8 +204,13 @@ e a senha do usuário do Atlas. Guarde num gerenciador de senhas, nunca no repos
 | `FRONTEND_URL` | `https://cineclubexhy.vercel.app` (some o domínio próprio, se houver, separado por vírgula) |
 | `CLOUDINARY_URL` | a do P2 |
 
-4. Para cada push na `main` atualizar a API, autorize o Render a ler o repositório no
-   GitHub; sem isso, cada atualização exige um *Manual Deploy*.
+4. **Deploy automático depois dos testes:** no Render, *Settings → Deploy Hook*, copie a URL
+   (é secreta: quem a tiver publica a API) e guarde no GitHub em *Settings → Secrets and
+   variables → Actions → New repository secret*, com o nome `RENDER_DEPLOY_HOOK_PRODUCAO`.
+   A cada push na `main` que mexa na API (`codigo-fonte/backend` ou este Blueprint), o job
+   `deploy-producao` do CI chama o hook **só se os testes da API e do site passarem**. O
+   Blueprint tem `autoDeploy: false`, então o Render nunca publica um commit sem testes.
+   Para trocar o hook (se vazar), use *Regenerate* no Render e atualize o segredo.
 5. Teste: `https://cineclubexhy-api.onrender.com/api/health` responde `db: connected`, e
    `https://cineclubexhy-api.onrender.com/api/demo` responde **404**.
 

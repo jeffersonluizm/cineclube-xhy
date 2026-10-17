@@ -62,3 +62,15 @@ test('com os segredos preenchidos, a API aceita a configuração de produção (
   }
   assert.deepEqual(problemasDeConfiguracao(preenchido), []);
 });
+
+test('deploy da produção: o Render não publica sozinho; o CI chama o deploy hook só na main e depois dos testes', () => {
+  assert.match(ler('render.producao.yaml'), /^\s+autoDeploy: false\b/m);
+  const ci = ler('.github/workflows/ci.yml');
+  const job = ci.slice(ci.indexOf('\n  deploy-producao:'));
+  assert.ok(ci.includes('\n  deploy-producao:'), 'job deploy-producao no ci.yml');
+  assert.match(job, /needs: \[backend, frontend\]/);
+  assert.match(job, /github\.event_name == 'push' && github\.ref == 'refs\/heads\/main'/);
+  assert.match(job, /secrets\.RENDER_DEPLOY_HOOK_PRODUCAO/);
+  // a URL do hook é segredo: nunca impressa no log
+  assert.doesNotMatch(job, /echo[^\n]*\$\{?HOOK/);
+});
