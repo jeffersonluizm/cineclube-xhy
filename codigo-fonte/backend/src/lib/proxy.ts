@@ -14,17 +14,19 @@ export function proxiesConfiaveis(env: NodeJS.ProcessEnv | Record<string, string
 }
 
 /**
- * Diagnóstico de uma vez por processo: quantos endereços chegam no X-Forwarded-For.
- * Serve para acertar PROXIES_CONFIAVEIS; mostra só a contagem, nunca os IPs.
+ * Diagnóstico de uma vez por processo: quantos endereços chegam no X-Forwarded-For do
+ * primeiro pedido que passou por proxy (o health check interno do Render chega sem o
+ * cabeçalho e é ignorado). Serve para acertar PROXIES_CONFIAVEIS; mostra só a contagem,
+ * nunca os IPs.
  */
 export function registrarSaltosDoProxy(confiaveis: number, log: (m: string) => void = console.log) {
   let registrado = false;
   return (req: Request, _res: Response, next: NextFunction) => {
-    if (!registrado) {
+    const enderecos = String(req.headers['x-forwarded-for'] ?? '')
+      .split(',')
+      .filter((parte) => parte.trim()).length;
+    if (!registrado && enderecos > 0) {
       registrado = true;
-      const enderecos = String(req.headers['x-forwarded-for'] ?? '')
-        .split(',')
-        .filter((parte) => parte.trim()).length;
       log(`[proxy] X-Forwarded-For com ${enderecos} endereço(s); PROXIES_CONFIAVEIS=${confiaveis}`);
     }
     next();
