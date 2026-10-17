@@ -1,11 +1,11 @@
+import { extrasDoPortfolio } from '@/lib/portfolio';
+
 // Crédito do desenvolvedor do site, exibido na página "sobre" junto da equipe
 const DEVELOPER = 'Jefferson Luiz';
 const ROLE = 'desenvolvimento do site';
-const LINKS = [
-  { label: 'LinkedIn', href: 'https://www.linkedin.com/in/j-luiz/' },
-  { label: 'GitHub', href: 'https://github.com/jeffersonluizm' },
-  { label: 'Letterboxd', href: 'https://letterboxd.com/Weinsmann/' },
-];
+const LINKEDIN = { label: 'LinkedIn', href: 'https://www.linkedin.com/in/j-luiz/' };
+const GITHUB = { label: 'GitHub', href: 'https://github.com/jeffersonluizm' };
+const LETTERBOXD = { label: 'Letterboxd', href: 'https://letterboxd.com/Weinsmann/' };
 
 interface CreditProps {
   className?: string;
@@ -13,6 +13,8 @@ interface CreditProps {
 
 /** Segue a mesma diagramação dos integrantes da equipe em /sobre */
 export default function Credit({ className = '' }: CreditProps) {
+  // O GitHub (código e documentação técnica) só aparece na demonstração de portfólio
+  const LINKS = extrasDoPortfolio() ? [LINKEDIN, GITHUB, LETTERBOXD] : [LINKEDIN, LETTERBOXD];
   return (
     <section className={`mb-6 ${className}`} aria-label={ROLE}>
       <p className="font-serif text-text-dark text-sm mb-2">{ROLE}</p>

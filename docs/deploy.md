@@ -153,7 +153,7 @@ mesmo código (motivo e comparação no [ADR 0007](adr/0007-producao-e-demonstra
 |---|---|---|
 | Site | `https://cineclubexhy.vercel.app` | `https://cineclube-xhy.vercel.app` |
 | API | `https://cineclubexhy-api.onrender.com`, Blueprint `render.producao.yaml` | `https://cineclube-xhy-api.onrender.com`, Blueprint `render.yaml` |
-| Banco | Atlas `cineclube-xhy-producao`, banco `cineclube_xhy` | `cineclube_demo` |
+| Banco | Atlas, projeto próprio da produção, banco `cineclube_xhy` | `cineclube_demo` |
 | Imagens | Cloudinary, pasta `cineclube-xhy` | disco temporário da API |
 
 Na produção **não existe** `DEMO_ENABLED`: o painel exige a senha da equipe, `GET /api/demo`
@@ -167,14 +167,14 @@ e a senha do usuário do Atlas. Guarde num gerenciador de senhas, nunca no repos
 
 ### P1. Banco no MongoDB Atlas
 
-1. Crie um **projeto** próprio, `cineclube-xhy-producao`, e nele um cluster **M0** na AWS
+1. Crie um **projeto** próprio para a produção (separado do da demonstração) e nele um cluster **M0** na AWS
    Oregon (perto da API no Render).
-2. **Database Access:** usuário `cineclube_app` com o papel `readWrite` **só** no banco
+2. **Database Access:** um usuário só da produção (nome à sua escolha) com o papel `readWrite` **só** no banco
    `cineclube_xhy` (não use `atlasAdmin` nem acesso a todos os bancos).
 3. **Network Access:** `0.0.0.0/0`. O Render gratuito não tem IP fixo; a proteção fica com
    o usuário de senha forte e acesso a um banco só.
 4. Copie a string de conexão e ponha o nome do banco:
-   `mongodb+srv://cineclube_app:<senha>@<cluster>.mongodb.net/cineclube_xhy?retryWrites=true&w=majority`
+   `mongodb+srv://<usuario>:<senha>@<cluster>.mongodb.net/cineclube_xhy?retryWrites=true&w=majority`
 5. Não rode o seed: o banco começa vazio e a equipe cadastra o conteúdo pelo painel. Os
    índices são criados pela própria API ao subir.
 
@@ -268,3 +268,16 @@ entram neste backup.
 - [ ] Enviar uma imagem pelo painel: a URL é do Cloudinary e a imagem continua depois de reiniciar a API.
 - [ ] A demonstração (`cineclube-xhy.vercel.app`) continua igual.
 - [ ] `npm run backup` contra a produção gera os arquivos com o conteúdo criado no teste.
+- [ ] `/como-foi-feito` e `/feed.xml` respondem 404, e o rodapé não tem "Este site" nem RSS (extras só da demonstração).
+
+### P8. Operação do dia a dia
+
+- **Trocar a senha da equipe** (por exemplo, quando alguém sai): altere `ADMIN_PASSWORD` no
+  Render e salve com *Save, rebuild, and deploy*. Todas as sessões abertas caem na hora,
+  inclusive a de quem saiu. A página "esqueci a senha" só manda falar com a coordenação:
+  ela não descreve nada disso ao público.
+- **IP real no limite por IP:** a API registra uma vez no log, ao receber o primeiro pedido,
+  `[proxy] X-Forwarded-For com N endereço(s)` (só a contagem, nunca os IPs). O primeiro
+  endereço é o do visitante e os outros são proxies; com N endereços, defina
+  `PROXIES_CONFIAVEIS=N` no Render (padrão 1). Nunca mais do que os proxies que existem de
+  fato: aí o visitante conseguiria forjar o próprio IP no cabeçalho.

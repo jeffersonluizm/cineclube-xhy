@@ -22,7 +22,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: MONGODB_URI
-        sync: false           # Atlas cineclube-xhy-producao, banco cineclube_xhy (usuário só com readWrite nele)
+        sync: false           # Atlas, projeto próprio da produção, banco cineclube_xhy (usuário só com readWrite nele)
       - key: ADMIN_PASSWORD
         sync: false           # senha da equipe do cineclube; 12+ caracteres, a API recusa subir com menos
       - key: JWT_SECRET

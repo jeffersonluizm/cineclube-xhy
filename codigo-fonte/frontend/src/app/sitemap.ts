@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { api } from '@/lib/api';
+import { extrasDoPortfolio } from '@/lib/portfolio';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
@@ -14,7 +15,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/ciclos-mostras`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${SITE_URL}/autores`, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${SITE_URL}/sobre`, changeFrequency: 'yearly', priority: 0.5 },
-    { url: `${SITE_URL}/como-foi-feito`, changeFrequency: 'yearly', priority: 0.3 },
+    // "como foi feito" só existe na demonstração de portfólio
+    ...(extrasDoPortfolio() ? [{ url: `${SITE_URL}/como-foi-feito`, changeFrequency: 'yearly' as const, priority: 0.3 }] : []),
   ];
 
   try {

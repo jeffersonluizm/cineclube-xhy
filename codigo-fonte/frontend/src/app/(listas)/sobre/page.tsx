@@ -7,6 +7,7 @@ import Credit from '@/components/Credit';
 import { api, ouNulo } from '@/lib/api';
 import type { TeamMember } from '@/lib/types';
 import { atributosDoLinkDoEditor, linkDoEditorSeguro } from '@/lib/linksDoEditor';
+import { extrasDoPortfolio } from '@/lib/portfolio';
 
 export const metadata: Metadata = {
   title: 'Sobre',
@@ -88,13 +89,15 @@ export default async function SobrePage() {
       {/* Desenvolvedor do site, listado junto da equipe */}
       <Credit />
 
-      <p className="font-serif text-text-dark text-base mt-10">
-        Quer saber como o site foi construído?{' '}
-        <Link href="/como-foi-feito" className="text-azul-escuro underline hover:text-olive-escuro">
-          Veja como foi feito
-        </Link>
-        .
-      </p>
+      {extrasDoPortfolio() && (
+        <p className="font-serif text-text-dark text-base mt-10">
+          Quer saber como o site foi construído?{' '}
+          <Link href="/como-foi-feito" className="text-azul-escuro underline hover:text-olive-escuro">
+            Veja como foi feito
+          </Link>
+          .
+        </p>
+      )}
     </PageShell>
   );
 }

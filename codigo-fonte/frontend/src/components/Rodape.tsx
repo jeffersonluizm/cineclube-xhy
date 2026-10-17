@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { LINKS_PRINCIPAIS, REDES, WHATSAPP } from '@/lib/navegacao';
+import { extrasDoPortfolio } from '@/lib/portfolio';
 import { LinkPainelDemo } from './DemoContexto';
 
 const externo = { target: '_blank', rel: 'noopener noreferrer' } as const;
@@ -10,12 +11,14 @@ export default function Rodape({ tom = 'cream' }: { tom?: 'cream' | 'dark' }) {
   const texto = escuro ? 'text-cream' : 'text-text-dark';
   const rotulo = escuro ? 'text-pink-claro' : 'text-pink-escuro';
   const link = `${texto} hover:underline ${escuro ? 'hover:text-olive' : 'hover:text-olive-escuro'}`;
+  // "Este site" (como foi feito, painel de demonstração) e o RSS só na demonstração de portfólio
+  const extras = extrasDoPortfolio();
 
   return (
     <footer
       className={`border-t ${escuro ? 'border-cream/15 bg-dark-purple' : 'border-text-dark/15 bg-cream'} px-5 sm:px-8 md:px-10 py-10`}
     >
-      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 max-w-6xl">
+      <div className={`grid gap-8 sm:grid-cols-2 ${extras ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} max-w-6xl`}>
         <section aria-labelledby="rodape-participe">
           <h2 id="rodape-participe" className={`font-display font-black text-xs tracking-widest mb-3 ${rotulo}`}>
             PARTICIPE
@@ -69,30 +72,34 @@ export default function Rodape({ tom = 'cream' }: { tom?: 'cream' | 'dark' }) {
                 </Link>
               </li>
             ))}
-            <li>
-              <a href="/feed.xml" className={link}>
-                RSS dos textos
-              </a>
-            </li>
+            {extras && (
+              <li>
+                <a href="/feed.xml" className={link}>
+                  RSS dos textos
+                </a>
+              </li>
+            )}
           </ul>
         </section>
 
-        <section aria-labelledby="rodape-sobre-site">
-          <h2 id="rodape-sobre-site" className={`font-display font-black text-xs tracking-widest mb-3 ${rotulo}`}>
-            ESTE SITE
-          </h2>
-          <p className={`font-serif text-base leading-snug mb-3 ${texto}`}>
-            Revista, catálogos e exibições do Cineclube XHY, com painel de publicação próprio.
-          </p>
-          <ul className="flex flex-col gap-1 font-display text-sm">
-            <li>
-              <Link href="/como-foi-feito" className={link}>
-                como foi feito →
-              </Link>
-            </li>
-            <LinkPainelDemo className={link} />
-          </ul>
-        </section>
+        {extras && (
+          <section aria-labelledby="rodape-sobre-site">
+            <h2 id="rodape-sobre-site" className={`font-display font-black text-xs tracking-widest mb-3 ${rotulo}`}>
+              ESTE SITE
+            </h2>
+            <p className={`font-serif text-base leading-snug mb-3 ${texto}`}>
+              Revista, catálogos e exibições do Cineclube XHY, com painel de publicação próprio.
+            </p>
+            <ul className="flex flex-col gap-1 font-display text-sm">
+              <li>
+                <Link href="/como-foi-feito" className={link}>
+                  como foi feito →
+                </Link>
+              </li>
+              <LinkPainelDemo className={link} />
+            </ul>
+          </section>
+        )}
       </div>
     </footer>
   );

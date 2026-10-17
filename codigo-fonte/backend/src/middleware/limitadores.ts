@@ -34,18 +34,22 @@ export function criarLimitadorGeral(porMinuto: number, segredoDoSite = process.e
 }
 
 /** Login: no máximo 10 tentativas erradas por IP a cada 15 minutos */
-export const limitadorLogin = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 10,
-  standardHeaders: 'draft-7',
-  legacyHeaders: false,
-  skipSuccessfulRequests: true,
-  message: mensagem('Muitas tentativas de login. Aguarde alguns minutos e tente novamente.'),
-});
+export function criarLimitadorLogin() {
+  return rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 10,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    skipSuccessfulRequests: true,
+    message: mensagem('Muitas tentativas de login. Aguarde alguns minutos e tente novamente.'),
+  });
+}
 
 /**
  * Teto de logins errados somando todos os IPs (força bruta distribuída): por hora.
- * Quem tem a senha certa continua entrando (sucessos não contam).
+ * Sucessos não contam. Vai sempre DEPOIS do limite por IP (criarLimitadoresDoLogin): assim
+ * as tentativas que o limite por IP já barrou não gastam o teto, e um IP sozinho não trava
+ * o login da equipe.
  */
 export function criarLimitadorLoginGlobal(porHora = 100) {
   return rateLimit({
@@ -57,6 +61,11 @@ export function criarLimitadorLoginGlobal(porHora = 100) {
     legacyHeaders: false,
     message: mensagem('O painel recebeu muitas tentativas de login erradas. Tente de novo mais tarde.'),
   });
+}
+
+/** Limites do POST /login, na ordem certa: primeiro por IP, depois o teto global */
+export function criarLimitadoresDoLogin(errosPorHora = 100) {
+  return [criarLimitadorLogin(), criarLimitadorLoginGlobal(errosPorHora)];
 }
 
 /** Upload: 60 imagens por IP a cada 15 minutos (o editor envia poucas por texto) */
