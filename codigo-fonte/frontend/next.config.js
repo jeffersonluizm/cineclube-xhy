@@ -58,6 +58,9 @@ const nextConfig = {
   // Otimizador de imagens desligado: o site não depende dele e ele concentra advisories
   // ainda sem correção na linha 14 do Next (ver docs/adr/0006). O middleware responde 404 em /_next/image.
   images: { unoptimized: true, remotePatterns },
+  // Cache de páginas no navegador (navegação por <Link>) com os mesmos tempos do Next 14:
+  // o Next 15 zerou o das páginas dinâmicas (era 30 s); o das estáticas continua 5 min.
+  experimental: { staleTimes: { dynamic: 30, static: 300 } },
   async headers() {
     return [{ source: '/:path*', headers: cabecalhosDeSeguranca }];
   },
@@ -66,7 +69,7 @@ const nextConfig = {
 /** @type {(fase: string) => import('next').NextConfig} */
 module.exports = (fase) => {
   // Build de produção com configuração que quebraria o site: para aqui, com a explicação.
-  // O `next lint` também carrega a config nessa fase; a conferência vale só para `next build`.
+  // Outros comandos (como `next typegen`) também carregam a config; a conferência vale só para `next build`.
   if (fase === PHASE_PRODUCTION_BUILD && process.argv.includes('build')) {
     const { erros, avisos } = conferirAmbienteDoBuild(process.env);
     for (const aviso of avisos) console.warn(`AVISO: ${aviso}`);

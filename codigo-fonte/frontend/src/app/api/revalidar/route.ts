@@ -20,6 +20,8 @@ export async function POST(req: Request) {
   }).catch(() => null);
   if (!sessao?.ok) return Response.json({ error: 'Sessão inválida' }, { status: 401 });
 
-  revalidateTag(ETIQUETA_CONTEUDO);
+  // { expire: 0 }: o cache da etiqueta expira na hora e a próxima visita já busca o conteúdo
+  // novo (o mesmo comportamento do Next 14). O perfil 'max' serviria a versão antiga mais uma vez.
+  revalidateTag(ETIQUETA_CONTEUDO, { expire: 0 });
   return Response.json({ ok: true, revalidado: ETIQUETA_CONTEUDO });
 }

@@ -50,6 +50,8 @@ async function buscar<T>(path: string): Promise<T> {
   try {
     res = await fetch(`${API_URL}${path}`, {
       headers: cabecalhosDoServidor(),
+      // Desde o Next 15 o fetch não entra no cache por padrão: o cache é pedido aqui, explícito
+      cache: 'force-cache',
       next: { revalidate: REVALIDAR_S, tags: [ETIQUETA_CONTEUDO] },
     });
   } catch (err) {
