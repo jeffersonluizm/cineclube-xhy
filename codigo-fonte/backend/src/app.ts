@@ -18,6 +18,7 @@ import { ErroHttp, rotaInexistente, tratadorDeErros } from './middleware/erros';
 import { criarLimitadorGeral } from './middleware/limitadores';
 import { corpoJson } from './middleware/demo';
 import { pastaUploads } from './lib/uploads';
+import { proxiesConfiaveis, registrarSaltosDoProxy } from './lib/proxy';
 
 // Só monta o app: a conexão com o banco e o listen ficam em index.ts (os testes importam este módulo)
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
@@ -29,7 +30,11 @@ app.disable('x-powered-by');
 app.set('query parser', 'simple');
 
 // Atrás de proxy (Render, Vercel, etc.) para o IP real chegar ao rate limit
-if (IS_PRODUCTION) app.set('trust proxy', 1);
+if (IS_PRODUCTION) {
+  const confiaveis = proxiesConfiaveis();
+  app.set('trust proxy', confiaveis);
+  app.use(registrarSaltosDoProxy(confiaveis));
+}
 
 // Cabeçalhos de segurança. A API só devolve JSON e imagens: nada pode ser executado
 // nem embutido em frame; as imagens de /uploads são lidas pelo site em outra origem.

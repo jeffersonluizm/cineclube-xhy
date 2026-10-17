@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { createHash } from 'crypto';
+import { createHmac } from 'crypto';
 
 const SEGREDO_DEV = 'segredo-apenas-para-desenvolvimento';
 
@@ -32,10 +32,11 @@ export function segredoJwt(env: NodeJS.ProcessEnv = process.env): string {
 
 /**
  * Versão da senha do editor gravada no token: trocar ADMIN_PASSWORD invalida na hora
- * todas as sessões abertas com a senha antiga (o hash não revela a senha).
+ * todas as sessões abertas com a senha antiga. É um HMAC com o JWT_SECRET: quem obtiver um
+ * token não consegue testar senhas offline contra ele (um hash simples permitiria).
  */
 export const versaoDaSenha = (senha = process.env.ADMIN_PASSWORD ?? '') =>
-  createHash('sha256').update(`cineclube-xhy:${senha}`, 'utf8').digest('hex').slice(0, 16);
+  createHmac('sha256', segredoJwt()).update(senha, 'utf8').digest('hex').slice(0, 16);
 
 export interface AuthRequest extends Request {
   editor?: { role: string; exp?: number };

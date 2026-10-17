@@ -103,3 +103,36 @@ test('trocar ADMIN_PASSWORD derruba os tokens emitidos com a senha antiga', asyn
     process.env.ADMIN_PASSWORD = anterior;
   }
 });
+
+test('um IP sozinho não trava o login da equipe: tentativas já barradas por IP não gastam o teto global', async () => {
+  const { criarLimitadoresDoLogin } = await import('../src/middleware/limitadores');
+  const mini = express();
+  mini.set('trust proxy', 1);
+  mini.use(express.json());
+  mini.post('/login', ...criarLimitadoresDoLogin(12), (req, res) =>
+    req.body.password === 'senha-certa' ? res.json({ ok: true }) : res.status(401).json({ error: 'Senha incorreta' })
+  );
+  const ataque = [];
+  for (let i = 0; i < 30; i++)
+    ataque.push((await request(mini).post('/login').set('X-Forwarded-For', '203.0.113.9').send({ password: 'x' })).status);
+  assert.deepEqual(ataque.slice(0, 10), Array(10).fill(401));
+  assert.ok(
+    ataque.slice(10).every((c) => c === 429),
+    'depois de 10 erros, o IP do ataque é barrado'
+  );
+  const equipe = await request(mini).post('/login').set('X-Forwarded-For', '198.51.100.7').send({ password: 'senha-certa' });
+  assert.equal(equipe.status, 200, 'a equipe continua entrando');
+});
+
+test('a versão da senha no token depende do JWT_SECRET: um token vazado não permite testar senhas offline', async () => {
+  const { versaoDaSenha } = await import('../src/middleware/auth');
+  const anterior = process.env.JWT_SECRET;
+  try {
+    process.env.JWT_SECRET = 'a'.repeat(40);
+    const comUmSegredo = versaoDaSenha('senha-do-editor');
+    process.env.JWT_SECRET = 'b'.repeat(40);
+    assert.notEqual(versaoDaSenha('senha-do-editor'), comUmSegredo);
+  } finally {
+    process.env.JWT_SECRET = anterior;
+  }
+});
