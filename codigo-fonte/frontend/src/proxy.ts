@@ -13,11 +13,15 @@ const limitadores: Record<Cota, ReturnType<typeof criarLimitador>> = {
   paginas: criarLimitador(COTAS.paginas),
 };
 
+/**
+ * O Next 15 tirou o `req.ip` do NextRequest: o IP vem do primeiro endereço do
+ * X-Forwarded-For, que a Vercel reescreve com o IP real do visitante (não aceita o do cliente).
+ */
 function ipDoVisitante(req: NextRequest): string {
-  return req.ip ?? req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'desconhecido';
+  return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'desconhecido';
 }
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const caminho = req.nextUrl.pathname;
   // Otimizador de imagens fechado (images.unoptimized): nenhum pedido chega a ele
   if (caminho.startsWith('/_next/image')) return new NextResponse(null, { status: 404 });
