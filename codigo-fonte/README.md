@@ -28,6 +28,8 @@ npm install
 npm run seed   # popula o banco com dados de exemplo
 npm run dev    # inicia em http://localhost:3001
 npm test       # testes automatizados (node:test + supertest, banco em memória)
+npm run backup                         # copia o banco de MONGODB_URI para backups/AAAA-MM-DD-HHmm/ (fora do Git)
+npm run restaurar -- backups/<pasta>   # repõe um backup; recusa banco com conteúdo sem --substituir
 ```
 
 Organização do backend:

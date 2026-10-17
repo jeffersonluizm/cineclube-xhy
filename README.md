@@ -17,6 +17,24 @@
 
 ![Página inicial: a prateleira de edições](docs/img/01-home.jpg)
 
+## Duas publicações
+
+| | Site oficial (em uso pelo Cineclube XHY) | Demonstração (painel aberto) |
+|---|---|---|
+| Site | <https://cineclubexhy.vercel.app> | <https://cineclube-xhy.vercel.app> |
+| Painel do editor | só a equipe do cineclube, com senha | <https://cineclube-xhy.vercel.app/admin/login>, com um clique |
+| Conteúdo | o que o cineclube publica | dados de exemplo, que voltam ao original a cada hora |
+
+As duas rodam o mesmo código, com bancos, segredos e hospedagens separados
+([ADR 0007](docs/adr/0007-producao-e-demonstracao-separadas.md)). Para explorar o painel, use a
+demonstração: o site oficial é o conteúdo real do cineclube.
+
+## Em uso pelo Cineclube XHY
+
+Desde outubro de 2026, o Cineclube XHY publica as revistas, os textos e as exibições pelo
+painel, e o público lê em <https://cineclubexhy.vercel.app>. O cineclube autorizou citar o
+uso neste portfólio.
+
 ## Demonstração
 
 | | Endereço |
@@ -140,8 +158,8 @@ Relatório completo, com veredito de cada hipótese e limitações:
 ## Decisões
 
 Registradas em [`docs/adr/`](docs/adr/): senha única de editor, JWT no localStorage, banco
-embutido em desenvolvimento, modo demonstração, cache com revalidação e a permanência no
-Next 14.2 com a superfície dos advisories fechada.
+embutido em desenvolvimento, modo demonstração, cache com revalidação, a permanência no
+Next 14.2 com a superfície dos advisories fechada e a produção separada da demonstração.
 
 - **Cache com revalidação sob demanda** em vez de `no-store`: o visitante não espera a API
   (que dorme no plano gratuito) e o editor vê a mudança na hora.
@@ -198,7 +216,9 @@ cd codigo-fonte/frontend && npm install && npm run dev     # site
 
 A senha do painel é a `ADMIN_PASSWORD` gerada em `codigo-fonte/backend/.env`.
 Configuração completa, variáveis, tabela da API e guia de hospedagem gratuita em
-[`codigo-fonte/README.md`](codigo-fonte/README.md).
+[`codigo-fonte/README.md`](codigo-fonte/README.md). Publicação da demonstração e da produção
+(com despertador e backup do banco: `npm run backup` / `npm run restaurar`) em
+[`docs/deploy.md`](docs/deploy.md).
 
 ## Documentação
 
