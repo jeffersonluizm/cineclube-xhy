@@ -26,6 +26,9 @@ codigo-fonte/backend/uploads/
 # Banco de dados local de desenvolvimento
 codigo-fonte/backend/data/
 
+# Backups do banco (npm run backup): dados reais do cliente, nunca no Git
+codigo-fonte/backend/backups/
+
 # Sistema
 Thumbs.db
 .DS_Store
