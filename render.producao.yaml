@@ -1,0 +1,39 @@
+# Blueprint do Render (https://render.com) para a API de PRODUÇÃO do Cineclube XHY.
+# A demonstração usa o render.yaml; este arquivo é o do site em uso pelo cineclube.
+# Passo a passo em docs/deploy.md (seção "Produção real") e motivo da separação no
+# docs/adr/0007-producao-e-demonstracao-separadas.md.
+# No Render: crie um workspace próprio (as 750 h gratuitas por mês valem por workspace),
+# depois New → Blueprint → este repositório → "Blueprint Path" = render.producao.yaml.
+# Preencha os valores marcados com "sync: false" em Environment.
+services:
+  - type: web
+    name: cineclubexhy-api
+    runtime: node
+    plan: free
+    region: oregon            # o cluster do Atlas da produção também fica em Oregon
+    rootDir: codigo-fonte/backend
+    # --include=dev garante o TypeScript e os @types no build mesmo com NODE_ENV=production
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    # Sem DEMO_ENABLED (e sem DEMO_RESET_MINUTOS): conteúdo real, nada é apagado nem restaurado.
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false           # Atlas cineclube-xhy-producao, banco cineclube_xhy (usuário só com readWrite nele)
+      - key: ADMIN_PASSWORD
+        sync: false           # senha da equipe do cineclube; 12+ caracteres, a API recusa subir com menos
+      - key: JWT_SECRET
+        generateValue: true   # o Render gera um valor aleatório seguro
+      - key: SERVIDOR_SEGREDO
+        sync: false           # 32+ caracteres, DIFERENTE do da demonstração; o mesmo valor vai na Vercel
+      - key: FRONTEND_URL
+        sync: false           # https://cineclubexhy.vercel.app (e o domínio próprio, separados por vírgula)
+      - key: CLOUDINARY_URL
+        sync: false           # cloudinary://API_KEY:API_SECRET@CLOUD_NAME; sem ele as imagens somem a cada reinício
+      - key: CLOUDINARY_FOLDER
+        value: cineclube-xhy
+      - key: MONGODB_TIMEOUT_MS
+        value: "30000"        # Atlas gratuito pode demorar a responder na primeira conexão

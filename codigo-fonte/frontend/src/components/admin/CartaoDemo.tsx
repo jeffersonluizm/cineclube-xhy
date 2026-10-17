@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { adminApi, InfoDemo } from '@/lib/adminApi';
 import { intervaloEmTexto } from '@/lib/intervalo';
+import { MENSAGEM_ACORDANDO } from '@/lib/acordando';
 import { classeBotao } from './estilos';
 
 const ACORDANDO_APOS_MS = 2500;
@@ -10,7 +11,7 @@ const ACORDANDO_APOS_MS = 2500;
 /**
  * "Explore a demonstração": aparece no login só quando a API está em modo demonstração
  * (GET /api/demo). Enquanto a API gratuita acorda (30 a 60 s), explica a espera em vez de
- * parecer quebrado.
+ * parecer quebrado; esse aviso também aparece no site real, então não fala em demonstração.
  */
 export default function CartaoDemo({ aoEntrar }: { aoEntrar: () => void }) {
   const [info, setInfo] = useState<InfoDemo | null>(null);
@@ -52,7 +53,7 @@ export default function CartaoDemo({ aoEntrar }: { aoEntrar: () => void }) {
   if (acordando) {
     return (
       <p role="status" className="w-full border-l-4 border-gold-escuro bg-papel px-4 py-3 font-sans text-sm text-text-dark">
-        Acordando o servidor de demonstração… Na hospedagem gratuita ele dorme sem visitas e leva até um minuto para responder.
+        {MENSAGEM_ACORDANDO}
       </p>
     );
   }

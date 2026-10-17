@@ -1,4 +1,8 @@
-# Publicar a demonstração (Vercel + Render + Atlas)
+# Publicar: demonstração e produção (Vercel + Render + Atlas)
+
+Este roteiro tem duas partes: as seções 0 a 6 publicam a **demonstração** de portfólio
+(painel aberto, dados de exemplo); a seção [Produção real](#produção-real-site-em-uso-pelo-cineclube-xhy)
+publica o **site em uso pelo Cineclube XHY**, separado dela.
 
 Desenho gratuito: **site na Vercel**, **API no Render**, **MongoDB Atlas M0 com um banco só
 de demonstração**. O Cloudinary fica para o site oficial: na demonstração as imagens enviadas
@@ -140,8 +144,127 @@ API acordar. Para isso:
 - [ ] Compartilhar o link no WhatsApp/LinkedIn mostra título, descrição e imagem.
 - [ ] Atualizar os links do topo do `README.md` com a URL do site.
 
-## Produção real (conteúdo do cineclube)
+## Produção real (site em uso pelo Cineclube XHY)
 
-Para o site oficial, repita os passos com **outro** banco, `DEMO_ENABLED` **desligado**
-(remova a variável) e uma `ADMIN_PASSWORD` própria da equipe. Nesse modo `GET /api/demo`
-responde 404 e o login exige a senha.
+O site oficial é uma publicação **separada** da demonstração, do mesmo repositório e do
+mesmo código (motivo e comparação no [ADR 0007](adr/0007-producao-e-demonstracao-separadas.md)):
+
+| Peça | Produção | Demonstração (seções 0 a 6 acima) |
+|---|---|---|
+| Site | `https://cineclubexhy.vercel.app` | `https://cineclube-xhy.vercel.app` |
+| API | `https://cineclubexhy-api.onrender.com`, Blueprint `render.producao.yaml` | `https://cineclube-xhy-api.onrender.com`, Blueprint `render.yaml` |
+| Banco | Atlas `cineclube-xhy-producao`, banco `cineclube_xhy` | `cineclube_demo` |
+| Imagens | Cloudinary, pasta `cineclube-xhy` | disco temporário da API |
+
+Na produção **não existe** `DEMO_ENABLED`: o painel exige a senha da equipe, `GET /api/demo`
+responde 404, nada é apagado nem restaurado, e o site aparece nos buscadores.
+
+### P0. Segredos da produção
+
+Gere valores **novos**, diferentes dos da demonstração, com os mesmos comandos da seção 0:
+`ADMIN_PASSWORD` (a senha que a equipe do cineclube vai usar no painel), `SERVIDOR_SEGREDO`
+e a senha do usuário do Atlas. Guarde num gerenciador de senhas, nunca no repositório.
+
+### P1. Banco no MongoDB Atlas
+
+1. Crie um **projeto** próprio, `cineclube-xhy-producao`, e nele um cluster **M0** na AWS
+   Oregon (perto da API no Render).
+2. **Database Access:** usuário `cineclube_app` com o papel `readWrite` **só** no banco
+   `cineclube_xhy` (não use `atlasAdmin` nem acesso a todos os bancos).
+3. **Network Access:** `0.0.0.0/0`. O Render gratuito não tem IP fixo; a proteção fica com
+   o usuário de senha forte e acesso a um banco só.
+4. Copie a string de conexão e ponha o nome do banco:
+   `mongodb+srv://cineclube_app:<senha>@<cluster>.mongodb.net/cineclube_xhy?retryWrites=true&w=majority`
+5. Não rode o seed: o banco começa vazio e a equipe cadastra o conteúdo pelo painel. Os
+   índices são criados pela própria API ao subir.
+
+### P2. Imagens no Cloudinary
+
+1. Na conta do Cloudinary, copie a **API environment variable** (`cloudinary://API_KEY:API_SECRET@CLOUD_NAME`):
+   ela é o `CLOUDINARY_URL` da API.
+2. Anote o **Cloud name**: ele vai na Vercel como `CLOUDINARY_CLOUD_NAME`.
+3. A pasta `cineclube-xhy` já vem do Blueprint (`CLOUDINARY_FOLDER`). Sem `CLOUDINARY_URL`, a
+   API grava as imagens no disco do Render e elas somem a cada reinício (a API avisa no log).
+
+### P3. API no Render, em workspace próprio
+
+1. Crie um **workspace** novo (ex.: "Cineclube XHY"). As 750 horas gratuitas por mês valem
+   por workspace: a produção acordada o mês inteiro gasta cerca de 744 h e não pode dividir
+   a cota com a demonstração (ADR 0007).
+2. **New → Blueprint**, escolha o repositório e, em **Blueprint Path**, `render.producao.yaml`.
+   O serviço `cineclubexhy-api` vem com build, start, health check, `NODE_ENV=production`,
+   `JWT_SECRET` gerado, `CLOUDINARY_FOLDER=cineclube-xhy` e `MONGODB_TIMEOUT_MS=30000`.
+3. Preencha os valores `sync: false`:
+
+| Variável | Valor |
+|---|---|
+| `MONGODB_URI` | a string do P1, com `/cineclube_xhy` |
+| `ADMIN_PASSWORD` | a senha da equipe (12+ caracteres, senão a API não sobe) |
+| `SERVIDOR_SEGREDO` | o segredo da produção (32+ caracteres); o mesmo valor vai na Vercel |
+| `FRONTEND_URL` | `https://cineclubexhy.vercel.app` (some o domínio próprio, se houver, separado por vírgula) |
+| `CLOUDINARY_URL` | a do P2 |
+
+4. Para cada push na `main` atualizar a API, autorize o Render a ler o repositório no
+   GitHub; sem isso, cada atualização exige um *Manual Deploy*.
+5. Teste: `https://cineclubexhy-api.onrender.com/api/health` responde `db: connected`, e
+   `https://cineclubexhy-api.onrender.com/api/demo` responde **404**.
+
+### P4. Site na Vercel
+
+1. Projeto novo `cineclubexhy`, **Root Directory = `codigo-fonte/frontend`**, domínio
+   `cineclubexhy.vercel.app`.
+2. Variáveis em **Production e Preview** (o `next build` das prévias também para sem elas):
+
+| Variável | Valor |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | `https://cineclubexhy-api.onrender.com` |
+| `NEXT_PUBLIC_SITE_URL` | `https://cineclubexhy.vercel.app` |
+| `SERVIDOR_SEGREDO` | o mesmo do Render da produção (só de servidor: nunca `NEXT_PUBLIC_`) |
+| `CLOUDINARY_CLOUD_NAME` | o Cloud name do P2 |
+
+3. **Não** defina `NEXT_PUBLIC_DEMO`. Sem ela, o site é indexável: o `robots.txt` libera
+   tudo menos `/admin`, `/api/` e `/busca`, aponta o sitemap, e as páginas não levam
+   `noindex` (`codigo-fonte/frontend/src/lib/indexacao.ts`, coberto por teste). O painel
+   continua com `noindex` próprio.
+
+### P5. Despertador
+
+O Render gratuito dorme depois de 15 minutos sem tráfego. O site público continua no ar
+(as páginas saem do cache da Vercel), mas a equipe esperaria a API acordar no painel.
+
+- **Principal: cron-job.org.** Um job gratuito chamando
+  `https://cineclubexhy-api.onrender.com/api/health` a cada 10 minutos.
+- **Reserva: `keep-alive.yml`.** No GitHub, crie a variável `API_HEALTH_URL` com a mesma URL
+  (*Settings → Secrets and variables → Actions → Variables*). Ele não é o principal: o
+  GitHub **desativa agendamentos de repositórios públicos sem atividade por 60 dias**, e o
+  agendamento pode atrasar em horários de pico. Se o GitHub avisar que desativou, reative
+  em *Actions → keep-alive → Enable workflow*.
+
+### P6. Backup do banco
+
+O banco da produção tem o conteúdo real do cineclube. As imagens ficam no Cloudinary e não
+entram neste backup.
+
+- **Fazer:** no `codigo-fonte/backend`, com a string da produção só no comando:
+  ```bash
+  MONGODB_URI='mongodb+srv://...' npm run backup                 # Git Bash
+  $env:MONGODB_URI='mongodb+srv://...'; npm run backup           # PowerShell
+  ```
+  Cria `backend/backups/AAAA-MM-DD-HHmm/` com um JSON por coleção (EJSON: ids e datas
+  preservados) e um `manifesto.json`. A pasta está no `.gitignore`: **nunca** a envie ao
+  GitHub. Guarde uma cópia fora do computador. Os comandos não mostram a URI no log.
+- **Restaurar:** `MONGODB_URI='...' npm run restaurar -- backups/<pasta>`. Num banco com
+  conteúdo, a restauração é recusada; `--substituir` apaga as coleções do backup e as repõe
+  (use só quando for isso mesmo). Para conferir um backup sem risco, restaure num banco
+  vazio de teste.
+- Rode um backup antes de qualquer mudança grande (migração, troca de conta) e com uma
+  frequência combinada com o cineclube.
+
+### P7. Conferir a produção
+
+- [ ] `https://cineclubexhy.vercel.app` abre; `/robots.txt` libera os buscadores e as páginas não têm `noindex`.
+- [ ] `/admin/login` pede a senha e **não** mostra "Explore a demonstração"; `GET /api/demo` responde 404.
+- [ ] No painel, criar um texto, ver no site (cache revalidado na hora) e excluir.
+- [ ] Enviar uma imagem pelo painel: a URL é do Cloudinary e a imagem continua depois de reiniciar a API.
+- [ ] A demonstração (`cineclube-xhy.vercel.app`) continua igual.
+- [ ] `npm run backup` contra a produção gera os arquivos com o conteúdo criado no teste.
