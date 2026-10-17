@@ -4,6 +4,8 @@ name: ci
 on:
   push:
   pull_request:
+  # "Run workflow" na aba Actions: roda os testes e, na main, republica a API de produção
+  workflow_dispatch:
 
 jobs:
   backend:
@@ -58,7 +60,7 @@ jobs:
   # RENDER_DEPLOY_HOOK_PRODUCAO do repositório; nunca vai para o log.
   deploy-producao:
     needs: [backend, frontend]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -69,7 +71,11 @@ jobs:
         id: mudou
         env:
           ANTES: ${{ github.event.before }}
+          EVENTO: ${{ github.event_name }}
         run: |
+          if [ "$EVENTO" = "workflow_dispatch" ]; then
+            echo "api=sim" >> "$GITHUB_OUTPUT"; echo "Disparo manual: publica a API."; exit 0
+          fi
           if [ -z "$ANTES" ] || [ "$ANTES" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$ANTES" 2>/dev/null; then
             echo "api=sim" >> "$GITHUB_OUTPUT"; exit 0
           fi
@@ -87,6 +93,11 @@ jobs:
             echo "::warning::Segredo RENDER_DEPLOY_HOOK_PRODUCAO não configurado: a API não foi publicada."
             exit 0
           fi
-          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST --max-time 30 "$HOOK" || echo "000")
+          # Diagnóstico sem expor a chave: só esquema, host e caminho da URL configurada
+          base="${HOOK%%\?*}"
+          if [[ "$HOOK" == *"?key="* ]]; then chave="com ?key"; else chave="SEM ?key"; fi
+          echo "Hook configurado: $base ($chave)"
+          read -r code destino < <(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' -X POST --max-time 30 "$HOOK" || echo "000 -")
           echo "Render respondeu HTTP $code"
+          if [ "$code" -ge 300 ] && [ "$code" -lt 400 ]; then echo "Redireciona para: ${destino%%\?*}"; fi
           [ "$code" -ge 200 ] && [ "$code" -lt 300 ]
