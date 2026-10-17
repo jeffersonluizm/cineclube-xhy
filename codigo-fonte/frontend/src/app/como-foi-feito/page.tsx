@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import PageShell from '@/components/PageShell';
 import Breadcrumb from '@/components/Breadcrumb';
 import ConviteDemo from '@/components/ConviteDemo';
 import { DATA_CARGA, RESUMO_CARGA } from '@/lib/resultadosCarga';
+import { extrasDoPortfolio } from '@/lib/portfolio';
 
 export const metadata: Metadata = {
   title: 'Como foi feito',
@@ -10,7 +12,7 @@ export const metadata: Metadata = {
   alternates: { canonical: '/como-foi-feito' },
 };
 
-const REPO = 'https://github.com/jeffersonluizm/projeto-site-de-cinema';
+const REPO = 'https://github.com/jeffersonluizm/cineclube-xhy';
 
 function Titulo({ id, children }: { id: string; children: React.ReactNode }) {
   return (
@@ -107,6 +109,8 @@ function Diagrama() {
 }
 
 export default function ComoFoiFeitoPage() {
+  // Página de portfólio: no site do cliente não existe (a arquitetura não fica exposta a qualquer visitante)
+  if (!extrasDoPortfolio()) notFound();
   return (
     <PageShell mainClassName="max-w-4xl">
       <Breadcrumb crumbs={[{ label: 'sobre', href: '/sobre' }, { label: 'como foi feito' }]} />

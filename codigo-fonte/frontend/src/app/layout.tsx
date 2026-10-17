@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Cormorant_Garamond, Inter, Nunito } from 'next/font/google';
 import { cores } from '@/lib/tokens';
 import { robotsDaRaiz } from '@/lib/indexacao';
+import { extrasDoPortfolio } from '@/lib/portfolio';
 import { api, ouNulo } from '@/lib/api';
 import { ProvedorDemo } from '@/components/DemoContexto';
 import './globals.css';
@@ -42,7 +43,10 @@ export const metadata: Metadata = {
   },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
-  alternates: { types: { 'application/rss+xml': [{ url: '/feed.xml', title: 'Textos do Cineclube XHY' }] } },
+  // RSS só na demonstração de portfólio
+  ...(extrasDoPortfolio()
+    ? { alternates: { types: { 'application/rss+xml': [{ url: '/feed.xml', title: 'Textos do Cineclube XHY' }] } } }
+    : {}),
   openGraph: {
     type: 'website',
     locale: 'pt_BR',
