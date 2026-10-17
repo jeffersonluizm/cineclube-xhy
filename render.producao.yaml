@@ -37,3 +37,5 @@ services:
         value: cineclube-xhy
       - key: MONGODB_TIMEOUT_MS
         value: "30000"        # Atlas gratuito pode demorar a responder na primeira conexão
+      - key: PROXIES_CONFIAVEIS
+        value: "3"            # medido em 17/10/2026: o X-Forwarded-For chega com 3 endereços (docs/deploy.md, P8)
