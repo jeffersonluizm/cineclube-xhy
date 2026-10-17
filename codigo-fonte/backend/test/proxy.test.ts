@@ -24,3 +24,15 @@ test('o diagnóstico registra uma vez quantos endereços chegam no X-Forwarded-F
   assert.match(linhas[0], /PROXIES_CONFIAVEIS=2/);
   assert.doesNotMatch(linhas[0], /203\.0\.113|104\.16|10\.1\.2/);
 });
+
+test('o diagnóstico ignora pedidos sem X-Forwarded-For (o health check interno do Render) e espera um de visitante', async () => {
+  const linhas: string[] = [];
+  const app = express();
+  app.use(registrarSaltosDoProxy(1, (m) => linhas.push(m)));
+  app.get('/', (_req, res) => res.send('ok'));
+  await request(app).get('/');
+  assert.equal(linhas.length, 0);
+  await request(app).get('/').set('X-Forwarded-For', '203.0.113.9, 104.16.0.1');
+  assert.equal(linhas.length, 1);
+  assert.match(linhas[0], /2 endereço/);
+});
