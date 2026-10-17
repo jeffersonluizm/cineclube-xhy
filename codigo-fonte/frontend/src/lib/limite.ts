@@ -1,5 +1,5 @@
 /**
- * Limitador em memória por chave (IP do visitante), janela fixa. Roda no middleware do Next:
+ * Limitador em memória por chave (IP do visitante), janela fixa. Roda no proxy do Next (o antigo middleware):
  * em hospedagem serverless cada instância tem a sua memória, então é uma contenção de
  * melhor esforço; o limite de verdade da API continua valendo para quem a chama direto.
  */
@@ -25,17 +25,18 @@ export function criarLimitador({ limite, janelaMs }: { limite: number; janelaMs:
 }
 
 /**
- * Quantas vezes uma página passa pelo middleware: o documento (ou o RSC, na navegação por
+ * Quantas vezes uma página passa pelo proxy: o documento (ou o RSC, na navegação por
  * clique) e os pré-carregamentos (prefetch) dos links visíveis. Medido no Chrome headless em
- * 15/10/2026, com os dados de demonstração:
- *  - navegação por cliques home → /revista → edição → texto → /autores: 34 requisições em
- *    5 páginas, 6,8 por página (os prefetch já feitos não se repetem);
- *  - abrir uma página do zero: 10 (home no celular) a 16 (home no desktop).
- * O Next 14 remove os cabeçalhos de prefetch antes do middleware e o Purpose: prefetch vem
- * do cliente, então NADA é isento. A cota de páginas comporta 60 páginas por minuto
- * navegando, ou cerca de 26 aberturas do zero.
+ * 17/10/2026 com o Next 16, que pré-carrega por segmento e faz mais pedidos (menores), com os
+ * dados de demonstração:
+ *  - navegação por cliques home → /revista → edição → texto → autores: 46 requisições em
+ *    5 páginas, 9,2 por página (no Next 14 eram 6,8; os prefetch já feitos não se repetem);
+ *  - abrir uma página do zero: 12 (home no celular) a 31 (home no desktop); no Next 14, 10 a 16.
+ * Os cabeçalhos de prefetch e o Purpose: prefetch vêm do cliente, então NADA é isento. A cota
+ * de páginas comporta as mesmas 60 páginas por minuto navegando de antes, ou cerca de 19
+ * aberturas do zero no desktop.
  */
-export const REQUISICOES_POR_VISITA = 7;
+export const REQUISICOES_POR_VISITA = 10;
 const MINUTO = 60_000;
 export const COTAS = {
   /** buscas com termo: cada uma consulta a API, que não vê o IP do visitante */

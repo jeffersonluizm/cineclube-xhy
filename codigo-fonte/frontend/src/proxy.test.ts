@@ -60,8 +60,8 @@ test('abrir /busca sem termo não gasta a cota de busca', () => {
   assert.equal(contar429('/busca?q=ok', 1, ip), 0, 'a cota de busca continua inteira');
 });
 
-test('cota de páginas comporta visitas reais: cada visita gasta cerca de 7 requisições (documento + prefetch)', () => {
-  assert.ok(COTAS.paginas.limite >= 7 * 60, 'pelo menos 60 visitas por minuto');
+test('cota de páginas comporta visitas reais: cada visita gasta cerca de 9,2 requisições no Next 16 (documento + prefetch)', () => {
+  assert.ok(COTAS.paginas.limite >= 9.2 * 60, 'pelo menos 60 visitas por minuto');
   const ip = novoIp();
   assert.equal(contar429('/revista', COTAS.paginas.limite, ip), 0);
   assert.equal(contar429('/revista', 1, ip), 1);
