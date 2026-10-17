@@ -3,19 +3,24 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Logo from '@/components/Logo';
+import BarraCelular from '@/components/BarraCelular';
+import { linkAtivo, type ItemDoMenu } from '@/lib/menuCelular';
 import { ToastProvider } from './Toasts';
 import Sessao from './Sessao';
 
 /** Páginas de conexão: abertas sem sessão e sem o cabeçalho do painel */
 const PAGINAS_DE_CONEXAO = ['/admin/login', '/admin/recuperar-senha', '/admin/sessao-expirada', '/admin/sair'];
 
-const LINKS = [
+const LINKS: ItemDoMenu[] = [
   { href: '/admin', rotulo: 'início', exato: true },
-  { href: '/admin/revistas', rotulo: 'revistas' },
+  { href: '/admin/revistas', rotulo: 'revistas', tambem: ['/admin/artigos'] },
   { href: '/admin/catalogos', rotulo: 'catálogos' },
   { href: '/admin/ciclos', rotulo: 'exibições' },
   { href: '/admin/sobre', rotulo: 'sobre' },
 ];
+
+/** No celular: as seções, o site em nova aba e, separado no pé da gaveta, o sair */
+const ITENS_CELULAR: ItemDoMenu[] = [...LINKS, { href: '/', rotulo: 'ver o site ↗', externo: true }];
 
 /** Casca do painel: cabeçalho roxo com o menu, conteúdo em papel creme e a sessão vigiada */
 export default function PainelShell({ children }: { children: React.ReactNode }) {
@@ -25,21 +30,35 @@ export default function PainelShell({ children }: { children: React.ReactNode })
     return <ToastProvider>{children}</ToastProvider>;
   }
 
-  const ativo = (href: string, exato?: boolean) =>
-    exato
-      ? caminho === href
-      : caminho === href || caminho.startsWith(`${href}/`) || (href === '/admin/revistas' && caminho.startsWith('/admin/artigos'));
-
   return (
     <ToastProvider>
       <Sessao>
         <div className="min-h-screen bg-cream flex flex-col">
-          <header className="bg-dark-purple px-4 sm:px-8 py-4 flex flex-wrap items-center gap-x-8 gap-y-3">
+          <BarraCelular
+            classeVisivel="md:hidden"
+            tom="escuro"
+            marca={
+              <div className="flex items-center gap-3">
+                <Logo size={30} href="/admin" rotulo="Painel do editor: início" placa />
+                <p className="font-display font-bold text-cream text-base">painel do editor</p>
+              </div>
+            }
+            itens={ITENS_CELULAR}
+            extra={
+              <Link
+                href="/admin/sair"
+                className="inline-flex items-center min-h-12 font-display font-bold text-lg text-pink-claro hover:underline"
+              >
+                sair
+              </Link>
+            }
+          />
+          <header className="hidden md:flex bg-dark-purple px-8 py-4 flex-wrap items-center gap-x-8 gap-y-3">
             <Logo size={44} href="/admin" rotulo="Painel do editor: início" placa />
             <p className="font-display font-bold text-cream text-lg">painel do editor</p>
-            <nav aria-label="painel" className="flex flex-wrap gap-x-6 gap-y-2 sm:ml-4">
+            <nav aria-label="painel" className="flex flex-wrap gap-x-6 gap-y-2 ml-4">
               {LINKS.map((l) => {
-                const atual = ativo(l.href, l.exato);
+                const atual = linkAtivo(l, caminho);
                 return (
                   <Link
                     key={l.href}

@@ -1,5 +1,9 @@
 /** Classes de estilo do painel sem 'use client': servem também a componentes de servidor */
 
+import { ALVO_TOQUE, ALVO_TOQUE_QUADRADO } from '@/lib/toque';
+
+export { ALVO_TOQUE, ALVO_TOQUE_QUADRADO };
+
 export type Variante = 'principal' | 'secundario' | 'perigo' | 'texto' | 'texto-perigo';
 
 const VARIANTES: Record<Variante, string> = {
@@ -11,4 +15,4 @@ const VARIANTES: Record<Variante, string> = {
 };
 
 export const classeBotao = (variante: Variante = 'principal', extra = '') =>
-  `font-display inline-flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${VARIANTES[variante]} ${extra}`;
+  `font-display inline-flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${ALVO_TOQUE} ${VARIANTES[variante]} ${extra}`;

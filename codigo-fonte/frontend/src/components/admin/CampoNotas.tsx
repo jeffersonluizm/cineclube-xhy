@@ -1,6 +1,7 @@
 'use client';
 
 import { Botao } from './ui';
+import { ALVO_TOQUE_QUADRADO } from './estilos';
 
 interface CampoNotasProps {
   notas: string[];
@@ -32,7 +33,7 @@ export default function CampoNotas({ notas, aoMudar, titulo = 'notas de rodapé'
               type="button"
               onClick={() => aoMudar(notas.filter((_, j) => j !== i))}
               aria-label={`remover nota ${i + 1}`}
-              className="text-pink-escuro hover:text-text-dark px-2 pt-2"
+              className={`text-pink-escuro hover:text-text-dark px-2 pt-2 ${ALVO_TOQUE_QUADRADO}`}
             >
               ✕
             </button>

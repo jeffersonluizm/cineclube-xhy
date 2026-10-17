@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { DialogoExclusao } from './Dialogo';
 import { EstadoVazio, MoverItem } from './ui';
+import { ALVO_TOQUE } from './estilos';
 import { useToast } from './Toasts';
 
 interface ItemLista {
@@ -75,10 +76,17 @@ export default function ListaReordenavel<T extends ItemLista>({
               <p className="font-sans text-sm text-text-suave">{detalhe(item)}</p>
             </div>
             <div className="flex items-center gap-4 shrink-0">
-              <Link href={hrefEditar(item)} className="font-display text-azul-escuro hover:underline">
+              <Link
+                href={hrefEditar(item)}
+                className={`font-display text-azul-escuro hover:underline inline-flex items-center ${ALVO_TOQUE}`}
+              >
                 editar<span className="sr-only"> {titulo(item)}</span>
               </Link>
-              <button type="button" onClick={() => setParaExcluir(item)} className="font-display text-pink-escuro hover:underline">
+              <button
+                type="button"
+                onClick={() => setParaExcluir(item)}
+                className={`font-display text-pink-escuro hover:underline inline-flex items-center ${ALVO_TOQUE}`}
+              >
                 excluir<span className="sr-only"> {titulo(item)}</span>
               </button>
             </div>
