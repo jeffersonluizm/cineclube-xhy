@@ -1,6 +1,8 @@
 # ADR 0006: ficar no Next 14.2 (última) e fechar a superfície dos advisories
 
-- **Status:** aceita (1.3.0)
+- **Status:** substituída em 17/10/2026: o site foi migrado para o Next 16.4.2 (React 19), que
+  corrige os advisories abaixo; as medidas de configuração (otimizador de imagens desligado,
+  404 em `/_next/image`, agora no `proxy.ts`) continuam valendo. Antes: aceita (1.3.0)
 - **Data:** 04/10/2026
 
 ## Contexto

@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  Next.js 14 · Express · MongoDB · TypeScript nos dois lados · testes automatizados · teste de carga antes/depois
+  Next.js 16 · Express · MongoDB · TypeScript nos dois lados · testes automatizados · teste de carga antes/depois
 </p>
 
 ---
@@ -83,7 +83,7 @@ painel da revista, home no celular e a página [como foi feito](docs/img/14-como
 
 ```mermaid
 flowchart LR
-  V[Navegador<br/>site e painel] --> N[Next.js 14 na Vercel<br/>páginas em cache 60 s<br/>/api/revalidar · RSS · sitemap]
+  V[Navegador<br/>site e painel] --> N[Next.js 16 na Vercel<br/>páginas em cache 60 s<br/>/api/revalidar · RSS · sitemap]
   N --> A[API Express no Render<br/>helmet · CORS · limites · zod · JWT]
   V -. painel com token .-> A
   A --> M[(MongoDB Atlas<br/>índices e busca de texto)]
@@ -113,7 +113,7 @@ flowchart LR
 | Suíte | Testes | O que roda |
 |---|---|---|
 | API (`codigo-fonte/backend`) | 166 | node:test + supertest + MongoDB em memória |
-| Site (`codigo-fonte/frontend`) | 44 | regras do front e o `middleware.ts` de verdade |
+| Site (`codigo-fonte/frontend`) | 55 | regras do front e o `proxy.ts` (antigo middleware) de verdade |
 | Harness e preparo local (`carga/`, `ferramentas/`) | 16 | trava de carga e `.env` do `iniciar.bat` |
 | Fluxos no navegador (`ferramentas/verificar-fluxos.mjs`) | 10 conferências | visitante e editor no Chrome headless |
 
@@ -159,7 +159,8 @@ Relatório completo, com veredito de cada hipótese e limitações:
 
 Registradas em [`docs/adr/`](docs/adr/): senha única de editor, JWT no localStorage, banco
 embutido em desenvolvimento, modo demonstração, cache com revalidação, a permanência no
-Next 14.2 com a superfície dos advisories fechada e a produção separada da demonstração.
+Next 14.2 com a superfície dos advisories fechada (já superada pela migração para o Next 16) e
+a produção separada da demonstração.
 
 - **Cache com revalidação sob demanda** em vez de `no-store`: o visitante não espera a API
   (que dorme no plano gratuito) e o editor vê a mudança na hora.
@@ -181,8 +182,6 @@ Next 14.2 com a superfície dos advisories fechada e a produção separada da de
 - Token no navegador: um XSS bem-sucedido o levaria (a CSP reduz, não elimina).
 - Datas da programação em texto livre: ainda não há "próximas sessões".
 - Plano gratuito: a API dorme; o cache esconde isso do leitor, não do editor.
-- Next 14.2.35 ainda tem advisories corrigidos só no 15.5+; os vetores que se aplicam estão
-  fechados por configuração (otimizador de imagens desligado, sem Server Actions): [ADR 0006](docs/adr/0006-next-14-e-advisories.md).
 - O teste de carga roda gerador e servidores na mesma máquina: vale para comparar versões.
 
 ## Próximos passos
@@ -191,9 +190,6 @@ Next 14.2 com a superfície dos advisories fechada e a produção separada da de
 - Datas estruturadas nas sessões e agenda "próximas sessões" com calendário (.ics).
 - Prévia de rascunho no próprio site (`draftMode`) e imagem de compartilhamento gerada (`next/og`).
 - Cookie `httpOnly` com proxy no mesmo domínio para o token do painel.
-- Migrar para Next 15.5+ / React 19: fecha os advisories hoje contornados por configuração e
-  os três de DoS em RSC/App Router (GHSA-h25m-26qc-wcjf, GHSA-q4gf-8mx6-v5v3,
-  GHSA-8h8q-6873-q5fj), aceitos como risco residual no [ADR 0006](docs/adr/0006-next-14-e-advisories.md).
 
 ## Rodar localmente
 
