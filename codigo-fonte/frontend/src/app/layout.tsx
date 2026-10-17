@@ -77,7 +77,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // Demonstração ligada na API? (fora do ar ou desligada: sem link do painel no rodapé)
   const demo = await ouNulo(api.demo()).catch(() => null);
   return (
-    <html lang="pt-BR" className={`${cormorant.variable} ${nunito.variable} ${inter.variable}`}>
+    // data-scroll-behavior: o Next 16 só desliga o scroll suave (globals.css) durante a troca de
+    // página com este atributo; sem ele, cada navegação rolaria devagar até o topo
+    <html lang="pt-BR" data-scroll-behavior="smooth" className={`${cormorant.variable} ${nunito.variable} ${inter.variable}`}>
       <body>
         <a
           href="#conteudo"
