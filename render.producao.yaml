@@ -16,7 +16,8 @@ services:
     buildCommand: npm ci --include=dev && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
-    autoDeploy: true
+    # O Render não publica sozinho: o CI chama o deploy hook depois dos testes (job deploy-producao)
+    autoDeploy: false
     # Sem DEMO_ENABLED (e sem DEMO_RESET_MINUTOS): conteúdo real, nada é apagado nem restaurado.
     envVars:
       - key: NODE_ENV

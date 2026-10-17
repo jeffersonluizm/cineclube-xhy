@@ -52,3 +52,41 @@ jobs:
       - run: npm run format:check
       - run: npm test
       - run: npm run build
+
+  # Publica a API de produção (Render) só num push na main e só com a API e o site aprovados.
+  # O deploy hook é a URL secreta do Render (Settings → Deploy Hook) guardada no segredo
+  # RENDER_DEPLOY_HOOK_PRODUCAO do repositório; nunca vai para o log.
+  deploy-producao:
+    needs: [backend, frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Mudou algo na API?
+        id: mudou
+        env:
+          ANTES: ${{ github.event.before }}
+        run: |
+          if [ -z "$ANTES" ] || [ "$ANTES" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$ANTES" 2>/dev/null; then
+            echo "api=sim" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          if git diff --quiet "$ANTES" "$GITHUB_SHA" -- codigo-fonte/backend render.producao.yaml; then
+            echo "api=nao" >> "$GITHUB_OUTPUT"; echo "Nada mudou na API: sem deploy."
+          else
+            echo "api=sim" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Chamar o deploy hook do Render
+        if: steps.mudou.outputs.api == 'sim'
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_PRODUCAO }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::warning::Segredo RENDER_DEPLOY_HOOK_PRODUCAO não configurado: a API não foi publicada."
+            exit 0
+          fi
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST --max-time 30 "$HOOK" || echo "000")
+          echo "Render respondeu HTTP $code"
+          [ "$code" -ge 200 ] && [ "$code" -lt 300 ]
