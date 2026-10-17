@@ -97,7 +97,10 @@ jobs:
           base="${HOOK%%\?*}"
           if [[ "$HOOK" == *"?key="* ]]; then chave="com ?key"; else chave="SEM ?key"; fi
           echo "Hook configurado: $base ($chave)"
-          read -r code destino < <(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' -X POST --max-time 30 "$HOOK" || echo "000 -")
+          # sem "read": a saída do curl não termina em quebra de linha e o read falharia com o bash -e
+          resposta=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' -X POST --max-time 30 "$HOOK" || echo "000 -")
+          code="${resposta%% *}"
+          destino="${resposta#* }"
           echo "Render respondeu HTTP $code"
           if [ "$code" -ge 300 ] && [ "$code" -lt 400 ]; then echo "Redireciona para: ${destino%%\?*}"; fi
           [ "$code" -ge 200 ] && [ "$code" -lt 300 ]
