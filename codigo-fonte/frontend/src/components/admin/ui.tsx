@@ -87,7 +87,7 @@ export function Seletor({ rotulo, className = '', id, children, ...props }: Camp
   );
 }
 
-import { classeBotao, type Variante } from './estilos';
+import { ALVO_TOQUE_QUADRADO, classeBotao, type Variante } from './estilos';
 
 export { classeBotao };
 
@@ -266,7 +266,7 @@ export function MoverItem({
   aoMover: (dir: -1 | 1) => void;
   desabilitado?: boolean;
 }) {
-  const estilo = 'text-text-dark hover:text-pink-escuro disabled:opacity-30 leading-none p-1';
+  const estilo = `text-text-dark hover:text-pink-escuro disabled:opacity-30 leading-none p-1 inline-flex items-center justify-center ${ALVO_TOQUE_QUADRADO}`;
   return (
     <div className="flex flex-col">
       <button

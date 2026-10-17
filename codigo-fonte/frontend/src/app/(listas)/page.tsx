@@ -1,4 +1,5 @@
 import TopNav from '@/components/TopNav';
+import BarraCelularSite from '@/components/BarraCelularSite';
 import Rodape from '@/components/Rodape';
 import ConviteDemo from '@/components/ConviteDemo';
 import HomeShowcase, { ShowcaseSlide } from '@/components/HomeShowcase';
@@ -37,7 +38,9 @@ export default async function HomePage() {
 
   return (
     <div className="bg-cream">
-      <div className="h-dvh flex flex-col">
+      <BarraCelularSite classeVisivel="sm:hidden" />
+      {/* Com edições, a prateleira ocupa a tela (menos a barra do celular); sem elas, o "em breve" fica logo abaixo do topo */}
+      <div className={slides.length ? 'h-[calc(100dvh-3.5rem)] sm:h-dvh flex flex-col' : 'flex flex-col'}>
         <TopNav />
         <main id="conteudo" tabIndex={-1} className="flex-1 min-h-0 flex flex-col focus:outline-none">
           <h1 className="sr-only">Cineclube XHY: revista, catálogos e exibições</h1>

@@ -46,7 +46,12 @@ export default async function CicloDetailPage({ params }: Props) {
 
       {cycle.coverImage && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={imageUrl(cycle.coverImage)} alt="" decoding="async" className="w-full max-w-3xl max-h-[420px] object-cover mb-8" />
+        <img
+          src={imageUrl(cycle.coverImage)}
+          alt=""
+          decoding="async"
+          className="w-full max-w-3xl max-h-[50vh] md:max-h-[420px] object-cover mb-8"
+        />
       )}
 
       <div className="flex flex-col md:flex-row gap-8">

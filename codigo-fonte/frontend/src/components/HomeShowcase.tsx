@@ -137,7 +137,7 @@ export default function HomeShowcase({ slides }: HomeShowcaseProps) {
 
   if (total === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
+      <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-16 sm:py-24">
         <p className="font-display font-black text-text-dark text-titulo-lista mb-3">em breve</p>
         <p className="font-serif italic text-text-dark max-w-sm">
           A primeira edição está sendo montada. Enquanto isso, veja{' '}
@@ -232,7 +232,7 @@ export default function HomeShowcase({ slides }: HomeShowcaseProps) {
               onClick={() => irPara(j)}
               aria-label={nomeDoSlide(slide)}
               aria-current={j === index ? 'true' : undefined}
-              className="p-1.5 group"
+              className="p-3 sm:p-1.5 group"
             >
               <span
                 className={`block w-2.5 h-2.5 rounded-full border transition-colors ${
@@ -277,7 +277,7 @@ function SlideContent({ slide, hideInfo, eager }: { slide: ShowcaseSlide; hideIn
     <div className="flex flex-col sm:flex-row gap-5 sm:gap-12 items-center justify-center max-w-5xl w-full">
       <Link
         href={slide.href}
-        className="w-[min(440px,42vw)] sm:w-[min(440px,40vw)] shrink-0 block group"
+        className="w-[min(300px,62vw)] sm:w-[min(440px,40vw)] shrink-0 block group"
         aria-label={`abrir ${nomeDoSlide(slide)}`}
       >
         {slide.coverImage ? (

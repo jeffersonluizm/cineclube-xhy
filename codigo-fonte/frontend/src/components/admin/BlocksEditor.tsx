@@ -6,6 +6,7 @@ import type { Block } from '@/lib/types';
 import { blocoNovo } from '@/lib/blocos';
 import { useUploadImagem } from './hooks';
 import { Botao, MoverItem } from './ui';
+import { ALVO_TOQUE, ALVO_TOQUE_QUADRADO } from './estilos';
 
 const campo = 'w-full border border-text-dark/60 bg-papel px-3 py-2 font-sans text-text-dark';
 
@@ -130,7 +131,7 @@ export default function BlocksEditor({
                     type="button"
                     onClick={() => onChange(blocks.filter((_, j) => j !== i))}
                     aria-label={`remover bloco ${i + 1} (${blockLabels[block.type]})`}
-                    className="ml-auto text-pink-escuro hover:text-text-dark px-1"
+                    className={`ml-auto text-pink-escuro hover:text-text-dark px-1 inline-flex items-center justify-center ${ALVO_TOQUE_QUADRADO}`}
                   >
                     ✕
                   </button>
@@ -173,7 +174,7 @@ function AddBlockBar({ onAdd, posicao }: { onAdd: (type: Block['type']) => void;
           key={type}
           type="button"
           onClick={() => onAdd(type)}
-          className="font-display text-xs text-azul-escuro border border-azul-escuro px-3 py-0.5 hover:bg-azul-escuro hover:text-white transition-colors"
+          className={`font-display text-sm md:text-xs text-azul-escuro border border-azul-escuro px-3 py-0.5 hover:bg-azul-escuro hover:text-white transition-colors ${ALVO_TOQUE}`}
         >
           + {blockLabels[type]}
         </button>

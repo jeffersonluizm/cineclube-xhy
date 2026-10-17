@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ALVO_TOQUE } from '@/lib/toque';
 
 interface Crumb {
   label: string;
@@ -25,7 +26,7 @@ export default function Breadcrumb({ crumbs, tom = 'cream' }: BreadcrumbProps) {
                 </span>
               )}
               {crumb.href ? (
-                <Link href={crumb.href} className="hover:underline">
+                <Link href={crumb.href} className={`hover:underline inline-flex items-center ${ALVO_TOQUE}`}>
                   {crumb.label}
                 </Link>
               ) : (
