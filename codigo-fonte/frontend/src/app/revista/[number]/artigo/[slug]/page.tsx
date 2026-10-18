@@ -5,12 +5,13 @@ import { api, ouNulo } from '@/lib/api';
 import { pageMetadata } from '@/lib/seo';
 
 interface Props {
-  params: { number: string; slug: string };
+  params: Promise<{ number: string; slug: string }>;
 }
 
-const carregar = (p: Props['params']) => ouNulo(api.revista.article(p.number, p.slug));
+const carregar = (p: Awaited<Props['params']>) => ouNulo(api.revista.article(p.number, p.slug));
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   const dados = await carregar(params).catch(() => null);
   if (!dados) return { title: 'Página não encontrada', robots: { index: false } };
   const { article, magazine } = dados;
@@ -24,7 +25,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-export default async function ArticlePage({ params }: Props) {
+export default async function ArticlePage(props: Props) {
+  const params = await props.params;
   const dados = await carregar(params);
   if (!dados) notFound();
   const { article, magazine, prev, next } = dados;

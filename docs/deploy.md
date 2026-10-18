@@ -109,9 +109,9 @@ visitante abusivo derrubaria o site para todos. O servidor do site manda o cabe�
 e o build do site falha: avisar não bastaria, porque o site quebraria sob carga. O build
 do site também falha sem `NEXT_PUBLIC_API_URL` ou com ela em `http://` (só `localhost` é
 aceito sem TLS). A API reconhece o cabeçalho (comparação em tempo
-constante) e não o limita. O abuso é contido no próprio site pelo `middleware.ts`, que
-limita por IP do visitante (busca com termo: 20/min; revalidação: 30/min; páginas: 420/min,
-o equivalente a 60 visitas, já que cada visita passa umas 7 vezes pelo middleware). Nenhum
+constante) e não o limita. O abuso é contido no próprio site pelo `proxy.ts` (o antigo middleware), que
+limita por IP do visitante (busca com termo: 20/min; revalidação: 30/min; páginas: 600/min,
+o equivalente a 60 visitas, já que no Next 16 cada visita passa umas 9 vezes pelo proxy). Nenhum
 cabeçalho de prefetch isenta da contagem, porque o cliente pode forjá-lo.
 
 ## 5. Manter acordado (recomendado, não obrigatório)

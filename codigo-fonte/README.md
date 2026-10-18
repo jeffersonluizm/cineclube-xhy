@@ -5,7 +5,7 @@
 ```
 codigo-fonte/
   backend/    API REST (Express + TypeScript + MongoDB)
-  frontend/   Site (Next.js 14 + TypeScript + Tailwind CSS)
+  frontend/   Site (Next.js 16 + React 19 + TypeScript + Tailwind CSS)
 ```
 
 ## Requisitos
@@ -166,11 +166,11 @@ imagem é conferido pelos primeiros bytes do arquivo, não pelo que o navegador 
 - Token JWT HS256 de 8 horas. O segredo de desenvolvimento só é aceito fora de produção
   **e** com banco local; com banco remoto sem `JWT_SECRET`, a API não emite tokens.
 - O servidor do site se identifica com `X-Servidor-Site` (segredo só de servidor) e fica
-  fora do limite por IP; o abuso de visitantes é contido no `middleware.ts` do site
-  (busca com termo 20/min, revalidação 30/min e páginas 420/min por IP do visitante; 420
-  cobre 60 visitas por minuto, porque cada visita passa umas 7 vezes pelo middleware entre o
-  documento e os pré-carregamentos dos links). Nenhum cabeçalho isenta da contagem: o Next 14
-  remove os de prefetch antes do middleware e o `Purpose: prefetch` vem do cliente. O 429 de
+  fora do limite por IP; o abuso de visitantes é contido no `proxy.ts` do site (o antigo middleware)
+  (busca com termo 20/min, revalidação 30/min e páginas 600/min por IP do visitante; 600
+  cobre 60 visitas por minuto, porque no Next 16 cada visita passa umas 9 vezes pelo proxy entre o
+  documento e os pré-carregamentos dos links). Nenhum cabeçalho isenta da contagem: os de
+  prefetch e o `Purpose: prefetch` vêm do cliente. O 429 de
   página volta em HTML na identidade do site.
 - O token carrega a versão da senha: trocar `ADMIN_PASSWORD` derruba todas as sessões.
 - Em produção a API usa `trust proxy` = 1 (um proxy na frente, como no Render), para os
